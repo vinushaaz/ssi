@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>SS Interior's — Invoice Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --navy:#0F2744;--blue:#1A5FA8;--blue-mid:#2E7DD1;--blue-lt:#EBF3FD;
+  --green:#0F9E6E;--green-lt:#E6F7F1;--amber:#C97F0A;--amber-lt:#FEF6E4;
+  --purple:#5B3FC4;--purple-lt:#EFEBFC;--red:#D94040;--red-lt:#FEECEC;
+  --bg:#F0F4FA;--card:#fff;--border:#D8E2EF;
+  --text:#111827;--muted:#6B7280;--faint:#9CA3AF;
+  --r:14px;--rs:9px;
+  --shadow:0 2px 12px rgba(15,39,68,.08);
+  --shadow-lg:0 8px 32px rgba(15,39,68,.14);
+  --nav-h:64px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:var(--nav-h)}
+
+/* ── TOP HEADER ── */
+.top-bar{background:var(--navy);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
+.tb-brand{display:flex;align-items:center;gap:10px}
+.tb-logo{width:34px;height:34px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center}
+.tb-logo svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:1.8}
+.tb-name{font-family:'Playfair Display',serif;font-style:italic;color:#fff;font-size:17px}
+.inv-badge{background:rgba(255,255,255,.15);color:#B5D4F4;font-size:11px;padding:4px 12px;border-radius:20px;font-weight:600}
+
+/* ── BOTTOM NAV ── */
+.bot-nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);background:var(--navy);display:flex;z-index:200;border-top:1px solid rgba(255,255,255,.08)}
+.bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;border:none;background:none;font-family:'DM Sans',sans-serif;padding:8px 4px;transition:all .18s;position:relative}
+.bn-item.active{background:rgba(255,255,255,.09)}
+.bn-icon{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.bn-icon svg{width:18px;height:18px;fill:none;stroke:#7A9BBE;stroke-width:1.8;transition:all .18s}
+.bn-item.active .bn-icon svg{stroke:#60A5FA}
+.bn-item.done .bn-icon svg{stroke:#34D399}
+.bn-label{font-size:10px;color:#7A9BBE;font-weight:500;transition:all .18s}
+.bn-item.active .bn-label{color:#E0EFFE}
+.bn-item.done .bn-label{color:#6EE7B7}
+.bn-dot{position:absolute;top:6px;right:calc(50% - 18px);width:7px;height:7px;border-radius:50%;background:var(--green);display:none}
+.bn-item.done .bn-dot{display:block}
+
+/* ── DESKTOP SIDEBAR ── */
+@media(min-width:769px){
+  body{padding-bottom:0}
+  .bot-nav{display:none}
+  .shell{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+  .sidebar{background:var(--navy);position:sticky;top:0;height:100vh;display:flex;flex-direction:column;padding:24px 18px}
+  .sb-brand{display:flex;align-items:center;gap:10px;margin-bottom:32px}
+  .sb-logo{width:40px;height:40px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center}
+  .sb-logo svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:1.8}
+  .sb-name{font-family:'Playfair Display',serif;font-style:italic;color:#fff;font-size:18px;line-height:1.1}
+  .sb-name span{display:block;font-family:'DM Sans',sans-serif;font-style:normal;font-size:10px;color:#7A9BBE;font-weight:400;letter-spacing:.08em;text-transform:uppercase;margin-top:1px}
+  .sb-steps{display:flex;flex-direction:column;gap:4px}
+  .sb-step{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;cursor:pointer;transition:all .2s;border:none;background:none;width:100%;text-align:left;font-family:'DM Sans',sans-serif}
+  .sb-step:hover{background:rgba(255,255,255,.06)}
+  .sb-step.active{background:rgba(255,255,255,.1)}
+  .step-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;background:rgba(255,255,255,.1);color:#7A9BBE;transition:all .2s}
+  .sb-step.active .step-dot{background:var(--blue-mid);color:#fff}
+  .sb-step.done .step-dot{background:var(--green);color:#fff}
+  .step-info{display:flex;flex-direction:column}
+  .step-num-lbl{font-size:10px;color:#5A7A9A;font-weight:500;letter-spacing:.06em;text-transform:uppercase}
+  .step-name{font-size:13px;color:#C5D8EE;font-weight:500}
+  .sb-step.active .step-name{color:#fff}
+  .sb-divider{height:1px;background:rgba(255,255,255,.06);margin:16px 0}
+  .sb-actions{margin-top:auto;display:flex;flex-direction:column;gap:8px}
+  .sb-btn{padding:11px 14px;border-radius:10px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;transition:all .18s;width:100%}
+  .sb-btn svg{width:15px;height:15px;flex-shrink:0}
+  .sb-btn-pdf{background:var(--blue);color:#fff}.sb-btn-pdf:hover{background:#1450A0}
+  .sb-btn-xl{background:var(--green);color:#fff}.sb-btn-xl:hover{background:#0A8860}
+  .sb-btn-rst{background:rgba(255,255,255,.06);color:#7A9BBE;border:1px solid rgba(255,255,255,.1)}.sb-btn-rst:hover{background:rgba(255,255,255,.1);color:#C5D8EE}
+  .top-bar{display:none}
+}
+
+/* ── CONTENT ── */
+.main{min-height:100vh}
+@media(min-width:769px){.main{overflow:hidden}}
+.content{padding:20px 16px;display:none}
+.content.active{display:block}
+@media(min-width:769px){.content{padding:28px 32px}}
+
+/* ── Progress bar ── */
+.prog-wrap{margin-bottom:20px}
+.prog-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--blue) 0%,var(--blue-mid) 100%);border-radius:2px;transition:width .4s ease}
+.prog-label{display:flex;justify-content:space-between;margin-bottom:6px}
+.prog-label span{font-size:11px;color:var(--muted);font-weight:500}
+.prog-label strong{font-size:11px;color:var(--blue);font-weight:600}
+
+/* ── Cards ── */
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:18px 16px;margin-bottom:14px;box-shadow:var(--shadow)}
+@media(min-width:769px){.card{padding:24px}}
+.card-hd{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.chip{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.chip svg{width:18px;height:18px;fill:none;stroke-width:1.8}
+.chip.blue{background:var(--blue-lt)}.chip.blue svg{stroke:var(--blue)}
+.chip.amber{background:var(--amber-lt)}.chip.amber svg{stroke:var(--amber)}
+.chip.purple{background:var(--purple-lt)}.chip.purple svg{stroke:var(--purple)}
+.chip.green{background:var(--green-lt)}.chip.green svg{stroke:var(--green)}
+.card-title{font-size:14px;font-weight:600;color:var(--text)}
+.card-sub{font-size:12px;color:var(--muted);margin-top:1px}
+
+/* ── Fields ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media(max-width:500px){
+  .g2{grid-template-columns:1fr}
+  .g3{grid-template-columns:1fr 1fr}
+}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:2px}
+.field label{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.field input,.field textarea,.field select{font-size:14px;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--rs);background:#FAFBFD;color:var(--text);font-family:'DM Sans',sans-serif;transition:all .15s;-webkit-appearance:none}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--blue-mid);background:#fff;box-shadow:0 0 0 3px rgba(46,125,209,.1)}
+.field textarea{resize:vertical;min-height:80px;line-height:1.6}
+.field input::placeholder,.field textarea::placeholder{color:var(--faint)}
+
+/* ── Upload zones ── */
+.upload-zone{border:2px dashed var(--border);border-radius:var(--r);padding:24px 16px;text-align:center;cursor:pointer;transition:all .2s;background:#FAFBFD}
+.upload-zone:active{background:var(--blue-lt);border-color:var(--blue-mid)}
+.upload-zone.filled{border-style:solid;border-color:var(--green);background:var(--green-lt);padding:16px}
+.upload-zone input{display:none}
+.upload-zone .uico{width:36px;height:36px;stroke:#9CA3AF;margin:0 auto 10px}
+.upload-zone.filled .uico{display:none}
+.upload-preview{max-height:64px;max-width:200px;object-fit:contain;display:none;margin:0 auto 6px}
+.upload-zone.filled .upload-preview{display:block}
+.uz-label{font-size:13px;color:var(--muted);margin-top:4px}
+.uz-label.ok{color:var(--green);font-weight:600}
+.uz-hint{font-size:11px;color:var(--faint);margin-top:3px}
+.upload-zone.filled .uz-hint{display:none}
+.uz-actions{display:none;gap:8px;justify-content:center;margin-top:10px}
+.uz-actions.show{display:flex}
+
+/* ── Line Items ── */
+.tbl-wrap{overflow-x:auto;border-radius:var(--rs);border:1px solid var(--border);-webkit-overflow-scrolling:touch}
+.tbl-wrap::-webkit-scrollbar{height:4px}
+.tbl-wrap::-webkit-scrollbar-track{background:var(--border)}
+.tbl-wrap::-webkit-scrollbar-thumb{background:var(--blue-mid);border-radius:2px}
+.items-tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}
+.items-tbl thead tr{background:#F5F8FD}
+.items-tbl th{padding:10px 10px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+.items-tbl th.r{text-align:right}
+.items-tbl td{padding:4px 3px;border-bottom:1px solid #F3F4F6;vertical-align:middle}
+.items-tbl tbody tr:last-child td{border-bottom:none}
+.items-tbl input{width:100%;border:1.5px solid transparent;border-radius:6px;padding:8px 8px;font-size:13px;background:transparent;color:var(--text);font-family:'DM Sans',sans-serif;transition:all .15s}
+.items-tbl input:focus{background:#F5F8FD;border-color:var(--border);outline:none}
+.items-tbl input.r{text-align:right}
+.amt-cell{text-align:right;padding-right:10px;font-size:13px;font-weight:600;color:var(--text);white-space:nowrap}
+.row-n{font-size:12px;color:var(--faint);text-align:center;width:28px;padding:0 4px}
+.del-btn{width:30px;height:30px;border-radius:7px;border:none;background:none;cursor:pointer;color:var(--faint);font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;transition:all .15s;font-family:inherit;flex-shrink:0}
+.del-btn:active{background:#FEE2E2;color:var(--red)}
+.add-row-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;margin-top:12px;padding:13px;border:2px dashed var(--border);border-radius:var(--rs);background:none;cursor:pointer;font-size:13px;font-weight:500;color:var(--muted);font-family:'DM Sans',sans-serif;transition:all .15s}
+.add-row-btn:active{background:#F5F8FD;color:var(--text)}
+.add-row-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+
+/* ── Totals ── */
+.totals-wrap{background:linear-gradient(135deg,#F5F8FD 0%,#EBF3FD 100%);border-radius:var(--r);padding:18px 18px;border:1px solid var(--border);margin-top:14px}
+.tot-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:14px}
+.tot-row .lbl{color:var(--muted);flex:1}
+.tot-row .val{font-weight:500;color:var(--text);min-width:130px;text-align:right;letter-spacing:normal}
+.tot-divider{height:1px;background:var(--border);margin:10px 0}
+.tot-grand{background:#fff;border-radius:10px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--border);margin-top:10px}
+.tot-grand .lbl{font-size:15px;font-weight:600;color:var(--text);flex:1}
+.tot-grand .val{font-size:22px;font-weight:700;color:var(--blue);min-width:130px;text-align:right;letter-spacing:normal}
+.words-box{margin-top:12px;background:rgba(26,95,168,.07);border-radius:var(--rs);padding:12px 16px;font-size:12px;color:var(--navy);font-style:italic;line-height:1.7;border-left:3px solid var(--blue-mid)}
+
+/* ── Action bar ── */
+.abar{display:flex;gap:10px;flex-wrap:wrap;padding-top:16px;margin-top:4px;border-top:1px solid var(--border)}
+.btn{padding:12px 20px;border-radius:var(--rs);font-size:14px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--text);font-family:'DM Sans',sans-serif;transition:all .18s;display:flex;align-items:center;gap:8px;-webkit-appearance:none}
+.btn:active{transform:scale(.98)}
+.btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;flex-shrink:0}
+.btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}.btn-primary:active{background:#1450A0}
+.btn-success{background:var(--green);color:#fff;border-color:var(--green)}.btn-success:active{background:#0A8860}
+.btn-ghost{border-color:transparent;color:var(--muted)}.btn-ghost:active{background:#FEE2E2;color:var(--red)}
+.btn-full{width:100%;justify-content:center}
+.btn-icon{padding:12px;border-radius:var(--rs)}
+
+/* ── Export row (mobile) ── */
+.export-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+@media(min-width:480px){.export-row{grid-template-columns:1fr 1fr 1fr}}
+
+/* ── Preview ── */
+.preview-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.preview-scroll::-webkit-scrollbar{height:4px}
+.preview-scroll::-webkit-scrollbar-thumb{background:var(--blue-mid);border-radius:2px}
+.preview-bg{background:#6B7280;padding:20px 16px;border-radius:var(--r)}
+@media(min-width:769px){.preview-bg{padding:32px}}
+.invoice-paper{background:#fff;width:720px;margin:0 auto;padding:40px 46px;font-family:'Times New Roman',Georgia,serif;box-shadow:0 8px 40px rgba(0,0,0,.25);border-radius:4px}
+@media(max-width:768px){.invoice-paper{width:680px;padding:30px 34px;font-size:90%}}
+@media(max-width:500px){.invoice-paper{width:560px;padding:24px 22px;font-size:82%}}
+
+/* Invoice paper styles */
+.inv-co-name{font-size:28px;font-weight:700;color:var(--blue);font-style:italic;text-align:center;letter-spacing:-.5px}
+.inv-tagline{font-size:10px;letter-spacing:.18em;color:#555;text-align:center;margin:4px 0 8px;text-transform:uppercase}
+.inv-topbar{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-top:2.5px solid var(--blue);border-bottom:1px solid #C8D8E8}
+.inv-topbar-l{font-size:9.5px;color:#444;line-height:1.8;max-width:55%}
+.inv-topbar-r{font-size:9.5px;color:#333;text-align:right;line-height:1.8}
+.inv-gstin{text-align:center;font-size:11px;font-weight:700;margin:8px 0 6px;letter-spacing:.05em}
+.inv-label{background:var(--blue);color:#fff;text-align:center;font-size:13px;font-weight:700;padding:5px 0;letter-spacing:.25em;margin-bottom:10px}
+.inv-parties{display:grid;grid-template-columns:1fr 1fr;border:1px solid #B0C4D8;margin-bottom:10px}
+.inv-party{padding:12px 14px;font-size:9.5px;line-height:1.8}
+.inv-party:first-child{border-right:1px solid #B0C4D8}
+.inv-party .plbl{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#666;margin-bottom:3px}
+.inv-party .pname{font-size:12px;font-weight:700;color:#111}
+.inv-tbl{width:100%;border-collapse:collapse;font-size:9.5px;margin-bottom:0}
+.inv-tbl th{border:1px solid #B0C4D8;padding:6px 8px;background:#D9E8F7;font-weight:700;text-align:center;font-size:9px;letter-spacing:.04em}
+.inv-tbl td{border:1px solid #B0C4D8;padding:5.5px 8px}
+.inv-tbl td.c{text-align:center}
+.inv-tbl td.r{text-align:right;white-space:nowrap;padding-right:10px}
+.inv-tbl tr.sub td{background:#F5F8FD}
+.inv-tbl tr.grand td{background:#D9E8F7;font-weight:700}
+.inv-words{font-size:8.5px;font-style:italic;border:1px solid #B0C4D8;border-top:none;padding:6px 10px;background:#FAFCFE;color:#333}
+.inv-footer{display:grid;grid-template-columns:1fr 1fr;margin-top:14px;gap:10px}
+.inv-terms{font-size:8.5px;color:#666;line-height:1.9}
+.inv-sign{text-align:right}
+.inv-sign .for{font-size:9px;color:#666;margin-bottom:6px}
+.inv-sign .sig-line{border-top:1px solid #aaa;margin-top:4px;padding-top:4px;font-size:8.5px;color:#666;width:160px;margin-left:auto}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:calc(var(--nav-h) + 12px);left:50%;transform:translateX(-50%);padding:12px 20px;border-radius:var(--rs);font-size:13px;font-weight:500;display:none;align-items:center;gap:10px;z-index:9999;box-shadow:var(--shadow-lg);white-space:nowrap;animation:slideUp .3s ease}
+@media(min-width:769px){.toast{bottom:24px;right:24px;left:auto;transform:none}}
+.toast.show{display:flex}
+.toast.ok{background:#fff;border-left:4px solid var(--green);color:var(--green)}
+.toast.err{background:#fff;border-left:4px solid var(--red);color:var(--red)}
+@keyframes slideUp{from{transform:translate(-50%,20px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+@media(min-width:769px){
+  @keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+}
+
+/* ── Scroll hint for table (mobile) ── */
+.scroll-hint{font-size:11px;color:var(--faint);text-align:center;margin-bottom:6px;display:flex;align-items:center;justify-content:center;gap:4px}
+.scroll-hint svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
+@media(min-width:640px){.scroll-hint{display:none}}
+
+/* ── Section divider ── */
+.sec-divider{display:flex;align-items:center;gap:10px;margin:18px 0 16px}
+.sec-divider span{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.sec-divider::before,.sec-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Desktop shell */
+@media(min-width:769px){
+  .shell{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+}
+@media(min-width:1200px){
+  .shell{grid-template-columns:260px 1fr}
+  .content{padding:36px 48px}
+  .card{padding:28px 30px}
+  .invoice-paper{width:780px;padding:48px 54px}
+}
+@media(min-width:1600px){
+  .content{padding:40px 64px;max-width:1100px}
+}
+</style>
+</head>
+<body>
+
+<!-- MOBILE TOP BAR -->
+<div class="top-bar">
+  <div class="tb-brand">
+    <div class="tb-logo"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+    <span class="tb-name">SS Interior's</span>
+  </div>
+  <div class="inv-badge" id="inv-badge-top">SS/24-25/016</div>
+</div>
+
+<div class="shell">
+
+<!-- DESKTOP SIDEBAR -->
+<aside class="sidebar" style="display:none" id="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+    <div class="sb-name">SS Interior's<span>Invoice Pro</span></div>
+  </div>
+  <div class="sb-steps">
+    <button class="sb-step active" id="sb0" onclick="goTab(0)">
+      <span class="step-dot" id="sd0">1</span>
+      <span class="step-info"><span class="step-num-lbl">Step 1</span><span class="step-name">Details</span></span>
+    </button>
+    <button class="sb-step" id="sb1" onclick="goTab(1)">
+      <span class="step-dot" id="sd1">2</span>
+      <span class="step-info"><span class="step-num-lbl">Step 2</span><span class="step-name">Line Items</span></span>
+    </button>
+    <button class="sb-step" id="sb2" onclick="goTab(2)">
+      <span class="step-dot" id="sd2">3</span>
+      <span class="step-info"><span class="step-num-lbl">Step 3</span><span class="step-name">Preview &amp; Export</span></span>
+    </button>
+  </div>
+  <div class="sb-divider"></div>
+  <div class="sb-actions">
+    <button class="sb-btn sb-btn-pdf" onclick="exportPDF()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Export PDF
+    </button>
+    <button class="sb-btn sb-btn-xl" onclick="exportExcel()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8l3 4-3 4M13 8h4M13 12h3M13 16h4"/></svg>Export Excel
+    </button>
+    <button class="sb-btn sb-btn-rst" onclick="resetAll()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.17"/></svg>Reset
+    </button>
+  </div>
+</aside>
+
+<main class="main">
+
+<!-- TAB 0: DETAILS -->
+<div class="content active" id="tab0">
+  <div class="prog-wrap">
+    <div class="prog-label"><span>Step 1 of 3</span><strong>Details</strong></div>
+    <div class="prog-bar"><div class="prog-fill" style="width:33%"></div></div>
+  </div>
+
+  <!-- Company -->
+  <div class="card">
+    <div class="card-hd">
+      <div class="chip blue"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+      <div><div class="card-title">Company Details</div><div class="card-sub">Your business info</div></div>
+    </div>
+    <!-- Logo -->
+    <div class="field" style="margin-bottom:10px"><label>Logo <span style="font-weight:400;color:var(--faint)">(optional)</span></label></div>
+    <div class="upload-zone" id="logo-zone" onclick="document.getElementById('logo-file').click()" style="padding:16px;margin-bottom:8px">
+      <input type="file" id="logo-file" accept="image/*" onchange="handleLogo(event)"/>
+      <svg class="uico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      <img class="upload-preview" id="logo-img" alt="logo"/>
+      <p class="uz-label" id="logo-lbl">Tap to upload logo</p>
+      <p class="uz-hint">PNG, JPG, SVG</p>
+    </div>
+    <div class="uz-actions" id="logo-actions">
+      <button class="btn" style="font-size:12px;padding:7px 12px" onclick="document.getElementById('logo-file').click()">Change</button>
+      <button class="btn btn-ghost" style="font-size:12px;padding:7px 12px" onclick="clearLogo()">Remove</button>
+    </div>
+
+    <div class="sec-divider"><span>Business Info</span></div>
+    <div class="g2" style="gap:12px;margin-bottom:12px">
+      <div class="field"><label>Business name</label><input id="co-name" value="SS Interior's"/></div>
+      <div class="field"><label>GSTIN</label><input id="co-gstin" value="33BBNPS1222B1Z4"/></div>
+    </div>
+    <div class="field" style="margin-bottom:12px"><label>Address</label><textarea id="co-addr">No. 295/2, Jagadambal Nagar, 1st Street, Vanagaram, Chennai - 95.</textarea></div>
+    <div class="g2" style="margin-bottom:12px">
+      <div class="field"><label>Contact person</label><input id="co-person" value="Senthil"/></div>
+      <div class="field"><label>Email</label><input id="co-email" value="ssinteriors7714@gmail.com" type="email"/></div>
+    </div>
+    <div class="g2">
+      <div class="field"><label>Phone 1</label><input id="co-ph1" value="9841057774" type="tel"/></div>
+      <div class="field"><label>Phone 2</label><input id="co-ph2" value="9841057775" type="tel"/></div>
+    </div>
+  </div>
+
+  <!-- Invoice Details -->
+  <div class="card">
+    <div class="card-hd">
+      <div class="chip amber"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+      <div><div class="card-title">Invoice Details</div><div class="card-sub">Number and date</div></div>
+    </div>
+    <div class="g2" style="margin-bottom:12px">
+      <div class="field"><label>Invoice number</label><input id="inv-no" value="SS/24-25/016" oninput="updateBadge()"/></div>
+      <div class="field"><label>Date</label><input id="inv-date" type="date"/></div>
+    </div>
+    <div class="field"><label>Delivery address <span style="font-weight:400;color:var(--faint)">(optional)</span></label><input id="inv-delivery" placeholder="Same as billing"/></div>
+  </div>
+
+  <!-- Customer -->
+  <div class="card">
+    <div class="card-hd">
+      <div class="chip amber"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+      <div><div class="card-title">Bill To</div><div class="card-sub">Customer details</div></div>
+    </div>
+    <div class="g2" style="margin-bottom:12px">
+      <div class="field"><label>Company / name</label><input id="cust-name" value="M/S. Elagant Enterprises,"/></div>
+      <div class="field"><label>GSTIN</label><input id="cust-gstin" value="33BREPG7020C1ZI"/></div>
+    </div>
+    <div class="field" style="margin-bottom:12px"><label>Address</label><textarea id="cust-addr">No. 17, Karunya Street, Srinivasa Nagar,
+Ayapakkam, Chennai - 600 077</textarea></div>
+    <div class="field"><label>Phone</label><input id="cust-phone" placeholder="+91 98765 43210" type="tel"/></div>
+  </div>
+
+  <!-- Signature -->
+  <div class="card">
+    <div class="card-hd">
+      <div class="chip purple"><svg viewBox="0 0 24 24"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg></div>
+      <div><div class="card-title">Owner Signature</div><div class="card-sub">Upload PNG or JPG of signature</div></div>
+    </div>
+    <div class="upload-zone" id="sig-zone" onclick="document.getElementById('sig-file').click()">
+      <input type="file" id="sig-file" accept="image/*" onchange="handleSig(event)"/>
+      <svg class="uico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
+      <img class="upload-preview" id="sig-img" alt="signature"/>
+      <p class="uz-label" id="sig-lbl">Tap to upload signature</p>
+      <p class="uz-hint">PNG with transparent background looks best</p>
+    </div>
+    <div class="uz-actions" id="sig-actions">
+      <button class="btn" style="font-size:12px;padding:7px 12px" onclick="document.getElementById('sig-file').click()">Change</button>
+      <button class="btn btn-ghost" style="font-size:12px;padding:7px 12px" onclick="clearSig()">Remove</button>
+    </div>
+  </div>
+
+  <div class="abar">
+    <button class="btn btn-primary btn-full" onclick="goTab(1)">
+      <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      Next: Line Items
+    </button>
+  </div>
+</div>
+
+<!-- TAB 1: LINE ITEMS -->
+<div class="content" id="tab1">
+  <div class="prog-wrap">
+    <div class="prog-label"><span>Step 2 of 3</span><strong>Line Items</strong></div>
+    <div class="prog-bar"><div class="prog-fill" style="width:66%"></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd">
+      <div class="chip blue"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
+      <div><div class="card-title">Line Items</div><div class="card-sub">Totals calculate in real-time</div></div>
+    </div>
+
+    <div class="scroll-hint">
+      <svg viewBox="0 0 24 24"><path d="M5 12h14M15 8l4 4-4 4"/></svg>
+      Swipe table left to see all columns
+    </div>
+
+    <div class="tbl-wrap">
+      <table class="items-tbl">
+        <thead><tr>
+          <th style="width:28px">#</th>
+          <th>Description</th>
+          <th style="width:62px">HSN</th>
+          <th style="width:58px">Qty</th>
+          <th style="width:52px">Unit</th>
+          <th class="r" style="width:80px">Rate ₹</th>
+          <th class="r" style="width:80px">Amt ₹</th>
+          <th style="width:32px"></th>
+        </tr></thead>
+        <tbody id="items-body"></tbody>
+      </table>
+    </div>
+
+    <button class="add-row-btn" onclick="addRow()">
+      <svg><path d="M12 5v14M5 12h14"/></svg>
+      Add line item
+    </button>
+
+    <div class="totals-wrap">
+      <div class="tot-row"><span class="lbl">Sub-total</span><span class="val" id="t-sub">₹ 0.00</span></div>
+      <div class="tot-row"><span class="lbl">SGST @ 9%</span><span class="val" id="t-sgst">₹ 0.00</span></div>
+      <div class="tot-row"><span class="lbl">CGST @ 9%</span><span class="val" id="t-cgst">₹ 0.00</span></div>
+      <div class="tot-grand">
+        <span class="lbl">Grand Total</span>
+        <span class="val" id="t-grand">₹ 0.00</span>
+      </div>
+      <div class="words-box" id="t-words">Enter items above to see total in words</div>
+    </div>
+  </div>
+
+  <div class="abar">
+    <button class="btn" onclick="goTab(0)">
+      <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Back
+    </button>
+    <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="goTab(2);renderPreview()">
+      <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      Preview
+    </button>
+  </div>
+</div>
+
+<!-- TAB 2: PREVIEW & EXPORT -->
+<div class="content" id="tab2">
+  <div class="prog-wrap">
+    <div class="prog-label"><span>Step 3 of 3</span><strong>Preview &amp; Export</strong></div>
+    <div class="prog-bar"><div class="prog-fill" style="width:100%"></div></div>
+  </div>
+
+  <div class="export-row">
+    <button class="btn btn-primary btn-full" onclick="exportPDF()" style="justify-content:center">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      PDF
+    </button>
+    <button class="btn btn-success btn-full" onclick="exportExcel()" style="justify-content:center">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8l3 4-3 4M13 8h4M13 12h3M13 16h4"/></svg>
+      Excel
+    </button>
+    <button class="btn btn-full" onclick="goTab(1)" style="justify-content:center;grid-column:1/-1">
+      <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Edit Items
+    </button>
+  </div>
+
+  <div class="scroll-hint" style="margin-bottom:10px">
+    <svg viewBox="0 0 24 24"><path d="M5 12h14M15 8l4 4-4 4"/></svg>
+    Swipe to see full invoice
+  </div>
+
+  <div class="preview-scroll">
+    <div class="preview-bg">
+      <div class="invoice-paper" id="invoice-paper"><!-- rendered by JS --></div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div><!-- .shell -->
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="bot-nav">
+  <button class="bn-item active" id="bn0" onclick="goTab(0)">
+    <span class="bn-dot"></span>
+    <div class="bn-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+    <span class="bn-label">Details</span>
+  </button>
+  <button class="bn-item" id="bn1" onclick="goTab(1)">
+    <span class="bn-dot"></span>
+    <div class="bn-icon"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/></svg></div>
+    <span class="bn-label">Items</span>
+  </button>
+  <button class="bn-item" id="bn2" onclick="goTab(2);renderPreview()">
+    <span class="bn-dot"></span>
+    <div class="bn-icon"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+    <span class="bn-label">Preview</span>
+  </button>
+</nav>
+
+<div id="toast" class="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+let rows=[], sigDataUrl=null, logoDataUrl=null;
+
+function init(){
+  document.getElementById('inv-date').value=new Date().toISOString().split('T')[0];
+  rows=[{desc:"Making and Supply of Door frame with 45mm thick door\nSize: 7'3\" x 3'3\" - 1 No. & Wood Size: 5 1/2\" x 3\"",hsn:"9403",qty:12,unit:"Nos",rate:21423}];
+  renderRows();
+  // show desktop sidebar on wide screens
+  if(window.innerWidth>=769) document.getElementById('sidebar').style.display='flex';
+}
+
+/* ── TABS ── */
+function goTab(n){
+  [0,1,2].forEach(i=>{
+    document.getElementById('tab'+i).classList.toggle('active',i===n);
+    // desktop sidebar
+    const sb=document.getElementById('sb'+i);
+    const sd=document.getElementById('sd'+i);
+    if(sb){
+      sb.className='sb-step'+(i===n?' active':i<n?' done':'');
+      sd.innerHTML=i<n?'<svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 6.5l3.5 3.5 5.5-6"/></svg>':String(i+1);
+    }
+    // mobile bottom nav
+    const bn=document.getElementById('bn'+i);
+    if(bn) bn.className='bn-item'+(i===n?' active':i<n?' done':'');
+  });
+  window.scrollTo(0,0);
+}
+
+function updateBadge(){
+  const v=document.getElementById('inv-no').value||'—';
+  document.getElementById('inv-badge-top').textContent=v;
+}
+
+/* ── LOGO ── */
+function handleLogo(e){
+  const file=e.target.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    logoDataUrl=ev.target.result;
+    document.getElementById('logo-img').src=logoDataUrl;
+    document.getElementById('logo-zone').classList.add('filled');
+    document.getElementById('logo-lbl').textContent='Logo uploaded ✓';
+    document.getElementById('logo-lbl').className='uz-label ok';
+    document.getElementById('logo-actions').classList.add('show');
+  };r.readAsDataURL(file);
+}
+function clearLogo(){
+  logoDataUrl=null;document.getElementById('logo-file').value='';
+  document.getElementById('logo-img').src='';
+  document.getElementById('logo-zone').classList.remove('filled');
+  document.getElementById('logo-lbl').textContent='Tap to upload logo';
+  document.getElementById('logo-lbl').className='uz-label';
+  document.getElementById('logo-actions').classList.remove('show');
+}
+
+/* ── SIGNATURE ── */
+function handleSig(e){
+  const file=e.target.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    sigDataUrl=ev.target.result;
+    document.getElementById('sig-img').src=sigDataUrl;
+    document.getElementById('sig-zone').classList.add('filled');
+    document.getElementById('sig-lbl').textContent='Signature uploaded ✓';
+    document.getElementById('sig-lbl').className='uz-label ok';
+    document.getElementById('sig-actions').classList.add('show');
+  };r.readAsDataURL(file);
+}
+function clearSig(){
+  sigDataUrl=null;document.getElementById('sig-file').value='';
+  document.getElementById('sig-img').src='';
+  document.getElementById('sig-zone').classList.remove('filled');
+  document.getElementById('sig-lbl').textContent='Tap to upload signature';
+  document.getElementById('sig-lbl').className='uz-label';
+  document.getElementById('sig-actions').classList.remove('show');
+}
+
+/* ── ROWS ── */
+function addRow(){rows.push({desc:'',hsn:'',qty:1,unit:'Nos',rate:0});renderRows();}
+function delRow(i){rows.splice(i,1);renderRows();}
+
+function renderRows(){
+  document.getElementById('items-body').innerHTML=rows.map((r,i)=>`<tr>
+    <td class="row-n">${i+1}</td>
+    <td><input value="${esc(r.desc)}" oninput="rows[${i}].desc=this.value" placeholder="Description…" style="min-width:160px"/></td>
+    <td><input value="${esc(r.hsn)}" oninput="rows[${i}].hsn=this.value" placeholder="9403"/></td>
+    <td><input class="r" type="number" inputmode="decimal" min="0" step="0.001" value="${r.qty}" oninput="rows[${i}].qty=+this.value||0;calcUI()"/></td>
+    <td><input value="${esc(r.unit)}" oninput="rows[${i}].unit=this.value" placeholder="Nos"/></td>
+    <td><input class="r" type="number" inputmode="decimal" min="0" step="0.01" value="${r.rate}" oninput="rows[${i}].rate=+this.value||0;calcUI()"/></td>
+    <td class="amt-cell">₹${fmt(r.qty*r.rate)}</td>
+    <td><button class="del-btn" onclick="delRow(${i})">×</button></td>
+  </tr>`).join('');
+  calcUI();
+}
+
+/* ── CALC ── */
+function calc(){const sub=rows.reduce((s,r)=>s+r.qty*r.rate,0);return{sub,sgst:sub*.09,cgst:sub*.09,grand:sub*1.18};}
+function calcUI(){
+  const t=calc();
+  document.getElementById('t-sub').textContent='₹ '+fmt(t.sub);
+  document.getElementById('t-sgst').textContent='₹ '+fmt(t.sgst);
+  document.getElementById('t-cgst').textContent='₹ '+fmt(t.cgst);
+  document.getElementById('t-grand').textContent='₹ '+fmt(t.grand);
+  document.getElementById('t-words').textContent=numWords(t.grand);
+}
+
+/* ── HELPERS ── */
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;');}
+function fmt(n){
+  // Correct Indian number format: last 3 digits, then groups of 2
+  // 257076 → 2,57,076   |   303349.68 → 3,03,349.68
+  const fixed = (+n).toFixed(2);
+  const [intPart, decPart] = fixed.split('.');
+  if(intPart.length <= 3) return intPart + '.' + decPart;
+  const lastThree = intPart.slice(-3);
+  let remaining = intPart.slice(0, -3);
+  const pairs = [];
+  while(remaining.length > 0){
+    pairs.unshift(remaining.slice(-2));
+    remaining = remaining.slice(0, -2);
+  }
+  return pairs.join(',') + ',' + lastThree + '.' + decPart;
+}
+function fmtDate(d){return d?new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';}
+function g(id){return document.getElementById(id)?.value||'';}
+
+function numWords(n){
+  const a=['','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
+  const b=['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+  function w(x){if(!x)return '';if(x<20)return a[x]+' ';if(x<100)return b[Math.floor(x/10)]+' '+(a[x%10]?a[x%10]+' ':'');return a[Math.floor(x/100)]+' hundred '+(x%100?w(x%100):'');}
+  function cv(x){const cr=Math.floor(x/10000000),la=Math.floor((x%10000000)/100000),th=Math.floor((x%100000)/1000),hu=x%1000;return(cr?w(cr)+'crore ':'')+(la?w(la)+'lakh ':'')+(th?w(th)+'thousand ':'')+(hu?w(hu):'');}
+  if(!n)return 'Zero only';
+  const inr=Math.floor(n),ps=Math.round((n-inr)*100);
+  let r='Rupees '+cv(inr).trim();if(ps)r+=' and paise '+w(ps).trim();
+  return r.charAt(0).toUpperCase()+r.slice(1)+' only';
+}
+
+/* ── PREVIEW ── */
+function renderPreview(){
+  const t=calc();
+  const irows=rows.map((r,i)=>`<tr>
+    <td class="c">${i+1}</td>
+    <td style="white-space:pre-line;max-width:180px">${r.desc}</td>
+    <td class="c">${r.hsn}</td><td class="r">${r.qty}.000</td>
+    <td class="c">${r.unit}</td><td class="r">${fmt(r.rate)}</td>
+    <td class="r"><strong>${fmt(r.qty*r.rate)}</strong></td>
+  </tr>`).join('');
+  const logoHtml=logoDataUrl?`<div style="text-align:center;margin-bottom:8px"><img src="${logoDataUrl}" style="max-height:50px;max-width:160px;object-fit:contain"/></div>`:'';
+  const sigHtml=sigDataUrl?`<img src="${sigDataUrl}" style="max-height:52px;max-width:160px;object-fit:contain;display:block;margin-left:auto" alt="sig"/>`:`<div style="height:46px;width:160px;margin-left:auto"></div>`;
+  document.getElementById('invoice-paper').innerHTML=`
+    ${logoHtml}
+    <div class="inv-co-name">${g('co-name')}</div>
+    <div class="inv-tagline">OFFICE &nbsp;|&nbsp; COMMERCIAL &nbsp;|&nbsp; RESIDENTIAL</div>
+    <div class="inv-topbar">
+      <div class="inv-topbar-l">${g('co-addr').replace(/\n/g,'<br>')} <br>Email: ${g('co-email')}</div>
+      <div class="inv-topbar-r"><strong>${g('co-person')}</strong><br>${g('co-ph1')}<br>${g('co-ph2')}</div>
+    </div>
+    <div class="inv-gstin">GSTIN: ${g('co-gstin')}</div>
+    <div class="inv-label">INVOICE</div>
+    <div class="inv-parties">
+      <div class="inv-party">
+        <div class="plbl">Bill To</div>
+        <div class="pname">${g('cust-name')}</div>
+        <div style="white-space:pre-line">${g('cust-addr')}</div>
+        ${g('cust-phone')?'<br>Ph: '+g('cust-phone'):''}
+        <br><strong>GSTIN:</strong> ${g('cust-gstin')}
+      </div>
+      <div class="inv-party" style="background:#FAFCFF">
+        <div><strong>INVOICE NO:</strong> ${g('inv-no')}</div>
+        <div><strong>DATE:</strong> ${fmtDate(g('inv-date'))}</div>
+        ${g('inv-delivery')?'<br><strong>Delivery:</strong><br>'+g('inv-delivery'):''}
+      </div>
+    </div>
+    <table class="inv-tbl">
+      <thead><tr>
+        <th style="width:26px">S.No</th><th>Description of Work</th>
+        <th style="width:54px">SAC/HSN</th><th style="width:44px">Qty</th>
+        <th style="width:38px">Unit</th><th style="width:72px;text-align:right;padding-right:10px">Rate (&#8377;)</th><th style="width:88px;text-align:right;padding-right:12px">Amount (&#8377;)</th>
+      </tr></thead>
+      <tbody>
+        ${irows}
+        <tr class="sub"><td colspan="5" style="text-align:right;font-weight:700;padding-right:10px">Sub-Total:</td><td colspan="2" class="r" style="font-weight:700;padding-right:12px">&#8377; ${fmt(t.sub)}</td></tr>
+        <tr class="sub"><td colspan="5" style="text-align:right;padding-right:10px">SGST @ 9%</td><td colspan="2" class="r" style="padding-right:12px">&#8377; ${fmt(t.sgst)}</td></tr>
+        <tr class="sub"><td colspan="5" style="text-align:right;padding-right:10px">CGST @ 9%</td><td colspan="2" class="r" style="padding-right:12px">&#8377; ${fmt(t.cgst)}</td></tr>
+        <tr class="grand"><td colspan="5" style="text-align:right;font-size:11px;font-weight:700;padding-right:10px">GRAND TOTAL:</td><td colspan="2" class="r" style="font-size:12px;font-weight:700;padding-right:12px">&#8377; ${fmt(t.grand)}</td></tr>
+      </tbody>
+    </table>
+    <div class="inv-words">(${numWords(t.grand)})</div>
+    <div class="inv-footer">
+      <div class="inv-terms">Goods once sold cannot be taken.<br>All subject to Chennai Jurisdiction.<div style="margin-top:8px;color:#aaa">Thank you for your business.</div></div>
+      <div class="inv-sign">
+        <div class="for">for ${g('co-name')}</div>
+        ${sigHtml}
+        <div class="sig-line">Authorised Signature</div>
+      </div>
+    </div>`;
+}
+
+/* ── EXPORT PDF ── */
+function exportPDF(){
+  renderPreview();
+  if(typeof window.jspdf==='undefined'){showToast('PDF library loading, try again','err');return;}
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=doc.internal.pageSize.getWidth();let y=16;
+  if(logoDataUrl){try{doc.addImage(logoDataUrl,'PNG',W/2-25,y-4,50,16);y+=18;}catch(e){}}
+  doc.setFontSize(22);doc.setFont('helvetica','bolditalic');doc.setTextColor(26,95,168);
+  doc.text(g('co-name'),W/2,y,{align:'center'});y+=7;
+  doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);
+  doc.text('OFFICE | COMMERCIAL | RESIDENTIAL',W/2,y,{align:'center'});y+=5;
+  doc.setDrawColor(26,95,168);doc.setLineWidth(.8);doc.line(14,y,W-14,y);y+=4;
+  doc.setFontSize(7.5);doc.setTextColor(50,50,50);
+  doc.text(g('co-addr').replace(/\n/g,' | '),14,y);
+  doc.text('Email: '+g('co-email'),14,y+3.5);
+  doc.text(g('co-person'),W-14,y,{align:'right'});
+  doc.text(g('co-ph1'),W-14,y+3.5,{align:'right'});
+  doc.text(g('co-ph2'),W-14,y+7,{align:'right'});
+  y+=12;doc.setDrawColor(190,190,190);doc.setLineWidth(.3);doc.line(14,y,W-14,y);y+=4;
+  doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(30,30,30);
+  doc.text('GSTIN: '+g('co-gstin'),W/2,y,{align:'center'});y+=5;
+  doc.setFillColor(26,95,168);doc.rect(14,y-3.5,W-28,7,'F');
+  doc.setFontSize(10);doc.setTextColor(255,255,255);
+  doc.text('INVOICE',W/2,y+.5,{align:'center'});y+=9;
+  doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(30,30,30);
+  doc.setDrawColor(140,140,140);doc.rect(14,y,W/2-16,28);doc.rect(W/2,y,W/2-14,28);
+  doc.setFont('helvetica','bold');doc.text('Bill To:',16,y+4);
+  doc.setFont('helvetica','normal');
+  const al=doc.splitTextToSize(g('cust-name')+'\n'+g('cust-addr'),W/2-20);
+  doc.text(al,16,y+8);doc.text('GSTIN: '+g('cust-gstin'),16,y+25);
+  doc.setFont('helvetica','bold');
+  doc.text('INVOICE NO: '+g('inv-no'),W/2+2,y+4);
+  doc.setFont('helvetica','normal');
+  doc.text('DATE: '+fmtDate(g('inv-date')),W/2+2,y+8);
+  if(g('inv-delivery'))doc.text('Delivery: '+g('inv-delivery'),W/2+2,y+12);
+  y+=32;
+  const cw=[8,72,14,12,10,28,28];
+  const hd=['S.No','Description','HSN','Qty','Unit','Rate(Rs.)','Amt(Rs.)'];
+  doc.setFillColor(210,230,248);doc.rect(14,y-4,W-28,7,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(30,30,30);
+  let cx=14;hd.forEach((h,i)=>{doc.text(h,cx+1,y);cx+=cw[i];});y+=3;
+  doc.setFont('helvetica','normal');
+  rows.forEach((r,idx)=>{
+    const lines=doc.splitTextToSize(r.desc,76);
+    const rh=Math.max(7,lines.length*4+2);
+    doc.setDrawColor(210,210,210);doc.line(14,y+rh-1,W-14,y+rh-1);
+    let lx=14;
+    doc.text(String(idx+1),lx+1,y+3);lx+=cw[0];
+    doc.text(lines,lx+1,y+3);lx+=cw[1];
+    doc.text(r.hsn,lx+1,y+3);lx+=cw[2];
+    doc.text(String(r.qty),lx+cw[3]-2,y+3,{align:'right'});lx+=cw[3];
+    doc.text(r.unit,lx+1,y+3);lx+=cw[4];
+    doc.text(fmt(r.rate),lx+cw[5]-2,y+3,{align:'right'});lx+=cw[5];
+    doc.text(fmt(r.qty*r.rate),lx+cw[6]-2,y+3,{align:'right'});
+    y+=rh;
+  });
+  const t=calc();
+  const trs=[['Sub-Total:',fmt(t.sub)],['SGST @ 9%:',fmt(t.sgst)],['CGST @ 9%:',fmt(t.cgst)],['Grand Total:',fmt(t.grand)]];
+  trs.forEach(([l,v],i)=>{
+    y+=5.5;
+    if(i===3){doc.setFont('helvetica','bold');doc.setFillColor(210,230,248);doc.rect(14,y-4,W-28,7,'F');}
+    doc.setTextColor(30,30,30);
+    doc.text(l,W-42,y,{align:'right'});
+    doc.text('Rs.',W-27,y,{align:'right'});
+    doc.text(v,W-14,y,{align:'right'});
+    if(i!==3)doc.setFont('helvetica','normal');
+  });
+  y+=9;
+  doc.setFont('helvetica','italic');doc.setFontSize(7.5);
+  doc.setFillColor(248,252,255);doc.rect(14,y-4,W-28,8,'F');
+  doc.setDrawColor(170,170,170);doc.rect(14,y-4,W-28,8);
+  const wordsText = '(' + numWords(t.grand) + ')'; const safeWords = wordsText.replace(/Rupees/g,'Rs.').replace(/rupees/g,'rs.'); doc.text(safeWords,16,y);y+=12;
+  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(80,80,80);
+  doc.text('Goods once sold cannot be taken.\nAll subject to Chennai Jurisdiction.',14,y);
+  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(26,95,168);
+  doc.text('for '+g('co-name'),W-14,y,{align:'right'});
+  if(sigDataUrl){try{doc.addImage(sigDataUrl,'JPEG',W-58,y+3,44,20);}catch(e){}}
+  else{doc.setDrawColor(160,160,160);doc.line(W-58,y+24,W-14,y+24);}
+  doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(110,110,110);
+  doc.text('Authorised Signature',W-14,y+28,{align:'right'});
+  doc.save('Invoice-'+g('inv-no').replace(/\//g,'-')+'.pdf');
+  showToast('PDF saved to Downloads','ok');
+}
+
+/* ── EXPORT EXCEL ── */
+function exportExcel(){
+  if(typeof XLSX==='undefined'){showToast('Excel library loading, try again','err');return;}
+  const t=calc();
+  const aoa=[
+    [g('co-name')],['OFFICE | COMMERCIAL | RESIDENTIAL'],
+    [g('co-addr').replace(/\n/g,', ')],
+    ['Ph: '+g('co-ph1')+' / '+g('co-ph2')+'  |  '+g('co-email')],
+    ['GSTIN: '+g('co-gstin')],[],['INVOICE'],[],
+    ['Invoice No:',g('inv-no'),'','','Date:',fmtDate(g('inv-date'))],
+    ['Bill To:',g('cust-name'),'','','Customer GSTIN:',g('cust-gstin')],
+    ['Address:',g('cust-addr').replace(/\n/g,', ')],[],
+    ['S.No','Description','SAC/HSN','Qty','Unit','Rate (₹)','Amount (₹)'],
+    ...rows.map((r,i)=>[i+1,r.desc,r.hsn,r.qty,r.unit,r.rate,+(r.qty*r.rate).toFixed(2)]),
+    [],
+    ['','','','','','Sub-Total (₹):',+t.sub.toFixed(2)],
+    ['','','','','','SGST @ 9% (₹):',+t.sgst.toFixed(2)],
+    ['','','','','','CGST @ 9% (₹):',+t.cgst.toFixed(2)],
+    ['','','','','','Grand Total (₹):',+t.grand.toFixed(2)],
+    [],['Amount in Words:',numWords(t.grand)],
+    [],['Authorised Signature:',g('co-person')],
+  ];
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols']=[{wch:6},{wch:44},{wch:12},{wch:8},{wch:8},{wch:20},{wch:16}];
+  ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:6}},{s:{r:1,c:0},e:{r:1,c:6}},{s:{r:6,c:0},e:{r:6,c:6}}];
+  XLSX.utils.book_append_sheet(wb,ws,'Invoice');
+  XLSX.writeFile(wb,'Invoice-'+g('inv-no').replace(/\//g,'-')+'.xlsx');
+  showToast('Excel saved to Downloads','ok');
+}
+
+/* ── RESET ── */
+function resetAll(){
+  if(!confirm('Reset all fields?'))return;
+  rows=[{desc:'',hsn:'',qty:1,unit:'Nos',rate:0}];
+  ['cust-name','cust-gstin','cust-addr','cust-phone','inv-delivery'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('inv-no').value='SS/24-25/017';
+  clearSig();clearLogo();updateBadge();renderRows();goTab(0);
+}
+
+/* ── TOAST ── */
+function showToast(msg,type){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.className='toast show '+type;
+  setTimeout(()=>el.className='toast',3500);
+}
+
+/* ── RESIZE ── */
+window.addEventListener('resize',()=>{
+  const sb=document.getElementById('sidebar');
+  if(sb) sb.style.display=window.innerWidth>=769?'flex':'none';
+});
+
+init();
+</script>
+</body>
+</html>
