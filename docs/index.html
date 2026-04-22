@@ -146,8 +146,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .items-tbl tbody tr:last-child td{border-bottom:none}
 .items-tbl input{width:100%;border:1.5px solid transparent;border-radius:6px;padding:8px 8px;font-size:13px;background:transparent;color:var(--text);font-family:'DM Sans',sans-serif;transition:all .15s}
 .items-tbl input:focus{background:#F5F8FD;border-color:var(--border);outline:none}
-.items-tbl input.r{text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
-.amt-cell{text-align:right;padding-right:10px;font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+.items-tbl input.r{text-align:right}
+.amt-cell{text-align:right;padding-right:10px;font-size:13px;font-weight:600;color:var(--text);white-space:nowrap}
 .row-n{font-size:12px;color:var(--faint);text-align:center;width:28px;padding:0 4px}
 .del-btn{width:30px;height:30px;border-radius:7px;border:none;background:none;cursor:pointer;color:var(--faint);font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;transition:all .15s;font-family:inherit;flex-shrink:0}
 .del-btn:active{background:#FEE2E2;color:var(--red)}
@@ -159,11 +159,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .totals-wrap{background:linear-gradient(135deg,#F5F8FD 0%,#EBF3FD 100%);border-radius:var(--r);padding:18px 18px;border:1px solid var(--border);margin-top:14px}
 .tot-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:14px}
 .tot-row .lbl{color:var(--muted);flex:1}
-.tot-row .val{font-weight:500;color:var(--text);min-width:130px;text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:"tnum";letter-spacing:0}
+.tot-row .val{font-weight:500;color:var(--text);min-width:130px;text-align:right;letter-spacing:normal}
 .tot-divider{height:1px;background:var(--border);margin:10px 0}
 .tot-grand{background:#fff;border-radius:10px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--border);margin-top:10px}
 .tot-grand .lbl{font-size:15px;font-weight:600;color:var(--text);flex:1}
-.tot-grand .val{font-size:22px;font-weight:700;color:var(--blue);min-width:130px;text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:"tnum";letter-spacing:0}
+.tot-grand .val{font-size:22px;font-weight:700;color:var(--blue);min-width:130px;text-align:right;letter-spacing:normal}
 .words-box{margin-top:12px;background:rgba(26,95,168,.07);border-radius:var(--rs);padding:12px 16px;font-size:12px;color:var(--navy);font-style:italic;line-height:1.7;border-left:3px solid var(--blue-mid)}
 
 /* ── Action bar ── */
@@ -208,7 +208,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .inv-tbl th{border:1px solid #B0C4D8;padding:6px 8px;background:#D9E8F7;font-weight:700;text-align:center;font-size:9px;letter-spacing:.04em}
 .inv-tbl td{border:1px solid #B0C4D8;padding:5.5px 8px}
 .inv-tbl td.c{text-align:center}
-.inv-tbl td.r{text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:"tnum";white-space:nowrap;padding-right:10px}
+.inv-tbl td.r{text-align:right;white-space:nowrap;padding-right:10px}
 .inv-tbl tr.sub td{background:#F5F8FD}
 .inv-tbl tr.grand td{background:#D9E8F7;font-weight:700}
 .inv-words{font-size:8.5px;font-style:italic;border:1px solid #B0C4D8;border-top:none;padding:6px 10px;background:#FAFCFE;color:#333}
@@ -633,7 +633,21 @@ function calcUI(){
 
 /* ── HELPERS ── */
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;');}
-function fmt(n){return Number((+n).toFixed(2)).toLocaleString('en-IN',{minimumFractionDigits:2});}
+function fmt(n){
+  // Correct Indian number format: last 3 digits, then groups of 2
+  // 257076 → 2,57,076   |   303349.68 → 3,03,349.68
+  const fixed = (+n).toFixed(2);
+  const [intPart, decPart] = fixed.split('.');
+  if(intPart.length <= 3) return intPart + '.' + decPart;
+  const lastThree = intPart.slice(-3);
+  let remaining = intPart.slice(0, -3);
+  const pairs = [];
+  while(remaining.length > 0){
+    pairs.unshift(remaining.slice(-2));
+    remaining = remaining.slice(0, -2);
+  }
+  return pairs.join(',') + ',' + lastThree + '.' + decPart;
+}
 function fmtDate(d){return d?new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';}
 function g(id){return document.getElementById(id)?.value||'';}
 
@@ -686,16 +700,16 @@ function renderPreview(){
     </div>
     <table class="inv-tbl">
       <thead><tr>
-        <th style="width:28px">S.No</th><th>Description of Work</th>
-        <th style="width:58px">SAC/HSN</th><th style="width:46px">Qty</th>
-        <th style="width:40px">Unit</th><th style="width:66px">Rate ₹</th><th style="width:76px">Amount ₹</th>
+        <th style="width:26px">S.No</th><th>Description of Work</th>
+        <th style="width:54px">SAC/HSN</th><th style="width:44px">Qty</th>
+        <th style="width:38px">Unit</th><th style="width:72px;text-align:right;padding-right:10px">Rate (&#8377;)</th><th style="width:88px;text-align:right;padding-right:12px">Amount (&#8377;)</th>
       </tr></thead>
       <tbody>
         ${irows}
-        <tr class="sub"><td colspan="5" style="text-align:right;font-weight:700;padding-right:10px">Sub-Total:</td><td class="r" style="font-weight:700">₹</td><td class="r" style="font-weight:700">${fmt(t.sub)}</td></tr>
-        <tr class="sub"><td colspan="5" style="text-align:right;padding-right:10px">SGST @ 9%</td><td class="r">₹</td><td class="r">${fmt(t.sgst)}</td></tr>
-        <tr class="sub"><td colspan="5" style="text-align:right;padding-right:10px">CGST @ 9%</td><td class="r">₹</td><td class="r">${fmt(t.cgst)}</td></tr>
-        <tr class="grand"><td colspan="5" style="text-align:right;font-size:11px;font-weight:700;padding-right:10px">GRAND TOTAL:</td><td class="r" style="font-size:12px;font-weight:700">₹</td><td class="r" style="font-size:12px;font-weight:700">${fmt(t.grand)}</td></tr>
+        <tr class="sub"><td colspan="5" style="text-align:right;font-weight:700;padding-right:10px">Sub-Total:</td><td colspan="2" class="r" style="font-weight:700;padding-right:12px">&#8377; ${fmt(t.sub)}</td></tr>
+        <tr class="sub"><td colspan="5" style="text-align:right;padding-right:10px">SGST @ 9%</td><td colspan="2" class="r" style="padding-right:12px">&#8377; ${fmt(t.sgst)}</td></tr>
+        <tr class="sub"><td colspan="5" style="text-align:right;padding-right:10px">CGST @ 9%</td><td colspan="2" class="r" style="padding-right:12px">&#8377; ${fmt(t.cgst)}</td></tr>
+        <tr class="grand"><td colspan="5" style="text-align:right;font-size:11px;font-weight:700;padding-right:10px">GRAND TOTAL:</td><td colspan="2" class="r" style="font-size:12px;font-weight:700;padding-right:12px">&#8377; ${fmt(t.grand)}</td></tr>
       </tbody>
     </table>
     <div class="inv-words">(${numWords(t.grand)})</div>
@@ -746,8 +760,8 @@ function exportPDF(){
   doc.text('DATE: '+fmtDate(g('inv-date')),W/2+2,y+8);
   if(g('inv-delivery'))doc.text('Delivery: '+g('inv-delivery'),W/2+2,y+12);
   y+=32;
-  const cw=[10,80,14,14,12,22,22];
-  const hd=['S.No','Description','HSN','Qty','Unit','Rate','Amount'];
+  const cw=[8,72,14,12,10,28,28];
+  const hd=['S.No','Description','HSN','Qty','Unit','Rate(Rs.)','Amt(Rs.)'];
   doc.setFillColor(210,230,248);doc.rect(14,y-4,W-28,7,'F');
   doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(30,30,30);
   let cx=14;hd.forEach((h,i)=>{doc.text(h,cx+1,y);cx+=cw[i];});y+=3;
@@ -767,18 +781,21 @@ function exportPDF(){
     y+=rh;
   });
   const t=calc();
-  const trs=[['Sub-Total:','₹',fmt(t.sub)],['SGST @ 9%','₹',fmt(t.sgst)],['CGST @ 9%','₹',fmt(t.cgst)],['Grand Total:','₹',fmt(t.grand)]];
-  trs.forEach(([l,sym,v],i)=>{
-    y+=5;
+  const trs=[['Sub-Total:',fmt(t.sub)],['SGST @ 9%:',fmt(t.sgst)],['CGST @ 9%:',fmt(t.cgst)],['Grand Total:',fmt(t.grand)]];
+  trs.forEach(([l,v],i)=>{
+    y+=5.5;
     if(i===3){doc.setFont('helvetica','bold');doc.setFillColor(210,230,248);doc.rect(14,y-4,W-28,7,'F');}
-    doc.setTextColor(30,30,30);doc.text(l,W-36,y,{align:'right'});doc.text(sym,W-22,y,{align:'right'});doc.text(v,W-14,y,{align:'right'});
+    doc.setTextColor(30,30,30);
+    doc.text(l,W-42,y,{align:'right'});
+    doc.text('Rs.',W-27,y,{align:'right'});
+    doc.text(v,W-14,y,{align:'right'});
     if(i!==3)doc.setFont('helvetica','normal');
   });
   y+=9;
   doc.setFont('helvetica','italic');doc.setFontSize(7.5);
   doc.setFillColor(248,252,255);doc.rect(14,y-4,W-28,8,'F');
   doc.setDrawColor(170,170,170);doc.rect(14,y-4,W-28,8);
-  doc.text('('+numWords(t.grand)+')',16,y);y+=12;
+  const wordsText = '(' + numWords(t.grand) + ')'; const safeWords = wordsText.replace(/Rupees/g,'Rs.').replace(/rupees/g,'rs.'); doc.text(safeWords,16,y);y+=12;
   doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(80,80,80);
   doc.text('Goods once sold cannot be taken.\nAll subject to Chennai Jurisdiction.',14,y);
   doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(26,95,168);
