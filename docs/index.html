@@ -138,7 +138,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .tbl-wrap::-webkit-scrollbar{height:4px}
 .tbl-wrap::-webkit-scrollbar-track{background:var(--border)}
 .tbl-wrap::-webkit-scrollbar-thumb{background:var(--blue-mid);border-radius:2px}
-.items-tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}
+.items-tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:800px}
 .items-tbl thead tr{background:#F5F8FD}
 .items-tbl th{padding:10px 10px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
 .items-tbl th.r{text-align:right}
@@ -147,6 +147,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .items-tbl input{width:100%;border:1.5px solid transparent;border-radius:6px;padding:8px 8px;font-size:13px;background:transparent;color:var(--text);font-family:'DM Sans',sans-serif;transition:all .15s}
 .items-tbl input:focus{background:#F5F8FD;border-color:var(--border);outline:none}
 .items-tbl input.r{text-align:right}
+.items-tbl select{width:100%;border:1.5px solid transparent;border-radius:6px;padding:8px 6px;font-size:12px;background:transparent;color:var(--text);font-family:'DM Sans',sans-serif;transition:all .15s;-webkit-appearance:none}
+.items-tbl select:focus{background:#F5F8FD;border-color:var(--border);outline:none}
+.calc-cell{display:flex;flex-direction:column;gap:3px;padding:4px 2px}
+.calc-inline{display:flex;gap:3px;align-items:center}
+.calc-inline input{width:44px!important;flex:1;text-align:center;padding:6px 4px!important}
+.calc-inline span{font-size:11px;color:var(--faint);flex-shrink:0}
+.calc-mini-select{font-size:11px!important;padding:6px 4px!important;border:1.5px solid var(--border)!important;border-radius:6px;background:#FAFBFD!important;width:auto!important;flex-shrink:0}
+.calc-helper{font-size:10px;color:var(--blue-mid);white-space:nowrap;font-weight:500}
 .amt-cell{text-align:right;padding-right:10px;font-size:13px;font-weight:600;color:var(--text);white-space:nowrap}
 .row-n{font-size:12px;color:var(--faint);text-align:center;width:28px;padding:0 4px}
 .del-btn{width:30px;height:30px;border-radius:7px;border:none;background:none;cursor:pointer;color:var(--faint);font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;transition:all .15s;font-family:inherit;flex-shrink:0}
@@ -425,8 +433,9 @@ Ayapakkam, Chennai - 600 077</textarea></div>
           <th style="width:28px">#</th>
           <th>Description</th>
           <th style="width:62px">HSN</th>
-          <th style="width:58px">Qty</th>
-          <th style="width:52px">Unit</th>
+          <th style="width:118px">Calc Type</th>
+          <th style="width:170px">Qty / Area</th>
+          <th style="width:60px">Unit</th>
           <th class="r" style="width:80px">Rate ₹</th>
           <th class="r" style="width:80px">Amt ₹</th>
           <th style="width:32px"></th>
@@ -440,10 +449,82 @@ Ayapakkam, Chennai - 600 077</textarea></div>
       Add line item
     </button>
 
+    <div class="sec-divider"><span>Tax Settings</span></div>
+    <div class="g2" style="gap:12px;margin-bottom:12px">
+      <div class="field">
+        <label>GST Rate</label>
+        <select id="gst-rate" onchange="handleGstRateChange();calcUI()">
+          <option value="5">5%</option>
+          <option value="12">12%</option>
+          <option value="18" selected>18%</option>
+          <option value="28">28%</option>
+          <option value="custom">Custom %</option>
+          <option value="0">No GST</option>
+        </select>
+      </div>
+      <div class="field" id="gst-custom-field" style="display:none">
+        <label>Custom GST %</label>
+        <input id="gst-custom-rate" type="number" min="0" max="100" step="0.01" value="18" oninput="calcUI()"/>
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:4px">
+      <label>GST Mode</label>
+      <select id="gst-mode" onchange="calcUI()">
+        <option value="split">CGST + SGST</option>
+        <option value="igst">IGST</option>
+        <option value="exempt">GST Exempt</option>
+      </select>
+    </div>
+
+    <div class="sec-divider"><span>Discount</span></div>
+    <div class="g2" style="gap:12px;margin-bottom:12px">
+      <div class="field">
+        <label>Discount Type</label>
+        <select id="disc-type" onchange="handleDiscTypeChange();calcUI()">
+          <option value="none" selected>No Discount</option>
+          <option value="pct">Percentage (%)</option>
+          <option value="fixed">Fixed Amount (₹)</option>
+        </select>
+      </div>
+      <div class="field" id="disc-value-field" style="display:none">
+        <label id="disc-value-label">Discount %</label>
+        <input id="disc-value" type="number" min="0" step="0.01" value="0" oninput="calcUI()"/>
+      </div>
+    </div>
+
+    <div class="sec-divider"><span>Additional Charges</span></div>
+    <div class="g2" style="gap:12px;margin-bottom:10px">
+      <div class="field"><label>Packing (₹)</label><input id="chg-packing" type="number" min="0" step="0.01" value="0" oninput="calcUI()"/></div>
+      <div class="field"><label>Transport (₹)</label><input id="chg-transport" type="number" min="0" step="0.01" value="0" oninput="calcUI()"/></div>
+    </div>
+    <div class="g2" style="gap:12px;margin-bottom:10px">
+      <div class="field"><label>Installation (₹)</label><input id="chg-installation" type="number" min="0" step="0.01" value="0" oninput="calcUI()"/></div>
+      <div class="field"><label>Labour (₹)</label><input id="chg-labour" type="number" min="0" step="0.01" value="0" oninput="calcUI()"/></div>
+    </div>
+    <div class="g2" style="gap:12px;margin-bottom:12px">
+      <div class="field"><label>Other Charge — Label</label><input id="chg-other-label" type="text" placeholder="e.g. Loading" value=""/></div>
+      <div class="field"><label>Other Charge (₹)</label><input id="chg-other" type="number" min="0" step="0.01" value="0" oninput="calcUI()"/></div>
+    </div>
+
+    <div class="sec-divider"><span>Round Off</span></div>
+    <div class="g2" style="gap:12px;margin-bottom:12px">
+      <div class="field">
+        <label>Round Off Mode</label>
+        <select id="roundoff-mode" onchange="handleRoundOffModeChange();calcUI()">
+          <option value="auto" selected>Auto (Nearest ₹1)</option>
+          <option value="custom">Custom Amount</option>
+          <option value="none">No Round Off</option>
+        </select>
+      </div>
+      <div class="field" id="roundoff-custom-field" style="display:none">
+        <label>Custom Round Off (₹)</label>
+        <input id="roundoff-custom-value" type="number" step="0.01" value="0" oninput="calcUI()"/>
+      </div>
+    </div>
+
     <div class="totals-wrap">
-      <div class="tot-row"><span class="lbl">Sub-total</span><span class="val" id="t-sub">₹ 0.00</span></div>
-      <div class="tot-row"><span class="lbl">SGST @ 9%</span><span class="val" id="t-sgst">₹ 0.00</span></div>
-      <div class="tot-row"><span class="lbl">CGST @ 9%</span><span class="val" id="t-cgst">₹ 0.00</span></div>
+      <div class="tot-row" id="row-sub"><span class="lbl">Sub-total</span><span class="val" id="t-sub">₹ 0.00</span></div>
+      <div id="totals-mid"></div>
       <div class="tot-grand">
         <span class="lbl">Grand Total</span>
         <span class="val" id="t-grand">₹ 0.00</span>
@@ -529,7 +610,7 @@ let rows=[], sigDataUrl=null, logoDataUrl=null;
 
 function init(){
   document.getElementById('inv-date').value=new Date().toISOString().split('T')[0];
-  rows=[{desc:"Making and Supply of Door frame with 45mm thick door\nSize: 7'3\" x 3'3\" - 1 No. & Wood Size: 5 1/2\" x 3\"",hsn:"9403",qty:12,unit:"Nos",rate:21423}];
+  rows=[{desc:"Making and Supply of Door frame with 45mm thick door\nSize: 7'3\" x 3'3\" - 1 No. & Wood Size: 5 1/2\" x 3\"",hsn:"9403",calcType:'qty',qty:12,unit:"Nos",rate:21423,area:0,areaSqm:0,sheets:0,sheetSize:'8x4',length:0,lengthUnit:'ft',width:0,areaUnit:'ft'}];
   renderRows();
   // show desktop sidebar on wide screens
   if(window.innerWidth>=769) document.getElementById('sidebar').style.display='flex';
@@ -603,30 +684,276 @@ function clearSig(){
 }
 
 /* ── ROWS ── */
-function addRow(){rows.push({desc:'',hsn:'',qty:1,unit:'Nos',rate:0});renderRows();}
+function addRow(){rows.push({desc:'',hsn:'',calcType:'qty',qty:1,unit:'Nos',rate:0,area:0,areaSqm:0,sheets:0,sheetSize:'8x4',length:0,lengthUnit:'ft',width:0,areaUnit:'ft'});renderRows();}
 function delRow(i){rows.splice(i,1);renderRows();}
+
+/* ── SMART CALCULATION ENGINE ── */
+// Only hardcoded conversions permitted: standard sheet sizes → sq.ft. Everything else is user input.
+const SHEET_SIZES={
+  '8x4':{label:'8×4 ft',sqft:32},
+  '7x4':{label:'7×4 ft',sqft:28},
+  '6x4':{label:'6×4 ft',sqft:24},
+  '6x2':{label:'6×2 ft',sqft:12},
+};
+
+function getFinalQtyUnit(r){
+  const mode=r.calcType||'qty';
+  switch(mode){
+    case 'sqft': return{qty:+r.area||0,unit:'sq.ft'};
+    case 'sqm': return{qty:+r.areaSqm||0,unit:'sq.m'};
+    case 'sheet':{
+      const sz=SHEET_SIZES[r.sheetSize]||SHEET_SIZES['8x4'];
+      return{qty:(+r.sheets||0)*sz.sqft,unit:'sq.ft'};
+    }
+    case 'rft': return{qty:+r.length||0,unit:r.lengthUnit==='m'?'meter':'R.ft'};
+    case 'custom':{
+      const unit=r.areaUnit==='m'?'sq.m':'sq.ft';
+      return{qty:(+r.length||0)*(+r.width||0)*(+r.qty||1),unit};
+    }
+    default: return{qty:+r.qty||0,unit:r.unit||'Nos'};
+  }
+}
+function rowAmount(r){const{qty}=getFinalQtyUnit(r);return qty*(+r.rate||0);}
+function fmtQty(q,mode){return(+q||0).toFixed(mode==='qty'?3:2);}
+
+function calcTypeSelectHtml(r,i){
+  const modes=[['qty','Quantity'],['sqft','Square Feet'],['sqm','Square Meter'],['sheet','Sheet Work'],['rft','Running Feet / Meter'],['custom','Custom Area']];
+  const cur=r.calcType||'qty';
+  const opts=modes.map(([v,l])=>`<option value="${v}" ${cur===v?'selected':''}>${l}</option>`).join('');
+  return`<select class="calc-mini-select" style="width:100%!important" onchange="rows[${i}].calcType=this.value;renderRows()">${opts}</select>`;
+}
+
+function calcCellHtml(r,i){
+  const mode=r.calcType||'qty';
+  if(mode==='qty'){
+    return`<input class="r" type="number" inputmode="decimal" min="0" step="0.001" value="${r.qty||0}" oninput="rows[${i}].qty=+this.value||0;updateRowLive(${i})"/>`;
+  }
+  if(mode==='sqft'){
+    return`<input class="r" type="number" inputmode="decimal" min="0" step="0.01" value="${r.area||0}" placeholder="Area sq.ft" oninput="rows[${i}].area=+this.value||0;updateRowLive(${i})"/>`;
+  }
+  if(mode==='sqm'){
+    return`<input class="r" type="number" inputmode="decimal" min="0" step="0.01" value="${r.areaSqm||0}" placeholder="Area sq.m" oninput="rows[${i}].areaSqm=+this.value||0;updateRowLive(${i})"/>`;
+  }
+  if(mode==='sheet'){
+    const curSize=r.sheetSize||'8x4';
+    const sz=SHEET_SIZES[curSize]||SHEET_SIZES['8x4'];
+    const area=(+r.sheets||0)*sz.sqft;
+    const sizeOpts=Object.keys(SHEET_SIZES).map(k=>`<option value="${k}" ${curSize===k?'selected':''}>${SHEET_SIZES[k].label} (${SHEET_SIZES[k].sqft} sq.ft)</option>`).join('');
+    return`<div class="calc-cell">
+      <div class="calc-inline">
+        <select class="calc-mini-select" onchange="rows[${i}].sheetSize=this.value;updateRowLive(${i})">${sizeOpts}</select>
+        <input class="r" type="number" inputmode="decimal" min="0" step="1" value="${r.sheets||0}" placeholder="Qty" title="No. of sheets" oninput="rows[${i}].sheets=+this.value||0;updateRowLive(${i})"/>
+      </div>
+      <span class="calc-helper" id="helper-${i}">${fmt(area)} sq.ft (Calculated)</span>
+    </div>`;
+  }
+  if(mode==='rft'){
+    return`<div class="calc-cell">
+      <div class="calc-inline">
+        <input class="r" type="number" inputmode="decimal" min="0" step="0.01" value="${r.length||0}" placeholder="Length" oninput="rows[${i}].length=+this.value||0;updateRowLive(${i})"/>
+        <select class="calc-mini-select" onchange="rows[${i}].lengthUnit=this.value;updateRowLive(${i})">
+          <option value="ft" ${r.lengthUnit!=='m'?'selected':''}>R.ft</option>
+          <option value="m" ${r.lengthUnit==='m'?'selected':''}>meter</option>
+        </select>
+      </div>
+    </div>`;
+  }
+  if(mode==='custom'){
+    const area=(+r.length||0)*(+r.width||0)*(+r.qty||1);
+    const unitLbl=r.areaUnit==='m'?'sq.m':'sq.ft';
+    return`<div class="calc-cell">
+      <div class="calc-inline">
+        <input type="number" inputmode="decimal" min="0" step="0.01" value="${r.length||0}" placeholder="L" title="Length" oninput="rows[${i}].length=+this.value||0;updateRowLive(${i})"/>
+        <span>×</span>
+        <input type="number" inputmode="decimal" min="0" step="0.01" value="${r.width||0}" placeholder="W" title="Width" oninput="rows[${i}].width=+this.value||0;updateRowLive(${i})"/>
+        <span>×</span>
+        <input type="number" inputmode="decimal" min="0" step="1" value="${r.qty||1}" placeholder="Qty" title="Quantity" oninput="rows[${i}].qty=+this.value||0;updateRowLive(${i})"/>
+      </div>
+      <div class="calc-inline">
+        <select class="calc-mini-select" onchange="rows[${i}].areaUnit=this.value;updateRowLive(${i})">
+          <option value="ft" ${r.areaUnit!=='m'?'selected':''}>ft</option>
+          <option value="m" ${r.areaUnit==='m'?'selected':''}>meter</option>
+        </select>
+        <span class="calc-helper" id="helper-${i}">${fmt(area)} ${unitLbl} (Calculated)</span>
+      </div>
+    </div>`;
+  }
+  return'';
+}
+
+function unitCellHtml(r,i){
+  const mode=r.calcType||'qty';
+  if(mode==='qty'){
+    return`<input value="${esc(r.unit)}" oninput="rows[${i}].unit=this.value" placeholder="Nos"/>`;
+  }
+  const{unit}=getFinalQtyUnit(r);
+  return`<span id="unitdisp-${i}" style="font-size:12px;color:var(--muted);padding:8px 4px;display:inline-block">${unit}</span>`;
+}
+
+// Live per-row update (recomputes amount + helper text without re-rendering inputs, so focus is preserved)
+function updateRowLive(i){
+  const r=rows[i];if(!r)return;
+  const amtEl=document.getElementById('amt-'+i);
+  if(amtEl)amtEl.textContent='₹'+fmt(rowAmount(r));
+  const helperEl=document.getElementById('helper-'+i);
+  if(helperEl){
+    const mode=r.calcType;
+    if(mode==='sheet'){
+      const sz=SHEET_SIZES[r.sheetSize]||SHEET_SIZES['8x4'];
+      helperEl.textContent=fmt((+r.sheets||0)*sz.sqft)+' sq.ft (Calculated)';
+    }else if(mode==='custom'){
+      const area=(+r.length||0)*(+r.width||0)*(+r.qty||1);
+      const unitLbl=r.areaUnit==='m'?'sq.m':'sq.ft';
+      helperEl.textContent=fmt(area)+' '+unitLbl+' (Calculated)';
+    }
+  }
+  const unitEl=document.getElementById('unitdisp-'+i);
+  if(unitEl){const{unit}=getFinalQtyUnit(r);unitEl.textContent=unit;}
+  calcUI();
+}
 
 function renderRows(){
   document.getElementById('items-body').innerHTML=rows.map((r,i)=>`<tr>
     <td class="row-n">${i+1}</td>
     <td><input value="${esc(r.desc)}" oninput="rows[${i}].desc=this.value" placeholder="Description…" style="min-width:160px"/></td>
     <td><input value="${esc(r.hsn)}" oninput="rows[${i}].hsn=this.value" placeholder="9403"/></td>
-    <td><input class="r" type="number" inputmode="decimal" min="0" step="0.001" value="${r.qty}" oninput="rows[${i}].qty=+this.value||0;calcUI()"/></td>
-    <td><input value="${esc(r.unit)}" oninput="rows[${i}].unit=this.value" placeholder="Nos"/></td>
-    <td><input class="r" type="number" inputmode="decimal" min="0" step="0.01" value="${r.rate}" oninput="rows[${i}].rate=+this.value||0;calcUI()"/></td>
-    <td class="amt-cell">₹${fmt(r.qty*r.rate)}</td>
+    <td>${calcTypeSelectHtml(r,i)}</td>
+    <td>${calcCellHtml(r,i)}</td>
+    <td>${unitCellHtml(r,i)}</td>
+    <td><input class="r" type="number" inputmode="decimal" min="0" step="0.01" value="${r.rate}" oninput="rows[${i}].rate=+this.value||0;updateRowLive(${i})"/></td>
+    <td class="amt-cell" id="amt-${i}">₹${fmt(rowAmount(r))}</td>
     <td><button class="del-btn" onclick="delRow(${i})">×</button></td>
   </tr>`).join('');
   calcUI();
 }
 
+/* ── GST HELPERS ── */
+function getGstRate(){
+  const sel=document.getElementById('gst-rate')?document.getElementById('gst-rate').value:'18';
+  if(sel==='custom'){
+    return(+document.getElementById('gst-custom-rate').value||0)/100;
+  }
+  return(+sel)/100;
+}
+function getGstMode(){
+  return document.getElementById('gst-mode')?document.getElementById('gst-mode').value:'split';
+}
+function handleGstRateChange(){
+  const sel=document.getElementById('gst-rate').value;
+  document.getElementById('gst-custom-field').style.display=sel==='custom'?'flex':'none';
+}
+
+/* ── DISCOUNT HELPERS ── */
+function handleDiscTypeChange(){
+  const sel=document.getElementById('disc-type').value;
+  const field=document.getElementById('disc-value-field');
+  const label=document.getElementById('disc-value-label');
+  if(sel==='none'){field.style.display='none';return;}
+  field.style.display='flex';
+  label.textContent=sel==='pct'?'Discount %':'Discount Amount (₹)';
+}
+
+/* ── ROUND OFF HELPERS ── */
+function handleRoundOffModeChange(){
+  const sel=document.getElementById('roundoff-mode').value;
+  document.getElementById('roundoff-custom-field').style.display=sel==='custom'?'flex':'none';
+}
+
 /* ── CALC ── */
-function calc(){const sub=rows.reduce((s,r)=>s+r.qty*r.rate,0);return{sub,sgst:sub*.09,cgst:sub*.09,grand:sub*1.18};}
+function calc(){
+  const sub=rows.reduce((s,r)=>s+rowAmount(r),0);
+
+  // Discount — applied BEFORE GST, reduces the taxable amount
+  const discType=document.getElementById('disc-type')?document.getElementById('disc-type').value:'none';
+  const discVal=+((document.getElementById('disc-value')||{}).value)||0;
+  let discAmt=0;
+  if(discType==='pct')discAmt=sub*discVal/100;
+  else if(discType==='fixed')discAmt=discVal;
+  discAmt=Math.min(Math.max(discAmt,0),sub);
+  const taxable=sub-discAmt;
+
+  // GST — computed on the post-discount taxable amount
+  const rate=getGstRate();
+  const mode=getGstMode();
+  let sgst=0,cgst=0,igst=0;
+  const gstApplies=mode!=='exempt'&&rate>0;
+  if(gstApplies){
+    if(mode==='igst'){igst=taxable*rate;}
+    else{sgst=taxable*rate/2;cgst=taxable*rate/2;}
+  }
+  const taxTotal=sgst+cgst+igst;
+
+  // Additional Charges — applied AFTER GST
+  const chgPacking=+((document.getElementById('chg-packing')||{}).value)||0;
+  const chgTransport=+((document.getElementById('chg-transport')||{}).value)||0;
+  const chgInstallation=+((document.getElementById('chg-installation')||{}).value)||0;
+  const chgLabour=+((document.getElementById('chg-labour')||{}).value)||0;
+  const chgOther=+((document.getElementById('chg-other')||{}).value)||0;
+  const chgOtherLabel=((document.getElementById('chg-other-label')||{}).value||'').trim()||'Other Charges';
+  const charges={packing:chgPacking,transport:chgTransport,installation:chgInstallation,labour:chgLabour,other:chgOther,otherLabel:chgOtherLabel};
+  const chargesTotal=chgPacking+chgTransport+chgInstallation+chgLabour+chgOther;
+
+  // Round Off — Auto (nearest ₹1), Custom (manual amount), or None
+  const preRound=taxable+taxTotal+chargesTotal;
+  const roMode=document.getElementById('roundoff-mode')?document.getElementById('roundoff-mode').value:'auto';
+  let roundOff,grand;
+  if(roMode==='none'){
+    roundOff=0;grand=preRound;
+  }else if(roMode==='custom'){
+    roundOff=+((document.getElementById('roundoff-custom-value')||{}).value)||0;
+    grand=preRound+roundOff;
+  }else{
+    grand=Math.round(preRound);roundOff=grand-preRound;
+  }
+
+  return{sub,discType,discVal,discAmt,taxable,rate,mode,sgst,cgst,igst,taxTotal,charges,chargesTotal,roMode,preRound,roundOff,grand};
+}
+
+// Shared row-list builder — used by the on-screen totals panel, PDF export and Excel export
+// so all three always show the exact same breakdown in the exact same order.
+function buildTotalsLines(t){
+  const ratePct=(t.rate*100).toFixed(2).replace(/\.?0+$/,'');
+  const lines=[];
+  if(t.discAmt>0){
+    const discLbl=t.discType==='pct'?('Discount @ '+t.discVal+'%'):'Discount';
+    lines.push({label:discLbl,value:'- '+fmt(t.discAmt)});
+    lines.push({label:'Taxable Amount',value:fmt(t.taxable)});
+  }
+  if(t.mode==='exempt'||t.rate===0){
+    lines.push({label:'GST',value:'Exempt / N.A.'});
+  }else if(t.mode==='igst'){
+    lines.push({label:'IGST @ '+ratePct+'%',value:fmt(t.igst)});
+  }else{
+    lines.push({label:'SGST @ '+(ratePct/2)+'%',value:fmt(t.sgst)});
+    lines.push({label:'CGST @ '+(ratePct/2)+'%',value:fmt(t.cgst)});
+  }
+  const c=t.charges;
+  if(c.packing>0)lines.push({label:'Packing Charges',value:fmt(c.packing)});
+  if(c.transport>0)lines.push({label:'Transport Charges',value:fmt(c.transport)});
+  if(c.installation>0)lines.push({label:'Installation Charges',value:fmt(c.installation)});
+  if(c.labour>0)lines.push({label:'Labour Charges',value:fmt(c.labour)});
+  if(c.other>0)lines.push({label:c.otherLabel,value:fmt(c.other)});
+  if(t.roMode!=='none'&&Math.abs(t.roundOff)>0.004){
+    lines.push({label:'Round Off'+(t.roMode==='custom'?' (Custom)':''),value:(t.roundOff>=0?'+ ':'- ')+fmt(Math.abs(t.roundOff))});
+  }
+  return lines;
+}
+
+// Formats a totals-line value for on-screen display: "- 500.00" -> "- ₹ 500.00", "Exempt / N.A." stays as-is
+function formatCurrencyLine(value){
+  if(value.indexOf('Exempt')>-1)return value;
+  const m=value.match(/^([+-]) (.+)$/);
+  if(m)return m[1]+' ₹ '+m[2];
+  return '₹ '+value;
+}
+
 function calcUI(){
   const t=calc();
   document.getElementById('t-sub').textContent='₹ '+fmt(t.sub);
-  document.getElementById('t-sgst').textContent='₹ '+fmt(t.sgst);
-  document.getElementById('t-cgst').textContent='₹ '+fmt(t.cgst);
+  const lines=buildTotalsLines(t);
+  document.getElementById('totals-mid').innerHTML=lines.map(l=>
+    `<div class="tot-row"><span class="lbl">${esc(l.label)}</span><span class="val">${formatCurrencyLine(l.value)}</span></div>`
+  ).join('');
   document.getElementById('t-grand').textContent='₹ '+fmt(t.grand);
   document.getElementById('t-words').textContent=numWords(t.grand);
 }
@@ -665,13 +992,20 @@ function numWords(n){
 /* ── PREVIEW ── */
 function renderPreview(){
   const t=calc();
-  const irows=rows.map((r,i)=>`<tr>
+  const taxRowsHtml=buildTotalsLines(t).map(l=>
+    `<tr class="sub"><td colspan="5" style="text-align:right;padding-right:10px">${l.label}</td><td colspan="2" class="r" style="padding-right:12px">${l.value.indexOf('Exempt')>-1?l.value:(l.value.match(/^[+-]/)?l.value.charAt(0)+' &#8377; '+l.value.slice(2):'&#8377; '+l.value)}</td></tr>`
+  ).join('');
+  const irows=rows.map((r,i)=>{
+    const{qty:fq,unit:fu}=getFinalQtyUnit(r);
+    const amt=rowAmount(r);
+    return`<tr>
     <td class="c">${i+1}</td>
     <td style="white-space:pre-line;max-width:180px">${r.desc}</td>
-    <td class="c">${r.hsn}</td><td class="r">${r.qty}.000</td>
-    <td class="c">${r.unit}</td><td class="r">${fmt(r.rate)}</td>
-    <td class="r"><strong>${fmt(r.qty*r.rate)}</strong></td>
-  </tr>`).join('');
+    <td class="c">${r.hsn}</td><td class="r">${fmtQty(fq,r.calcType)}</td>
+    <td class="c">${fu}</td><td class="r">${fmt(r.rate)}</td>
+    <td class="r"><strong>${fmt(amt)}</strong></td>
+  </tr>`;
+  }).join('');
   const logoHtml=logoDataUrl?`<div style="text-align:center;margin-bottom:8px"><img src="${logoDataUrl}" style="max-height:50px;max-width:160px;object-fit:contain"/></div>`:'';
   const sigHtml=sigDataUrl?`<img src="${sigDataUrl}" style="max-height:52px;max-width:160px;object-fit:contain;display:block;margin-left:auto" alt="sig"/>`:`<div style="height:46px;width:160px;margin-left:auto"></div>`;
   document.getElementById('invoice-paper').innerHTML=`
@@ -707,8 +1041,7 @@ function renderPreview(){
       <tbody>
         ${irows}
         <tr class="sub"><td colspan="5" style="text-align:right;font-weight:700;padding-right:10px">Sub-Total:</td><td colspan="2" class="r" style="font-weight:700;padding-right:12px">&#8377; ${fmt(t.sub)}</td></tr>
-        <tr class="sub"><td colspan="5" style="text-align:right;padding-right:10px">SGST @ 9%</td><td colspan="2" class="r" style="padding-right:12px">&#8377; ${fmt(t.sgst)}</td></tr>
-        <tr class="sub"><td colspan="5" style="text-align:right;padding-right:10px">CGST @ 9%</td><td colspan="2" class="r" style="padding-right:12px">&#8377; ${fmt(t.cgst)}</td></tr>
+        ${taxRowsHtml}
         <tr class="grand"><td colspan="5" style="text-align:right;font-size:11px;font-weight:700;padding-right:10px">GRAND TOTAL:</td><td colspan="2" class="r" style="font-size:12px;font-weight:700;padding-right:12px">&#8377; ${fmt(t.grand)}</td></tr>
       </tbody>
     </table>
@@ -767,6 +1100,8 @@ function exportPDF(){
   let cx=14;hd.forEach((h,i)=>{doc.text(h,cx+1,y);cx+=cw[i];});y+=3;
   doc.setFont('helvetica','normal');
   rows.forEach((r,idx)=>{
+    const{qty:fq,unit:fu}=getFinalQtyUnit(r);
+    const amt=rowAmount(r);
     const lines=doc.splitTextToSize(r.desc,76);
     const rh=Math.max(7,lines.length*4+2);
     doc.setDrawColor(210,210,210);doc.line(14,y+rh-1,W-14,y+rh-1);
@@ -774,22 +1109,25 @@ function exportPDF(){
     doc.text(String(idx+1),lx+1,y+3);lx+=cw[0];
     doc.text(lines,lx+1,y+3);lx+=cw[1];
     doc.text(r.hsn,lx+1,y+3);lx+=cw[2];
-    doc.text(String(r.qty),lx+cw[3]-2,y+3,{align:'right'});lx+=cw[3];
-    doc.text(r.unit,lx+1,y+3);lx+=cw[4];
+    doc.text(fmtQty(fq,r.calcType),lx+cw[3]-2,y+3,{align:'right'});lx+=cw[3];
+    doc.text(fu,lx+1,y+3);lx+=cw[4];
     doc.text(fmt(r.rate),lx+cw[5]-2,y+3,{align:'right'});lx+=cw[5];
-    doc.text(fmt(r.qty*r.rate),lx+cw[6]-2,y+3,{align:'right'});
+    doc.text(fmt(amt),lx+cw[6]-2,y+3,{align:'right'});
     y+=rh;
   });
   const t=calc();
-  const trs=[['Sub-Total:',fmt(t.sub)],['SGST @ 9%:',fmt(t.sgst)],['CGST @ 9%:',fmt(t.cgst)],['Grand Total:',fmt(t.grand)]];
+  let trs=[['Sub-Total:',fmt(t.sub)]];
+  buildTotalsLines(t).forEach(l=>trs.push([l.label+':',l.value]));
+  trs.push(['Grand Total:',fmt(t.grand)]);
+  const lastIdx=trs.length-1;
   trs.forEach(([l,v],i)=>{
     y+=5.5;
-    if(i===3){doc.setFont('helvetica','bold');doc.setFillColor(210,230,248);doc.rect(14,y-4,W-28,7,'F');}
+    if(i===lastIdx){doc.setFont('helvetica','bold');doc.setFillColor(210,230,248);doc.rect(14,y-4,W-28,7,'F');}
     doc.setTextColor(30,30,30);
     doc.text(l,W-42,y,{align:'right'});
     doc.text('Rs.',W-27,y,{align:'right'});
     doc.text(v,W-14,y,{align:'right'});
-    if(i!==3)doc.setFont('helvetica','normal');
+    if(i!==lastIdx)doc.setFont('helvetica','normal');
   });
   y+=9;
   doc.setFont('helvetica','italic');doc.setFontSize(7.5);
@@ -812,6 +1150,15 @@ function exportPDF(){
 function exportExcel(){
   if(typeof XLSX==='undefined'){showToast('Excel library loading, try again','err');return;}
   const t=calc();
+  const taxRows=buildTotalsLines(t).map(l=>{
+    // strip leading sign text and keep a signed numeric value for proper Excel formatting
+    const signed=l.value.match(/^([+-]) (.+)$/);
+    let numVal;
+    if(l.value.indexOf('Exempt')>-1)numVal=l.value; // text cell
+    else if(signed)numVal=(signed[1]==='-'?-1:1)*(+signed[2].replace(/,/g,''));
+    else numVal=+l.value.replace(/,/g,'');
+    return['','','','','',l.label+' (₹):',numVal];
+  });
   const aoa=[
     [g('co-name')],['OFFICE | COMMERCIAL | RESIDENTIAL'],
     [g('co-addr').replace(/\n/g,', ')],
@@ -821,11 +1168,10 @@ function exportExcel(){
     ['Bill To:',g('cust-name'),'','','Customer GSTIN:',g('cust-gstin')],
     ['Address:',g('cust-addr').replace(/\n/g,', ')],[],
     ['S.No','Description','SAC/HSN','Qty','Unit','Rate (₹)','Amount (₹)'],
-    ...rows.map((r,i)=>[i+1,r.desc,r.hsn,r.qty,r.unit,r.rate,+(r.qty*r.rate).toFixed(2)]),
+    ...rows.map((r,i)=>{const{qty:fq,unit:fu}=getFinalQtyUnit(r);return[i+1,r.desc,r.hsn,+fq.toFixed(3),fu,r.rate,+rowAmount(r).toFixed(2)];}),
     [],
     ['','','','','','Sub-Total (₹):',+t.sub.toFixed(2)],
-    ['','','','','','SGST @ 9% (₹):',+t.sgst.toFixed(2)],
-    ['','','','','','CGST @ 9% (₹):',+t.cgst.toFixed(2)],
+    ...taxRows,
     ['','','','','','Grand Total (₹):',+t.grand.toFixed(2)],
     [],['Amount in Words:',numWords(t.grand)],
     [],['Authorised Signature:',g('co-person')],
@@ -842,7 +1188,7 @@ function exportExcel(){
 /* ── RESET ── */
 function resetAll(){
   if(!confirm('Reset all fields?'))return;
-  rows=[{desc:'',hsn:'',qty:1,unit:'Nos',rate:0}];
+  rows=[{desc:'',hsn:'',calcType:'qty',qty:1,unit:'Nos',rate:0,area:0,areaSqm:0,sheets:0,sheetSize:'8x4',length:0,lengthUnit:'ft',width:0,areaUnit:'ft'}];
   ['cust-name','cust-gstin','cust-addr','cust-phone','inv-delivery'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('inv-no').value='SS/24-25/017';
   clearSig();clearLogo();updateBadge();renderRows();goTab(0);
