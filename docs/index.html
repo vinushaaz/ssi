@@ -688,6 +688,7 @@ function init(){
   // show desktop sidebar on wide screens
   if(window.innerWidth>=769) document.getElementById('sidebar').style.display='flex';
   // resume last draft from Supabase (if any) without blocking initial render
+  loadCompanySettings();
   loadDraft();
   // auto-save on any field edit anywhere in the form
   document.addEventListener('input',scheduleAutoSave);
@@ -728,15 +729,12 @@ function handleLogo(e){
     document.getElementById('logo-lbl').textContent='Logo uploaded ✓';
     document.getElementById('logo-lbl').className='uz-label ok';
     document.getElementById('logo-actions').classList.add('show');
+    saveCompanySettings();
   };r.readAsDataURL(file);
 }
 function clearLogo(){
-  logoDataUrl=null;document.getElementById('logo-file').value='';
-  document.getElementById('logo-img').src='';
-  document.getElementById('logo-zone').classList.remove('filled');
-  document.getElementById('logo-lbl').textContent='Tap to upload logo';
-  document.getElementById('logo-lbl').className='uz-label';
-  document.getElementById('logo-actions').classList.remove('show');
+  logoDataUrl=null;clearLogoUI();
+  saveCompanySettings();
 }
 
 /* ── SIGNATURE ── */
@@ -750,15 +748,12 @@ function handleSig(e){
     document.getElementById('sig-lbl').textContent='Signature uploaded ✓';
     document.getElementById('sig-lbl').className='uz-label ok';
     document.getElementById('sig-actions').classList.add('show');
+    saveCompanySettings();
   };r.readAsDataURL(file);
 }
 function clearSig(){
-  sigDataUrl=null;document.getElementById('sig-file').value='';
-  document.getElementById('sig-img').src='';
-  document.getElementById('sig-zone').classList.remove('filled');
-  document.getElementById('sig-lbl').textContent='Tap to upload signature';
-  document.getElementById('sig-lbl').className='uz-label';
-  document.getElementById('sig-actions').classList.remove('show');
+  sigDataUrl=null;clearSigUI();
+  saveCompanySettings();
 }
 
 /* ── ROWS ── */
@@ -1297,7 +1292,7 @@ function collectState(){
   const fields={};
   STATE_FIELD_IDS.forEach(id=>{const el=document.getElementById(id);if(el)fields[id]=el.value;});
   fields['gst-invoice-toggle']=isGstMode();
-  return{fields,rows,logoDataUrl,sigDataUrl};
+  return{fields,rows};
 }
 
 function applyState(state){
@@ -1311,22 +1306,7 @@ function applyState(state){
   const gstToggleEl=document.getElementById('gst-invoice-toggle');
   if(gstToggleEl)gstToggleEl.checked=fields['gst-invoice-toggle']!==false;
   rows=(state.rows&&state.rows.length)?state.rows:rows;
-  logoDataUrl=state.logoDataUrl||null;
-  sigDataUrl=state.sigDataUrl||null;
-  if(logoDataUrl){
-    document.getElementById('logo-img').src=logoDataUrl;
-    document.getElementById('logo-zone').classList.add('filled');
-    document.getElementById('logo-lbl').textContent='Logo uploaded ✓';
-    document.getElementById('logo-lbl').className='uz-label ok';
-    document.getElementById('logo-actions').classList.add('show');
-  }else clearLogoUI();
-  if(sigDataUrl){
-    document.getElementById('sig-img').src=sigDataUrl;
-    document.getElementById('sig-zone').classList.add('filled');
-    document.getElementById('sig-lbl').textContent='Signature uploaded ✓';
-    document.getElementById('sig-lbl').className='uz-label ok';
-    document.getElementById('sig-actions').classList.add('show');
-  }else clearSigUI();
+  // logo & signature are global company settings now, not part of per-invoice state — left untouched here
   handleGstRateChange();handleDiscTypeChange();handleRoundOffModeChange();handleGstInvoiceToggle();
   updateBadge();renderRows();calcUI();
 }
@@ -1342,6 +1322,40 @@ function clearSigUI(){
   document.getElementById('sig-zone').classList.remove('filled');
   document.getElementById('sig-lbl').textContent='Tap to upload signature';document.getElementById('sig-lbl').className='uz-label';
   document.getElementById('sig-actions').classList.remove('show');
+}
+
+/* ── SUPABASE: COMPANY SETTINGS (logo & signature persist forever, independent of any invoice) ── */
+const SETTINGS_ID='default';
+async function loadCompanySettings(){
+  if(!sb)return;
+  try{
+    const{data,error}=await sb.from('company_settings').select('logo_data_url,sig_data_url').eq('id',SETTINGS_ID).maybeSingle();
+    if(error)throw error;
+    if(data){
+      if(data.logo_data_url){
+        logoDataUrl=data.logo_data_url;
+        document.getElementById('logo-img').src=logoDataUrl;
+        document.getElementById('logo-zone').classList.add('filled');
+        document.getElementById('logo-lbl').textContent='Logo uploaded ✓';
+        document.getElementById('logo-lbl').className='uz-label ok';
+        document.getElementById('logo-actions').classList.add('show');
+      }
+      if(data.sig_data_url){
+        sigDataUrl=data.sig_data_url;
+        document.getElementById('sig-img').src=sigDataUrl;
+        document.getElementById('sig-zone').classList.add('filled');
+        document.getElementById('sig-lbl').textContent='Signature uploaded ✓';
+        document.getElementById('sig-lbl').className='uz-label ok';
+        document.getElementById('sig-actions').classList.add('show');
+      }
+    }
+  }catch(e){console.error('Could not load saved logo/signature:',e);}
+}
+async function saveCompanySettings(){
+  if(!sb)return;
+  try{
+    await sb.from('company_settings').upsert({id:SETTINGS_ID,logo_data_url:logoDataUrl,sig_data_url:sigDataUrl,updated_at:new Date().toISOString()});
+  }catch(e){console.error('Could not save logo/signature:',e);}
 }
 
 /* ── SUPABASE: DRAFT AUTOSAVE ── */
@@ -1448,7 +1462,8 @@ function resetAll(){
   rows=[{desc:'',hsn:'',calcType:'qty',qty:1,unit:'Nos',rate:0,area:0,areaSqm:0,sheets:0,sheetSize:'8x4',length:0,lengthUnit:'ft',width:0,areaUnit:'ft'}];
   ['cust-name','cust-gstin','cust-addr','cust-phone','inv-delivery'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('inv-no').value='SS/24-25/017';
-  clearSig();clearLogo();updateBadge();renderRows();goTab(0);
+  updateBadge();renderRows();goTab(0);
+  showToast('Fields reset — logo & signature kept','ok');
 }
 
 /* ── TOAST ── */
