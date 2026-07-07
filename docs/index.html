@@ -677,7 +677,7 @@ let rows=[], sigDataUrl=null, logoDataUrl=null;
 
 /* ── SUPABASE ── */
 const SUPABASE_URL='https://uiastnnbuoxjqcozqrvd.supabase.co';
-const SUPABASE_KEY='sb_publishable_dElmHQs4uM9EbZzUh4QcCQ_NAySUEhO';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpYXN0bm5idW94anFjb3pxcnZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MDI2MjcsImV4cCI6MjA5ODk3ODYyN30.6C5csglQr8mcYtdEej6VESKlPuVmcYFE5NNaNr1zWVE';
 const sb=(typeof supabase!=='undefined')?supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
 const CURRENT_DRAFT_ID='current-draft';
 
@@ -688,8 +688,12 @@ function init(){
   // show desktop sidebar on wide screens
   if(window.innerWidth>=769) document.getElementById('sidebar').style.display='flex';
   // resume last draft from Supabase (if any) without blocking initial render
-  loadCompanySettings();
-  loadDraft();
+  if(!sb){
+    showToast('Storage not connected — history & auto-save are off on this device','err');
+  }else{
+    loadCompanySettings();
+    loadDraft();
+  }
   // auto-save on any field edit anywhere in the form
   document.addEventListener('input',scheduleAutoSave);
   document.addEventListener('change',scheduleAutoSave);
@@ -1349,7 +1353,7 @@ async function loadCompanySettings(){
         document.getElementById('sig-actions').classList.add('show');
       }
     }
-  }catch(e){console.error('Could not load saved logo/signature:',e);}
+  }catch(e){console.error('Could not load saved logo/signature:',e);showToast('Could not load saved logo/signature — '+(e.message||'connection issue'),'err');}
 }
 async function saveCompanySettings(){
   if(!sb)return;
@@ -1386,7 +1390,7 @@ async function loadDraft(){
       applyState(data.data);
       suppressAutoSave=false;
     }
-  }catch(e){console.error('Draft load failed (working from blank form):',e);}
+  }catch(e){console.error('Draft load failed (working from blank form):',e);showToast('Could not load your saved draft — '+(e.message||'connection issue'),'err');}
 }
 
 /* ── SUPABASE: SAVE TO HISTORY ── */
