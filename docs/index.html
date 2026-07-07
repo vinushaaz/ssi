@@ -260,6 +260,36 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 @media(min-width:1600px){
   .content{padding:40px 64px;max-width:1100px}
 }
+
+/* ── GST TOGGLE ── */
+.gst-toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--blue-lt);border-radius:var(--rs);padding:10px 12px;margin-bottom:14px}
+.gst-toggle-title{font-size:13px;font-weight:600;color:var(--navy)}
+.gst-toggle-hint{font-size:11px;color:var(--muted);margin-top:1px}
+.switch{position:relative;display:inline-block;width:44px;height:25px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;inset:0;background:#C7D2E0;border-radius:999px;transition:.2s}
+.slider::before{content:"";position:absolute;height:19px;width:19px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.switch input:checked + .slider{background:var(--blue)}
+.switch input:checked + .slider::before{transform:translateX(19px)}
+
+/* ── HISTORY MODAL ── */
+.history-modal{position:fixed;inset:0;background:rgba(15,39,68,.55);z-index:500;display:none;align-items:flex-end;justify-content:center}
+@media(min-width:769px){.history-modal{align-items:center}}
+.history-panel{background:var(--card);width:100%;max-width:520px;max-height:82vh;border-radius:18px 18px 0 0;display:flex;flex-direction:column;overflow:hidden}
+@media(min-width:769px){.history-panel{border-radius:18px}}
+.history-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border)}
+.history-hd h3{font-family:'Playfair Display',serif;font-style:italic;font-size:18px;color:var(--navy)}
+.history-close{background:none;border:none;font-size:20px;color:var(--muted);cursor:pointer;line-height:1;padding:4px}
+.history-body{overflow-y:auto;padding:10px 14px 18px}
+.hist-item{display:flex;align-items:center;gap:10px;padding:12px 8px;border-bottom:1px solid var(--border)}
+.hist-main{flex:1;min-width:0}
+.hist-no{font-weight:600;font-size:13px;color:var(--navy)}
+.hist-sub{font-size:11.5px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hist-amt{font-size:13px;font-weight:700;color:var(--blue);white-space:nowrap}
+.hist-actions{display:flex;gap:6px}
+.hist-loading,.hist-empty{padding:30px 10px;text-align:center;color:var(--muted);font-size:13px}
+.history-btn{background:rgba(255,255,255,.15);border:none;color:#B5D4F4;border-radius:20px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px}
+.history-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
 </style>
 </head>
 <body>
@@ -270,7 +300,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div class="tb-logo"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
     <span class="tb-name">SS Interior's</span>
   </div>
-  <div class="inv-badge" id="inv-badge-top">SS/24-25/016</div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <button class="history-btn" onclick="openHistory()">
+      <svg viewBox="0 0 24 24"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 106 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+      History
+    </button>
+    <div class="inv-badge" id="inv-badge-top">SS/24-25/016</div>
+  </div>
 </div>
 
 <div class="shell">
@@ -302,6 +338,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     </button>
     <button class="sb-btn sb-btn-xl" onclick="exportExcel()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8l3 4-3 4M13 8h4M13 12h3M13 16h4"/></svg>Export Excel
+    </button>
+    <button class="sb-btn" onclick="openHistory()" style="background:var(--purple-lt);color:var(--purple)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 106 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>History
     </button>
     <button class="sb-btn sb-btn-rst" onclick="resetAll()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.17"/></svg>Reset
@@ -341,7 +380,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div class="sec-divider"><span>Business Info</span></div>
     <div class="g2" style="gap:12px;margin-bottom:12px">
       <div class="field"><label>Business name</label><input id="co-name" value="SS Interior's"/></div>
-      <div class="field"><label>GSTIN</label><input id="co-gstin" value="33BBNPS1222B1Z4"/></div>
+      <div class="field" id="co-gstin-field"><label>GSTIN</label><input id="co-gstin" value="33BBNPS1222B1Z4"/></div>
     </div>
     <div class="field" style="margin-bottom:12px"><label>Address</label><textarea id="co-addr">No. 295/2, Jagadambal Nagar, 1st Street, Vanagaram, Chennai - 95.</textarea></div>
     <div class="g2" style="margin-bottom:12px">
@@ -360,8 +399,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div class="chip amber"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
       <div><div class="card-title">Invoice Details</div><div class="card-sub">Number and date</div></div>
     </div>
+    <div class="gst-toggle-row">
+      <div>
+        <div class="gst-toggle-title">GST Invoice</div>
+        <div class="gst-toggle-hint" id="gst-toggle-hint">Tax invoice with GSTIN &amp; tax breakup</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="gst-invoice-toggle" checked onchange="handleGstInvoiceToggle()"/>
+        <span class="slider"></span>
+      </label>
+    </div>
     <div class="g2" style="margin-bottom:12px">
-      <div class="field"><label>Invoice number</label><input id="inv-no" value="SS/24-25/016" oninput="updateBadge()"/></div>
+      <div class="field"><label id="inv-no-label">Invoice number</label><input id="inv-no" value="SS/24-25/016" oninput="updateBadge()"/></div>
       <div class="field"><label>Date</label><input id="inv-date" type="date"/></div>
     </div>
     <div class="field"><label>Delivery address <span style="font-weight:400;color:var(--faint)">(optional)</span></label><input id="inv-delivery" placeholder="Same as billing"/></div>
@@ -375,7 +424,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     </div>
     <div class="g2" style="margin-bottom:12px">
       <div class="field"><label>Company / name</label><input id="cust-name" value="M/S. Elagant Enterprises,"/></div>
-      <div class="field"><label>GSTIN</label><input id="cust-gstin" value="33BREPG7020C1ZI"/></div>
+      <div class="field" id="cust-gstin-field"><label>GSTIN</label><input id="cust-gstin" value="33BREPG7020C1ZI"/></div>
     </div>
     <div class="field" style="margin-bottom:12px"><label>Address</label><textarea id="cust-addr">No. 17, Karunya Street, Srinivasa Nagar,
 Ayapakkam, Chennai - 600 077</textarea></div>
@@ -449,6 +498,7 @@ Ayapakkam, Chennai - 600 077</textarea></div>
       Add line item
     </button>
 
+    <div id="tax-settings-section">
     <div class="sec-divider"><span>Tax Settings</span></div>
     <div class="g2" style="gap:12px;margin-bottom:12px">
       <div class="field">
@@ -474,6 +524,7 @@ Ayapakkam, Chennai - 600 077</textarea></div>
         <option value="igst">IGST</option>
         <option value="exempt">GST Exempt</option>
       </select>
+    </div>
     </div>
 
     <div class="sec-divider"><span>Discount</span></div>
@@ -561,6 +612,10 @@ Ayapakkam, Chennai - 600 077</textarea></div>
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8l3 4-3 4M13 8h4M13 12h3M13 16h4"/></svg>
       Excel
     </button>
+    <button class="btn btn-full" style="justify-content:center;grid-column:1/-1;background:var(--purple-lt);color:var(--purple)" onclick="saveToHistory()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      Save to History
+    </button>
     <button class="btn btn-full" onclick="goTab(1)" style="justify-content:center;grid-column:1/-1">
       <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       Edit Items
@@ -603,10 +658,28 @@ Ayapakkam, Chennai - 600 077</textarea></div>
 
 <div id="toast" class="toast"></div>
 
+<!-- HISTORY MODAL -->
+<div class="history-modal" id="history-modal">
+  <div class="history-panel">
+    <div class="history-hd">
+      <h3>Saved Invoices</h3>
+      <button class="history-close" onclick="closeHistory()">&times;</button>
+    </div>
+    <div class="history-body" id="history-list"></div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 let rows=[], sigDataUrl=null, logoDataUrl=null;
+
+/* ── SUPABASE ── */
+const SUPABASE_URL='https://uiastnnbuoxjqcozqrvd.supabase.co';
+const SUPABASE_KEY='sb_publishable_dElmHQs4uM9EbZzUh4QcCQ_NAySUEhO';
+const sb=(typeof supabase!=='undefined')?supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
+const CURRENT_DRAFT_ID='current-draft';
 
 function init(){
   document.getElementById('inv-date').value=new Date().toISOString().split('T')[0];
@@ -614,6 +687,11 @@ function init(){
   renderRows();
   // show desktop sidebar on wide screens
   if(window.innerWidth>=769) document.getElementById('sidebar').style.display='flex';
+  // resume last draft from Supabase (if any) without blocking initial render
+  loadDraft();
+  // auto-save on any field edit anywhere in the form
+  document.addEventListener('input',scheduleAutoSave);
+  document.addEventListener('change',scheduleAutoSave);
 }
 
 /* ── TABS ── */
@@ -684,8 +762,8 @@ function clearSig(){
 }
 
 /* ── ROWS ── */
-function addRow(){rows.push({desc:'',hsn:'',calcType:'qty',qty:1,unit:'Nos',rate:0,area:0,areaSqm:0,sheets:0,sheetSize:'8x4',length:0,lengthUnit:'ft',width:0,areaUnit:'ft'});renderRows();}
-function delRow(i){rows.splice(i,1);renderRows();}
+function addRow(){rows.push({desc:'',hsn:'',calcType:'qty',qty:1,unit:'Nos',rate:0,area:0,areaSqm:0,sheets:0,sheetSize:'8x4',length:0,lengthUnit:'ft',width:0,areaUnit:'ft'});renderRows();scheduleAutoSave();}
+function delRow(i){rows.splice(i,1);renderRows();scheduleAutoSave();}
 
 /* ── SMART CALCULATION ENGINE ── */
 // Only hardcoded conversions permitted: standard sheet sizes → sq.ft. Everything else is user input.
@@ -843,6 +921,22 @@ function handleGstRateChange(){
   document.getElementById('gst-custom-field').style.display=sel==='custom'?'flex':'none';
 }
 
+/* ── GST INVOICE / PLAIN BILL TOGGLE ── */
+function isGstMode(){
+  const el=document.getElementById('gst-invoice-toggle');
+  return el?el.checked:true;
+}
+function handleGstInvoiceToggle(){
+  const on=isGstMode();
+  document.getElementById('gst-toggle-hint').textContent=on?'Tax invoice with GSTIN & tax breakup':'Plain bill — no GSTIN or tax breakup shown';
+  document.getElementById('co-gstin-field').style.display=on?'':'none';
+  document.getElementById('cust-gstin-field').style.display=on?'':'none';
+  document.getElementById('tax-settings-section').style.display=on?'':'none';
+  const invNoLbl=document.getElementById('inv-no-label');
+  if(invNoLbl)invNoLbl.textContent=on?'Invoice number':'Bill number';
+  calcUI();
+}
+
 /* ── DISCOUNT HELPERS ── */
 function handleDiscTypeChange(){
   const sel=document.getElementById('disc-type').value;
@@ -876,7 +970,7 @@ function calc(){
   const rate=getGstRate();
   const mode=getGstMode();
   let sgst=0,cgst=0,igst=0;
-  const gstApplies=mode!=='exempt'&&rate>0;
+  const gstApplies=isGstMode()&&mode!=='exempt'&&rate>0;
   if(gstApplies){
     if(mode==='igst'){igst=taxable*rate;}
     else{sgst=taxable*rate/2;cgst=taxable*rate/2;}
@@ -919,7 +1013,9 @@ function buildTotalsLines(t){
     lines.push({label:discLbl,value:'- '+fmt(t.discAmt)});
     lines.push({label:'Taxable Amount',value:fmt(t.taxable)});
   }
-  if(t.mode==='exempt'||t.rate===0){
+  if(!isGstMode()){
+    // plain bill — no GST line shown at all
+  }else if(t.mode==='exempt'||t.rate===0){
     lines.push({label:'GST',value:'Exempt / N.A.'});
   }else if(t.mode==='igst'){
     lines.push({label:'IGST @ '+ratePct+'%',value:fmt(t.igst)});
@@ -1016,18 +1112,18 @@ function renderPreview(){
       <div class="inv-topbar-l">${g('co-addr').replace(/\n/g,'<br>')} <br>Email: ${g('co-email')}</div>
       <div class="inv-topbar-r"><strong>${g('co-person')}</strong><br>${g('co-ph1')}<br>${g('co-ph2')}</div>
     </div>
-    <div class="inv-gstin">GSTIN: ${g('co-gstin')}</div>
-    <div class="inv-label">INVOICE</div>
+    ${isGstMode()?`<div class="inv-gstin">GSTIN: ${g('co-gstin')}</div>`:''}
+    <div class="inv-label">${isGstMode()?'INVOICE':'BILL'}</div>
     <div class="inv-parties">
       <div class="inv-party">
         <div class="plbl">Bill To</div>
         <div class="pname">${g('cust-name')}</div>
         <div style="white-space:pre-line">${g('cust-addr')}</div>
         ${g('cust-phone')?'<br>Ph: '+g('cust-phone'):''}
-        <br><strong>GSTIN:</strong> ${g('cust-gstin')}
+        ${isGstMode()?'<br><strong>GSTIN:</strong> '+g('cust-gstin'):''}
       </div>
       <div class="inv-party" style="background:#FAFCFF">
-        <div><strong>INVOICE NO:</strong> ${g('inv-no')}</div>
+        <div><strong>${isGstMode()?'INVOICE NO':'BILL NO'}:</strong> ${g('inv-no')}</div>
         <div><strong>DATE:</strong> ${fmtDate(g('inv-date'))}</div>
         ${g('inv-delivery')?'<br><strong>Delivery:</strong><br>'+g('inv-delivery'):''}
       </div>
@@ -1076,19 +1172,23 @@ function exportPDF(){
   doc.text(g('co-ph1'),W-14,y+3.5,{align:'right'});
   doc.text(g('co-ph2'),W-14,y+7,{align:'right'});
   y+=12;doc.setDrawColor(190,190,190);doc.setLineWidth(.3);doc.line(14,y,W-14,y);y+=4;
-  doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(30,30,30);
-  doc.text('GSTIN: '+g('co-gstin'),W/2,y,{align:'center'});y+=5;
+  const gstOn=isGstMode();
+  if(gstOn){
+    doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(30,30,30);
+    doc.text('GSTIN: '+g('co-gstin'),W/2,y,{align:'center'});y+=5;
+  }
   doc.setFillColor(26,95,168);doc.rect(14,y-3.5,W-28,7,'F');
   doc.setFontSize(10);doc.setTextColor(255,255,255);
-  doc.text('INVOICE',W/2,y+.5,{align:'center'});y+=9;
+  doc.text(gstOn?'INVOICE':'BILL',W/2,y+.5,{align:'center'});y+=9;
   doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(30,30,30);
   doc.setDrawColor(140,140,140);doc.rect(14,y,W/2-16,28);doc.rect(W/2,y,W/2-14,28);
   doc.setFont('helvetica','bold');doc.text('Bill To:',16,y+4);
   doc.setFont('helvetica','normal');
   const al=doc.splitTextToSize(g('cust-name')+'\n'+g('cust-addr'),W/2-20);
-  doc.text(al,16,y+8);doc.text('GSTIN: '+g('cust-gstin'),16,y+25);
+  doc.text(al,16,y+8);
+  if(gstOn)doc.text('GSTIN: '+g('cust-gstin'),16,y+25);
   doc.setFont('helvetica','bold');
-  doc.text('INVOICE NO: '+g('inv-no'),W/2+2,y+4);
+  doc.text((gstOn?'INVOICE NO: ':'BILL NO: ')+g('inv-no'),W/2+2,y+4);
   doc.setFont('helvetica','normal');
   doc.text('DATE: '+fmtDate(g('inv-date')),W/2+2,y+8);
   if(g('inv-delivery'))doc.text('Delivery: '+g('inv-delivery'),W/2+2,y+12);
@@ -1159,13 +1259,14 @@ function exportExcel(){
     else numVal=+l.value.replace(/,/g,'');
     return['','','','','',l.label+' (₹):',numVal];
   });
+  const gstOnXl=isGstMode();
   const aoa=[
     [g('co-name')],['OFFICE | COMMERCIAL | RESIDENTIAL'],
     [g('co-addr').replace(/\n/g,', ')],
     ['Ph: '+g('co-ph1')+' / '+g('co-ph2')+'  |  '+g('co-email')],
-    ['GSTIN: '+g('co-gstin')],[],['INVOICE'],[],
-    ['Invoice No:',g('inv-no'),'','','Date:',fmtDate(g('inv-date'))],
-    ['Bill To:',g('cust-name'),'','','Customer GSTIN:',g('cust-gstin')],
+    ...(gstOnXl?[['GSTIN: '+g('co-gstin')]]:[]),[],[gstOnXl?'INVOICE':'BILL'],[],
+    [gstOnXl?'Invoice No:':'Bill No:',g('inv-no'),'','','Date:',fmtDate(g('inv-date'))],
+    ...(gstOnXl?[['Bill To:',g('cust-name'),'','','Customer GSTIN:',g('cust-gstin')]]:[['Bill To:',g('cust-name')]]),
     ['Address:',g('cust-addr').replace(/\n/g,', ')],[],
     ['S.No','Description','SAC/HSN','Qty','Unit','Rate (₹)','Amount (₹)'],
     ...rows.map((r,i)=>{const{qty:fq,unit:fu}=getFinalQtyUnit(r);return[i+1,r.desc,r.hsn,+fq.toFixed(3),fu,r.rate,+rowAmount(r).toFixed(2)];}),
@@ -1183,6 +1284,162 @@ function exportExcel(){
   XLSX.utils.book_append_sheet(wb,ws,'Invoice');
   XLSX.writeFile(wb,'Invoice-'+g('inv-no').replace(/\//g,'-')+'.xlsx');
   showToast('Excel saved to Downloads','ok');
+}
+
+/* ── SUPABASE: STATE COLLECTION ── */
+const STATE_FIELD_IDS=['co-name','co-gstin','co-addr','co-person','co-email','co-ph1','co-ph2',
+  'inv-no','inv-date','inv-delivery','cust-name','cust-gstin','cust-addr','cust-phone',
+  'gst-rate','gst-custom-rate','gst-mode','disc-type','disc-value',
+  'chg-packing','chg-transport','chg-installation','chg-labour','chg-other-label','chg-other',
+  'roundoff-mode','roundoff-custom-value'];
+
+function collectState(){
+  const fields={};
+  STATE_FIELD_IDS.forEach(id=>{const el=document.getElementById(id);if(el)fields[id]=el.value;});
+  fields['gst-invoice-toggle']=isGstMode();
+  return{fields,rows,logoDataUrl,sigDataUrl};
+}
+
+function applyState(state){
+  if(!state)return;
+  const fields=state.fields||{};
+  Object.keys(fields).forEach(id=>{
+    if(id==='gst-invoice-toggle')return;
+    const el=document.getElementById(id);
+    if(el)el.value=fields[id];
+  });
+  const gstToggleEl=document.getElementById('gst-invoice-toggle');
+  if(gstToggleEl)gstToggleEl.checked=fields['gst-invoice-toggle']!==false;
+  rows=(state.rows&&state.rows.length)?state.rows:rows;
+  logoDataUrl=state.logoDataUrl||null;
+  sigDataUrl=state.sigDataUrl||null;
+  if(logoDataUrl){
+    document.getElementById('logo-img').src=logoDataUrl;
+    document.getElementById('logo-zone').classList.add('filled');
+    document.getElementById('logo-lbl').textContent='Logo uploaded ✓';
+    document.getElementById('logo-lbl').className='uz-label ok';
+    document.getElementById('logo-actions').classList.add('show');
+  }else clearLogoUI();
+  if(sigDataUrl){
+    document.getElementById('sig-img').src=sigDataUrl;
+    document.getElementById('sig-zone').classList.add('filled');
+    document.getElementById('sig-lbl').textContent='Signature uploaded ✓';
+    document.getElementById('sig-lbl').className='uz-label ok';
+    document.getElementById('sig-actions').classList.add('show');
+  }else clearSigUI();
+  handleGstRateChange();handleDiscTypeChange();handleRoundOffModeChange();handleGstInvoiceToggle();
+  updateBadge();renderRows();calcUI();
+}
+// UI-only reset helpers (no state mutation) — used by applyState when a loaded record has no logo/signature
+function clearLogoUI(){
+  document.getElementById('logo-file').value='';document.getElementById('logo-img').src='';
+  document.getElementById('logo-zone').classList.remove('filled');
+  document.getElementById('logo-lbl').textContent='Tap to upload logo';document.getElementById('logo-lbl').className='uz-label';
+  document.getElementById('logo-actions').classList.remove('show');
+}
+function clearSigUI(){
+  document.getElementById('sig-file').value='';document.getElementById('sig-img').src='';
+  document.getElementById('sig-zone').classList.remove('filled');
+  document.getElementById('sig-lbl').textContent='Tap to upload signature';document.getElementById('sig-lbl').className='uz-label';
+  document.getElementById('sig-actions').classList.remove('show');
+}
+
+/* ── SUPABASE: DRAFT AUTOSAVE ── */
+let draftSaveTimer=null,suppressAutoSave=false;
+function scheduleAutoSave(){
+  if(!sb||suppressAutoSave)return;
+  clearTimeout(draftSaveTimer);
+  draftSaveTimer=setTimeout(saveDraft,1200);
+}
+async function saveDraft(){
+  if(!sb)return;
+  try{
+    const t=calc();
+    await sb.from('invoices').upsert({
+      id:CURRENT_DRAFT_ID,status:'draft',
+      invoice_no:g('inv-no'),bill_date:g('inv-date')||null,customer_name:g('cust-name'),
+      grand_total:+t.grand.toFixed(2),data:collectState(),updated_at:new Date().toISOString()
+    });
+  }catch(e){console.error('Draft autosave failed:',e);}
+}
+async function loadDraft(){
+  if(!sb)return;
+  try{
+    const{data,error}=await sb.from('invoices').select('data').eq('id',CURRENT_DRAFT_ID).maybeSingle();
+    if(error)throw error;
+    if(data&&data.data){
+      suppressAutoSave=true;
+      applyState(data.data);
+      suppressAutoSave=false;
+    }
+  }catch(e){console.error('Draft load failed (working from blank form):',e);}
+}
+
+/* ── SUPABASE: SAVE TO HISTORY ── */
+async function saveToHistory(){
+  if(!sb){showToast('Not connected to storage','err');return;}
+  try{
+    const t=calc();
+    const id=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():('inv-'+Date.now());
+    const{error}=await sb.from('invoices').insert({
+      id,status:'saved',invoice_no:g('inv-no'),bill_date:g('inv-date')||null,
+      customer_name:g('cust-name'),grand_total:+t.grand.toFixed(2),data:collectState()
+    });
+    if(error)throw error;
+    showToast('Saved to history ✓','ok');
+  }catch(e){showToast('Save to history failed — check connection','err');console.error(e);}
+}
+
+/* ── SUPABASE: HISTORY MODAL ── */
+async function openHistory(){
+  document.getElementById('history-modal').style.display='flex';
+  document.getElementById('history-list').innerHTML='<div class="hist-loading">Loading…</div>';
+  if(!sb){document.getElementById('history-list').innerHTML='<div class="hist-empty">Storage not connected.</div>';return;}
+  try{
+    const{data,error}=await sb.from('invoices').select('id,invoice_no,bill_date,customer_name,grand_total,updated_at,created_at').eq('status','saved').order('created_at',{ascending:false});
+    if(error)throw error;
+    renderHistoryList(data||[]);
+  }catch(e){
+    document.getElementById('history-list').innerHTML='<div class="hist-empty">Could not load history. Check connection.</div>';
+    console.error(e);
+  }
+}
+function closeHistory(){document.getElementById('history-modal').style.display='none';}
+function renderHistoryList(list){
+  const el=document.getElementById('history-list');
+  if(!list.length){el.innerHTML='<div class="hist-empty">No saved invoices yet. Use "Save to History" from the Preview tab.</div>';return;}
+  el.innerHTML=list.map(r=>`
+    <div class="hist-item">
+      <div class="hist-main">
+        <div class="hist-no">${esc(r.invoice_no||'—')}</div>
+        <div class="hist-sub">${esc(r.customer_name||'—')} • ${fmtDate(r.bill_date)}</div>
+      </div>
+      <div class="hist-amt">₹ ${fmt(r.grand_total||0)}</div>
+      <div class="hist-actions">
+        <button class="btn" style="font-size:11px;padding:5px 9px" onclick="openHistoryItem('${r.id}')">Open</button>
+        <button class="btn btn-ghost" style="font-size:11px;padding:5px 9px" onclick="deleteHistoryItem('${r.id}')">Delete</button>
+      </div>
+    </div>`).join('');
+}
+async function openHistoryItem(id){
+  try{
+    const{data,error}=await sb.from('invoices').select('data').eq('id',id).maybeSingle();
+    if(error||!data)throw(error||new Error('not found'));
+    suppressAutoSave=true;
+    applyState(data.data);
+    suppressAutoSave=false;
+    closeHistory();goTab(0);
+    showToast('Invoice loaded ✓','ok');
+    scheduleAutoSave(); // carry the opened invoice into the working draft too
+  }catch(e){showToast('Could not open invoice','err');console.error(e);}
+}
+async function deleteHistoryItem(id){
+  if(!confirm('Delete this saved invoice? This cannot be undone.'))return;
+  try{
+    const{error}=await sb.from('invoices').delete().eq('id',id);
+    if(error)throw error;
+    openHistory();
+  }catch(e){showToast('Delete failed','err');console.error(e);}
 }
 
 /* ── RESET ── */
