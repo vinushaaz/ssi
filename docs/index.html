@@ -925,6 +925,17 @@ const SHEET_SIZES={
   '6x2':{label:'6×2 ft',sqft:12},
 };
 
+function getRowAreaQty(r){
+  const mode=r.calcType||'qty';
+  switch(mode){
+    case 'sqft': return{qty:'',area:+r.area||0};
+    case 'sqm': return{qty:'',area:+r.areaSqm||0};
+    case 'sheet':{const sz=SHEET_SIZES[r.sheetSize]||SHEET_SIZES['8x4'];return{qty:+r.sheets||0,area:(+r.sheets||0)*sz.sqft};}
+    case 'rft': return{qty:+r.length||0,area:''};
+    case 'custom': return{qty:+r.qty||1,area:(+r.length||0)*(+r.width||0)*(+r.qty||1)};
+    default: return{qty:+r.qty||0,area:''};
+  }
+}
 function getFinalQtyUnit(r){
   const mode=r.calcType||'qty';
   switch(mode){
@@ -1240,15 +1251,17 @@ function numWords(n){
 function renderPreview(){
   const t=calc();
   const taxRowsHtml=buildTotalsLines(t).map(l=>
-    `<tr class="sub"><td colspan="5" style="text-align:right;padding-right:10px">${l.label}</td><td colspan="2" class="r" style="padding-right:12px">${l.value.indexOf('Exempt')>-1?l.value:(l.value.match(/^[+-]/)?l.value.charAt(0)+' &#8377; '+l.value.slice(2):'&#8377; '+l.value)}</td></tr>`
+    `<tr class="sub"><td colspan="6" style="text-align:right;padding-right:10px">${l.label}</td><td colspan="2" class="r" style="padding-right:12px">${l.value.indexOf('Exempt')>-1?l.value:(l.value.match(/^[+-]/)?l.value.charAt(0)+' &#8377; '+l.value.slice(2):'&#8377; '+l.value)}</td></tr>`
   ).join('');
   const irows=rows.map((r,i)=>{
-    const{qty:fq,unit:fu}=getFinalQtyUnit(r);
+    const{unit:fu}=getFinalQtyUnit(r);
+    const{qty:aq,area:aa}=getRowAreaQty(r);
     const amt=rowAmount(r);
     return`<tr>
     <td class="c">${i+1}</td>
     <td style="white-space:pre-line;max-width:180px">${r.desc}</td>
-    <td class="c">${r.hsn}</td><td class="r">${fmtQty(fq,r.calcType)}</td>
+    <td class="c">${r.hsn}</td><td class="r">${aq===''?'—':fmtQty(aq,r.calcType)}</td>
+    <td class="r">${aa===''?'—':fmt(aa)}</td>
     <td class="c">${fu}</td><td class="r">${fmt(r.rate)}</td>
     <td class="r"><strong>${fmt(amt)}</strong></td>
   </tr>`;
@@ -1281,15 +1294,16 @@ function renderPreview(){
     </div>
     <table class="inv-tbl">
       <thead><tr>
-        <th style="width:26px">S.No</th><th>Description of Work</th>
-        <th style="width:54px">SAC/HSN</th><th style="width:44px">Qty</th>
-        <th style="width:38px">Unit</th><th style="width:72px;text-align:right;padding-right:10px">Rate (&#8377;)</th><th style="width:88px;text-align:right;padding-right:12px">Amount (&#8377;)</th>
+        <th style="width:24px">S.No</th><th>Description of Work</th>
+        <th style="width:48px">SAC/HSN</th><th style="width:40px">Qty</th>
+        <th style="width:44px">Area</th>
+        <th style="width:34px">Unit</th><th style="width:68px;text-align:right;padding-right:10px">Rate (&#8377;)</th><th style="width:82px;text-align:right;padding-right:12px">Amount (&#8377;)</th>
       </tr></thead>
       <tbody>
         ${irows}
-        <tr class="sub"><td colspan="5" style="text-align:right;font-weight:700;padding-right:10px">Sub-Total:</td><td colspan="2" class="r" style="font-weight:700;padding-right:12px">&#8377; ${fmt(t.sub)}</td></tr>
+        <tr class="sub"><td colspan="6" style="text-align:right;font-weight:700;padding-right:10px">Sub-Total:</td><td colspan="2" class="r" style="font-weight:700;padding-right:12px">&#8377; ${fmt(t.sub)}</td></tr>
         ${taxRowsHtml}
-        <tr class="grand"><td colspan="5" style="text-align:right;font-size:11px;font-weight:700;padding-right:10px">GRAND TOTAL:</td><td colspan="2" class="r" style="font-size:12px;font-weight:700;padding-right:12px">&#8377; ${fmt(t.grand)}</td></tr>
+        <tr class="grand"><td colspan="6" style="text-align:right;font-size:11px;font-weight:700;padding-right:10px">GRAND TOTAL:</td><td colspan="2" class="r" style="font-size:12px;font-weight:700;padding-right:12px">&#8377; ${fmt(t.grand)}</td></tr>
       </tbody>
     </table>
     <div class="inv-words">(${numWords(t.grand)})</div>
@@ -1344,26 +1358,28 @@ function exportPDF(){
   doc.text('DATE: '+fmtDate(g('inv-date')),W/2+2,y+8);
   if(g('inv-delivery'))doc.text('Delivery: '+g('inv-delivery'),W/2+2,y+12);
   y+=32;
-  const cw=[8,72,14,12,10,28,28];
-  const hd=['S.No','Description','HSN','Qty','Unit','Rate(Rs.)','Amt(Rs.)'];
+  const cw=[8,58,12,12,12,8,31,31];
+  const hd=['S.No','Description','HSN','Qty','Area','Unit','Rate(Rs.)','Amt(Rs.)'];
   doc.setFillColor(210,230,248);doc.rect(14,y-4,W-28,7,'F');
   doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(30,30,30);
   let cx=14;hd.forEach((h,i)=>{doc.text(h,cx+1,y);cx+=cw[i];});y+=3;
   doc.setFont('helvetica','normal');
   rows.forEach((r,idx)=>{
-    const{qty:fq,unit:fu}=getFinalQtyUnit(r);
+    const{unit:fu}=getFinalQtyUnit(r);
+    const{qty:aq,area:aa}=getRowAreaQty(r);
     const amt=rowAmount(r);
-    const lines=doc.splitTextToSize(r.desc,76);
+    const lines=doc.splitTextToSize(r.desc,62);
     const rh=Math.max(7,lines.length*4+2);
     doc.setDrawColor(210,210,210);doc.line(14,y+rh-1,W-14,y+rh-1);
     let lx=14;
     doc.text(String(idx+1),lx+1,y+3);lx+=cw[0];
     doc.text(lines,lx+1,y+3);lx+=cw[1];
     doc.text(r.hsn,lx+1,y+3);lx+=cw[2];
-    doc.text(fmtQty(fq,r.calcType),lx+cw[3]-2,y+3,{align:'right'});lx+=cw[3];
-    doc.text(fu,lx+1,y+3);lx+=cw[4];
-    doc.text(fmt(r.rate),lx+cw[5]-2,y+3,{align:'right'});lx+=cw[5];
-    doc.text(fmt(amt),lx+cw[6]-2,y+3,{align:'right'});
+    doc.text(aq===''?'—':fmtQty(aq,r.calcType),lx+cw[3]-2,y+3,{align:'right'});lx+=cw[3];
+    doc.text(aa===''?'—':fmt(aa),lx+cw[4]-2,y+3,{align:'right'});lx+=cw[4];
+    doc.text(fu,lx+1,y+3);lx+=cw[5];
+    doc.text(fmt(r.rate),lx+cw[6]-2,y+3,{align:'right'});lx+=cw[6];
+    doc.text(fmt(amt),lx+cw[7]-2,y+3,{align:'right'});
     y+=rh;
   });
   const t=calc();
@@ -1408,7 +1424,7 @@ function exportExcel(){
     if(l.value.indexOf('Exempt')>-1)numVal=l.value; // text cell
     else if(signed)numVal=(signed[1]==='-'?-1:1)*(+signed[2].replace(/,/g,''));
     else numVal=+l.value.replace(/,/g,'');
-    return['','','','','',l.label+' (₹):',numVal];
+    return['','','','','','',l.label+' (₹):',numVal];
   });
   const gstOnXl=isGstMode();
   const aoa=[
@@ -1419,19 +1435,19 @@ function exportExcel(){
     [gstOnXl?'Invoice No:':'Bill No:',g('inv-no'),'','','Date:',fmtDate(g('inv-date'))],
     ...(gstOnXl?[['Bill To:',g('cust-name'),'','','Customer GSTIN:',g('cust-gstin')]]:[['Bill To:',g('cust-name')]]),
     ['Address:',g('cust-addr').replace(/\n/g,', ')],[],
-    ['S.No','Description','SAC/HSN','Qty','Unit','Rate (₹)','Amount (₹)'],
-    ...rows.map((r,i)=>{const{qty:fq,unit:fu}=getFinalQtyUnit(r);return[i+1,r.desc,r.hsn,+fq.toFixed(3),fu,r.rate,+rowAmount(r).toFixed(2)];}),
+    ['S.No','Description','HSN/SAC','Qty','Area','Unit','Rate (₹)','Amount (₹)'],
+    ...rows.map((r,i)=>{const{unit:fu}=getFinalQtyUnit(r);const{qty:aq,area:aa}=getRowAreaQty(r);return[i+1,r.desc,r.hsn,aq===''?'':+(+aq).toFixed(3),aa===''?'':+(+aa).toFixed(2),fu,r.rate,+rowAmount(r).toFixed(2)];}),
     [],
-    ['','','','','','Sub-Total (₹):',+t.sub.toFixed(2)],
+    ['','','','','','','Sub-Total (₹):',+t.sub.toFixed(2)],
     ...taxRows,
-    ['','','','','','Grand Total (₹):',+t.grand.toFixed(2)],
+    ['','','','','','','Grand Total (₹):',+t.grand.toFixed(2)],
     [],['Amount in Words:',numWords(t.grand)],
     [],['Authorised Signature:',g('co-person')],
   ];
   const wb=XLSX.utils.book_new();
   const ws=XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols']=[{wch:6},{wch:44},{wch:12},{wch:8},{wch:8},{wch:20},{wch:16}];
-  ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:6}},{s:{r:1,c:0},e:{r:1,c:6}},{s:{r:6,c:0},e:{r:6,c:6}}];
+  ws['!cols']=[{wch:6},{wch:40},{wch:12},{wch:8},{wch:8},{wch:8},{wch:20},{wch:16}];
+  ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:7}},{s:{r:1,c:0},e:{r:1,c:7}},{s:{r:6,c:0},e:{r:6,c:7}}];
   XLSX.utils.book_append_sheet(wb,ws,'Invoice');
   XLSX.writeFile(wb,'Invoice-'+g('inv-no').replace(/\//g,'-')+'.xlsx');
   showToast('Excel saved to Downloads','ok');
