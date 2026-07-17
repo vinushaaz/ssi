@@ -1363,26 +1363,32 @@ function exportPDF(){
   doc.text('DATE: '+fmtDate(g('inv-date')),W/2+2,y+8);
   if(g('inv-delivery'))doc.text('Delivery: '+g('inv-delivery'),W/2+2,y+12);
   y+=32;
-  const cw=[8,58,12,12,12,8,31,31];
+  const cw=[8,48,12,16,18,10,30,32];
+  const align=['left','left','center','right','right','center','right','right'];
   const hd=['S.No','Description','HSN','Qty','Area','Unit','Rate(Rs.)','Amt(Rs.)'];
   doc.setFillColor(210,230,248);doc.rect(14,y-4,W-28,7,'F');
   doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(30,30,30);
-  let cx=14;hd.forEach((h,i)=>{doc.text(h,cx+1,y);cx+=cw[i];});y+=3;
+  let cx=14;hd.forEach((h,i)=>{
+    if(align[i]==='right')doc.text(h,cx+cw[i]-2,y,{align:'right'});
+    else if(align[i]==='center')doc.text(h,cx+cw[i]/2,y,{align:'center'});
+    else doc.text(h,cx+1,y);
+    cx+=cw[i];
+  });y+=3;
   doc.setFont('helvetica','normal');
   rows.forEach((r,idx)=>{
     const{unit:fu}=getFinalQtyUnit(r);
     const{qty:aq,area:aa}=getRowAreaQty(r);
     const amt=rowAmount(r);
-    const lines=doc.splitTextToSize(r.desc,62);
+    const lines=doc.splitTextToSize(r.desc,44);
     const rh=Math.max(7,lines.length*4+2);
     doc.setDrawColor(210,210,210);doc.line(14,y+rh-1,W-14,y+rh-1);
     let lx=14;
     doc.text(String(idx+1),lx+1,y+3);lx+=cw[0];
     doc.text(lines,lx+1,y+3);lx+=cw[1];
-    doc.text(r.hsn,lx+1,y+3);lx+=cw[2];
+    doc.text(r.hsn,lx+cw[2]/2,y+3,{align:'center'});lx+=cw[2];
     doc.text(aq===''?'—':fmtQty(aq,r.calcType),lx+cw[3]-2,y+3,{align:'right'});lx+=cw[3];
     doc.text(aa===''?'—':fmt(aa),lx+cw[4]-2,y+3,{align:'right'});lx+=cw[4];
-    doc.text(fu,lx+1,y+3);lx+=cw[5];
+    doc.text(fu,lx+cw[5]/2,y+3,{align:'center'});lx+=cw[5];
     doc.text(fmt(r.rate),lx+cw[6]-2,y+3,{align:'right'});lx+=cw[6];
     doc.text(fmt(amt),lx+cw[7]-2,y+3,{align:'right'});
     y+=rh;
