@@ -1004,7 +1004,7 @@ function rowAmount(r){
   if(mode==='percent')return pctBase(r)*(+r.percentageValue||0)/100;
   const{qty}=getFinalQtyUnit(r);return qty*(+r.rate||0);
 }
-function rateText(r){return(r.calcType==='lump'||r.calcType==='percent')?'—':rateText(r);}
+function rateText(r){return(r.calcType==='lump'||r.calcType==='percent')?'—':fmt(r.rate);}
 // returns a message when the row's input is incomplete/invalid (never silently treated as zero)
 function rowIssue(r){
   const mode=r.calcType||'qty';
@@ -1560,7 +1560,7 @@ function buildPDF(fname,showRem){
     doc.text((gstOn?'Invoice':'Bill')+' No: '+bill,14,291);
     doc.text('Page '+p+' of '+N,W-14,291,{align:'right'});
   }
-  saveOut(doc.output('blob'),fname,'PDF',()=>doc.save(fname));
+  saveOut(doc.output('blob'),fname,'PDF',()=>{try{sfDownload(doc.output('blob'),fname);}catch(e){doc.save(fname);}});
 }
 
 /* ── EXPORT EXCEL ── */
@@ -1947,11 +1947,11 @@ function exportPDF(){
   if(typeof window.jspdf==='undefined'){showToast('PDF library loading, try again','err');return;}
   const issues=validateInvoice();
   if(issues.length&&!confirm('⚠ '+issues.join('\n')+'\n\nOK = Continue anyway, Cancel = go back'))return;
-  askFileName('pdf',(name,o)=>buildPDF(name,o.remarks));
+  askFileName('pdf',(name,o)=>{try{buildPDF(name,o.remarks);}catch(e){console.error(e);showToast('PDF failed: '+(e.message||e),'err');}});
 }
 function exportExcel(){
   if(typeof XLSX==='undefined'){showToast('Excel library loading, try again','err');return;}
-  askFileName('xlsx',name=>buildExcel(name));
+  askFileName('xlsx',name=>{try{buildExcel(name);}catch(e){console.error(e);showToast('Excel failed: '+(e.message||e),'err');}});
 }
 
 /* ═══ EXCEL IMPORT ═══ */
@@ -2088,7 +2088,7 @@ async function sfConnect(){
   try{
     const h=await window.showDirectoryPicker({mode:'readwrite',id:'ssi-docs'});
     SF.dir=h;SF.state='ready';await sfIdbSet('dir',h);sfRender();showToast('Folder connected: '+h.name,'ok');
-  }catch(e){if(e.name!=='AbortError')showToast('Could not connect folder: '+(e.message||e.name),'err');}
+  }catch(e){if(e.name!=='AbortError')showToast(e.name==='SecurityError'?'Folder access is blocked here. Open this file directly in Chrome/Edge (not inside a preview or embedded frame).':'Could not connect folder: '+(e.message||e.name),'err');}
 }
 async function sfDisconnect(){SF.dir=null;SF.state=sfSupported()?'none':'unsupported';try{await sfIdbSet('dir',null);}catch(e){}sfRender();showToast('Folder disconnected','ok');}
 async function sfEnsure(){ // must run from a user gesture to be able to re-ask permission
@@ -2099,7 +2099,7 @@ async function sfEnsure(){ // must run from a user gesture to be able to re-ask 
 }
 function sfFY(){const d=new Date(g('inv-date')||Date.now());const y=isNaN(d)?new Date().getFullYear():d.getFullYear(),m=isNaN(d)?new Date().getMonth():d.getMonth();const s=m>=3?y:y-1;return s+'-'+String(s+1).slice(2);}
 function sfPath(){
-  const p=sfPrefs(),type=gstOn?'Invoices':'Bills',cust=safeName(g('cust-name'))||'No Customer';
+  const p=sfPrefs(),type=isGstMode()?'Invoices':'Bills',cust=safeName(g('cust-name'))||'No Customer';
   const parts=[SF_ROOT];
   if(p.layout==='type')parts.push(type);
   else if(p.layout==='year_type')parts.push(sfFY(),type);
@@ -2151,7 +2151,7 @@ function sfRender(){
 function sfPrefChange(){const p={layout:document.getElementById('sf-layout').value,dup:document.getElementById('sf-dup').value};try{localStorage.setItem(SF_KEY,JSON.stringify(p));}catch(e){}sfRender();}
 function sfOpen(){sfRender();document.getElementById('sf-modal').style.display='flex';}
 function sfClose(){document.getElementById('sf-modal').style.display='none';}
-sfInit();
+sfInit().catch(e=>{SF.state=sfSupported()?'none':'unsupported';try{sfRender();}catch(_){}});
 </script>
 <input type="file" id="xl-file" accept=".xlsx,.xls" style="display:none" onchange="handleExcelFile(event)"/>
 <div id="xl-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;padding:14px"><div id="xl-body" style="background:#fff;border-radius:14px;padding:20px;max-width:560px;width:100%;max-height:90vh;overflow:auto"></div></div>
