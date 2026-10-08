@@ -1423,17 +1423,22 @@ function buildPDF(fname,showRem){
   buildTotalsLines(t).forEach(l=>trs.push([l.label+':',l.value]));
   trs.push(['Grand Total:',fmt(t.grand)]);
   // totals + words + terms + signature must stay together: otherwise move them all to a fresh page
-  if(y+trs.length*5.5+9+12+34>PB)newPage(false);
+  if(y+trs.length*6+9+12+34>PB)newPage(false);
   doc.setFontSize(8);doc.setFont('helvetica','normal');
   const lastIdx=trs.length-1;
+  // measure the widest value (grand total is bold) so "Rs." and labels never collide with the amount
+  doc.setFont('helvetica','bold');doc.setFontSize(8.5);
+  let maxVW=0;trs.forEach(([l,v])=>{maxVW=Math.max(maxVW,doc.getTextWidth(v));});
+  const rsX=W-14-2-maxVW-2;          // right edge of "Rs."
+  const lblX=rsX-10;                 // right edge of label
   trs.forEach(([l,v],i)=>{
-    y+=5.5;
-    if(i===lastIdx){doc.setFont('helvetica','bold');doc.setFillColor(210,230,248);doc.rect(14,y-4,W-28,7,'F');}
-    doc.setTextColor(30,30,30);
-    doc.text(l,W-42,y,{align:'right'});
-    doc.text('Rs.',W-27,y,{align:'right'});
-    doc.text(v,W-14,y,{align:'right'});
-    if(i!==lastIdx)doc.setFont('helvetica','normal');
+    y+=6;
+    const last=i===lastIdx;
+    if(last){doc.setFillColor(210,230,248);doc.rect(14,y-4.5,W-28,7.5,'F');}
+    doc.setFont('helvetica',last?'bold':'normal');doc.setFontSize(last?9:8.5);doc.setTextColor(30,30,30);
+    doc.text(l,lblX,y,{align:'right'});
+    if(v.indexOf('Exempt')<0)doc.text('Rs.',rsX,y,{align:'right'});
+    doc.text(v,W-16,y,{align:'right'});
   });
   y+=9;
   doc.setFont('helvetica','italic');doc.setFontSize(7.5);
