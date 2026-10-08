@@ -957,7 +957,7 @@ function getFinalQtyUnit(r){
   }
 }
 function rowAmount(r){const{qty}=getFinalQtyUnit(r);return qty*(+r.rate||0);}
-function fmtQty(q,mode){return(+q||0).toFixed(mode==='qty'?3:2);}
+function fmtQty(q,mode){return String(+(+q||0).toFixed(2));} // whole numbers show without decimals (1, 8, 20); fractions keep up to 2 (2.5)
 
 function calcTypeSelectHtml(r,i){
   const modes=[['qty','Quantity'],['sqft','Square Feet'],['sqm','Square Meter'],['sheet','Sheet Work'],['rft','Running Feet / Meter'],['custom','Custom Area']];
