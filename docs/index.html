@@ -580,6 +580,7 @@ Ayapakkam, Chennai - 600 077</textarea></div>
       </table>
     </div>
 
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0"><button class="btn" onclick="pickExcel()">📊 Import Excel</button><button class="btn" onclick="downloadTemplate()">⬇ Download Excel Template</button></div>
     <button class="add-row-btn" onclick="addRow()">
       <svg><path d="M12 5v14M5 12h14"/></svg>
       Add line item
@@ -915,7 +916,7 @@ function clearSig(){
 }
 
 /* ── ROWS ── */
-function addRow(){rows.push({desc:'',hsn:'',calcType:'qty',qty:1,unit:'Nos',rate:0,area:0,areaSqm:0,sheets:0,sheetSize:'8x4',length:0,lengthUnit:'ft',width:0,areaUnit:'ft'});renderRows();scheduleAutoSave();}
+function addRow(){rows.push({desc:'',hsn:'',calcType:'qty',qty:1,unit:'Nos',rate:0,area:0,areaSqm:0,sheets:0,sheetSize:'8x4',length:0,lengthUnit:'ft',width:0,areaUnit:'ft',remarks:''});renderRows();scheduleAutoSave();}
 function delRow(i){rows.splice(i,1);renderRows();scheduleAutoSave();}
 
 /* ── SMART CALCULATION ENGINE ── */
@@ -1060,7 +1061,7 @@ function updateRowLive(i){
 function renderRows(){
   document.getElementById('items-body').innerHTML=rows.map((r,i)=>`<tr>
     <td class="row-n">${i+1}</td>
-    <td><input value="${esc(r.desc)}" oninput="rows[${i}].desc=this.value" placeholder="Description…" style="min-width:160px"/></td>
+    <td><input value="${esc(r.desc)}" oninput="rows[${i}].desc=this.value" placeholder="Description…" style="min-width:160px"/><input value="${esc(r.remarks)}" oninput="rows[${i}].remarks=this.value" placeholder="Remarks (optional)" style="min-width:160px;font-size:11px;margin-top:3px;color:#667"/></td>
     <td><input value="${esc(r.hsn)}" oninput="rows[${i}].hsn=this.value" placeholder="9403"/></td>
     <td>${calcTypeSelectHtml(r,i)}</td>
     <td>${calcCellHtml(r,i)}</td>
@@ -1323,9 +1324,7 @@ function renderPreview(){
 }
 
 /* ── EXPORT PDF ── */
-function exportPDF(){
-  renderPreview();
-  if(typeof window.jspdf==='undefined'){showToast('PDF library loading, try again','err');return;}
+function buildPDF(fname,showRem){
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
   const W=doc.internal.pageSize.getWidth();let y=16;
@@ -1375,17 +1374,43 @@ function exportPDF(){
     cx+=cw[i];
   });y+=3;
   doc.setFont('helvetica','normal');
+  const PB=281,bill=g('inv-no');
+  const tblHead=()=>{
+    doc.setFillColor(210,230,248);doc.rect(14,y-4,W-28,7,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(30,30,30);
+    let x=14;hd.forEach((h,k)=>{
+      if(align[k]==='right')doc.text(h,x+cw[k]-2,y,{align:'right'});
+      else if(align[k]==='center')doc.text(h,x+cw[k]/2,y,{align:'center'});
+      else doc.text(h,x+1,y);
+      x+=cw[k];
+    });y+=3;doc.setFont('helvetica','normal');
+  };
+  const newPage=(withTable)=>{
+    doc.addPage();y=16;
+    doc.setFont('helvetica','bolditalic');doc.setFontSize(14);doc.setTextColor(26,95,168);doc.text(g('co-name'),14,y);
+    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(50,50,50);
+    doc.text((gstOn?'Invoice No: ':'Bill No: ')+bill,W-14,y,{align:'right'});
+    y+=3;doc.setDrawColor(26,95,168);doc.setLineWidth(.6);doc.line(14,y,W-14,y);y+=8;
+    if(withTable)tblHead();
+  };
   rows.forEach((r,idx)=>{
     const{unit:fu}=getFinalQtyUnit(r);
     const{qty:aq,area:aa}=getRowAreaQty(r);
     const amt=rowAmount(r);
-    const lines=doc.splitTextToSize(r.desc,44);
-    const rh=Math.max(7,lines.length*4+2);
-    doc.setDrawColor(210,210,210);doc.line(14,y+rh-1,W-14,y+rh-1);
+    doc.setFontSize(7.5);
+    const lines=doc.splitTextToSize(r.desc||'',44);
+    doc.setFontSize(6.5);
+    const rem=(showRem&&r.remarks)?doc.splitTextToSize(String(r.remarks),44):[];
+    const rh=Math.max(7,3+lines.length*3.1+rem.length*2.7+1.5);
+    if(y+rh>PB)newPage(true);               // never split a row across pages
+    doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(30,30,30);
+    doc.setDrawColor(210,210,210);doc.setLineWidth(.3);doc.line(14,y+rh-1,W-14,y+rh-1);
     let lx=14;
     doc.text(String(idx+1),lx+1,y+3);lx+=cw[0];
-    doc.text(lines,lx+1,y+3);lx+=cw[1];
-    doc.text(r.hsn,lx+cw[2]/2,y+3,{align:'center'});lx+=cw[2];
+    doc.text(lines,lx+1,y+3);
+    if(rem.length){doc.setFontSize(6.5);doc.setTextColor(110,110,110);doc.text(rem,lx+1,y+3+lines.length*3.1+.8);doc.setFontSize(7.5);doc.setTextColor(30,30,30);}
+    lx+=cw[1];
+    doc.text(r.hsn||'',lx+cw[2]/2,y+3,{align:'center'});lx+=cw[2];
     doc.text(aq===''?'—':fmtQty(aq,r.calcType),lx+cw[3]-2,y+3,{align:'right'});lx+=cw[3];
     doc.text(aa===''?'—':fmt(aa),lx+cw[4]-2,y+3,{align:'right'});lx+=cw[4];
     doc.text(fu,lx+cw[5]/2,y+3,{align:'center'});lx+=cw[5];
@@ -1397,6 +1422,9 @@ function exportPDF(){
   let trs=[['Sub-Total:',fmt(t.sub)]];
   buildTotalsLines(t).forEach(l=>trs.push([l.label+':',l.value]));
   trs.push(['Grand Total:',fmt(t.grand)]);
+  // totals + words + terms + signature must stay together: otherwise move them all to a fresh page
+  if(y+trs.length*5.5+9+12+34>PB)newPage(false);
+  doc.setFontSize(8);doc.setFont('helvetica','normal');
   const lastIdx=trs.length-1;
   trs.forEach(([l,v],i)=>{
     y+=5.5;
@@ -1411,7 +1439,7 @@ function exportPDF(){
   doc.setFont('helvetica','italic');doc.setFontSize(7.5);
   doc.setFillColor(248,252,255);doc.rect(14,y-4,W-28,8,'F');
   doc.setDrawColor(170,170,170);doc.rect(14,y-4,W-28,8);
-  const wordsText = '(' + numWords(t.grand) + ')'; const safeWords = wordsText.replace(/Rupees/g,'Rs.').replace(/rupees/g,'rs.'); doc.text(safeWords,16,y);y+=12;
+  doc.text(('('+numWords(t.grand)+')').replace(/Rupees/g,'Rs.').replace(/rupees/g,'rs.'),16,y);y+=12;
   doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(80,80,80);
   doc.text('Goods once sold cannot be taken.\nAll subject to Chennai Jurisdiction.',14,y);
   doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(26,95,168);
@@ -1420,13 +1448,18 @@ function exportPDF(){
   else{doc.setDrawColor(160,160,160);doc.line(W-58,y+24,W-14,y+24);}
   doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(110,110,110);
   doc.text('Authorised Signature',W-14,y+28,{align:'right'});
-  doc.save('Invoice-'+g('inv-no').replace(/\//g,'-')+'.pdf');
+  const N=doc.getNumberOfPages();
+  for(let p=1;p<=N;p++){
+    doc.setPage(p);doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(110,110,110);
+    doc.text((gstOn?'Invoice':'Bill')+' No: '+bill,14,291);
+    doc.text('Page '+p+' of '+N,W-14,291,{align:'right'});
+  }
+  doc.save(fname);
   showToast('PDF saved to Downloads','ok');
 }
 
 /* ── EXPORT EXCEL ── */
-function exportExcel(){
-  if(typeof XLSX==='undefined'){showToast('Excel library loading, try again','err');return;}
+function buildExcel(fname){
   const t=calc();
   const taxRows=buildTotalsLines(t).map(l=>{
     // strip leading sign text and keep a signed numeric value for proper Excel formatting
@@ -1447,7 +1480,7 @@ function exportExcel(){
     ...(gstOnXl?[['Bill To:',g('cust-name'),'','','Customer GSTIN:',g('cust-gstin')]]:[['Bill To:',g('cust-name')]]),
     ['Address:',g('cust-addr').replace(/\n/g,', ')],[],
     ['S.No','Description','HSN/SAC','Qty','Area','Unit','Rate (₹)','Amount (₹)'],
-    ...rows.map((r,i)=>{const{unit:fu}=getFinalQtyUnit(r);const{qty:aq,area:aa}=getRowAreaQty(r);return[i+1,r.desc,r.hsn,aq===''?'':+(+aq).toFixed(3),aa===''?'':+(+aa).toFixed(2),fu,r.rate,+rowAmount(r).toFixed(2)];}),
+    ...rows.map((r,i)=>{const{unit:fu}=getFinalQtyUnit(r);const{qty:aq,area:aa}=getRowAreaQty(r);return[i+1,r.desc+(r.remarks?'\n'+r.remarks:''),r.hsn,aq===''?'':+(+aq).toFixed(3),aa===''?'':+(+aa).toFixed(2),fu,r.rate,+rowAmount(r).toFixed(2)];}),
     [],
     ['','','','','','','Sub-Total (₹):',+t.sub.toFixed(2)],
     ...taxRows,
@@ -1460,7 +1493,7 @@ function exportExcel(){
   ws['!cols']=[{wch:6},{wch:40},{wch:12},{wch:8},{wch:8},{wch:8},{wch:20},{wch:16}];
   ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:7}},{s:{r:1,c:0},e:{r:1,c:7}},{s:{r:6,c:0},e:{r:6,c:7}}];
   XLSX.utils.book_append_sheet(wb,ws,'Invoice');
-  XLSX.writeFile(wb,'Invoice-'+g('inv-no').replace(/\//g,'-')+'.xlsx');
+  XLSX.writeFile(wb,fname);
   showToast('Excel saved to Downloads','ok');
 }
 
@@ -1759,6 +1792,194 @@ window.addEventListener('resize',()=>{
   if(sb) sb.style.display=window.innerWidth>=769?'flex':'none';
 });
 
+
+/* ═══ FILE NAME MANAGER ═══ */
+const FN_KEY='ssi_fn_prefs';
+function fnPrefs(){try{return Object.assign({fmt:'bill',mode:'ask',custom:'',remember:true,remarks:true},JSON.parse(localStorage.getItem(FN_KEY)||'{}'));}catch(e){return{fmt:'bill',mode:'ask',custom:'',remember:true,remarks:true};}}
+function fnSave(p){try{localStorage.setItem(FN_KEY,JSON.stringify(p));}catch(e){}}
+function safeName(s){return String(s||'').replace(/[\\\/:*?"<>|\x00-\x1f]+/g,'-').replace(/-{2,}/g,'-').replace(/^[-.\s]+|[-.\s]+$/g,'');}
+function withExt(name,ext){const n=safeName(String(name||'').replace(/\.(pdf|xlsx|xls)\s*$/i,''))||'Invoice';return n+'.'+ext;}
+function fnBuild(fmt){
+  const bill=safeName(g('inv-no')),cust=safeName(g('cust-name').trim().replace(/\s+/g,'-')),date=fmtDate(g('inv-date')).replace(/\//g,'-');
+  const j=a=>a.filter(Boolean).join('-');
+  return fmt==='bill_cust'?j([bill,cust]):fmt==='bill_date'?j([bill,date]):fmt==='cust_bill'?j([cust,bill]):bill;
+}
+let _fnCb=null,_fnExt='pdf';
+function askFileName(ext,cb){
+  const p=fnPrefs();
+  if(p.mode==='bill'){cb(withExt(fnBuild('bill'),ext),{remarks:p.remarks});return;}
+  if(p.mode==='saved'){cb(withExt(p.fmt==='custom'?p.custom:fnBuild(p.fmt),ext),{remarks:p.remarks});return;}
+  _fnCb=cb;_fnExt=ext;
+  document.getElementById('fn-billno').textContent=g('inv-no')||'—';
+  document.getElementById('fn-fmt').value=p.fmt;document.getElementById('fn-mode').value=p.mode;
+  document.getElementById('fn-remember').checked=p.remember;document.getElementById('fn-remarks').checked=p.remarks;
+  document.getElementById('fn-remarks-wrap').style.display=ext==='pdf'?'':'none';
+  document.getElementById('fn-title').textContent='Save '+(ext==='pdf'?'PDF':'Excel');
+  document.getElementById('fn-name').value=p.fmt==='custom'?p.custom:fnBuild(p.fmt);
+  document.getElementById('fn-modal').style.display='flex';
+}
+function fnFmtChange(){const f=document.getElementById('fn-fmt').value;if(f!=='custom')document.getElementById('fn-name').value=fnBuild(f);}
+function fnClose(){document.getElementById('fn-modal').style.display='none';}
+function fnGo(){
+  const fmt=document.getElementById('fn-fmt').value,raw=document.getElementById('fn-name').value;
+  const rem=document.getElementById('fn-remarks').checked;
+  const p=fnPrefs();p.remarks=rem;
+  if(document.getElementById('fn-remember').checked){p.fmt=fmt;p.mode=document.getElementById('fn-mode').value;p.custom=fmt==='custom'?raw:p.custom;p.remember=true;}else p.remember=false;
+  fnSave(p);fnClose();
+  if(_fnCb)_fnCb(withExt(raw,_fnExt),{remarks:rem});
+}
+
+/* ═══ VALIDATION ═══ */
+function validateInvoice(){
+  const bad={desc:0,rate:0,qty:0};
+  rows.forEach(r=>{if(!(r.desc||'').trim())bad.desc++;if(!(+r.rate>0))bad.rate++;if(!(getFinalQtyUnit(r).qty>0))bad.qty++;});
+  const out=[];
+  if(!rows.length)out.push('No line items added.');
+  if(bad.desc)out.push(bad.desc+' item(s) have no description.');
+  if(bad.rate)out.push(bad.rate+' item(s) have no rate.');
+  if(bad.qty)out.push(bad.qty+' item(s) have zero quantity / area.');
+  return out;
+}
+function exportPDF(){
+  renderPreview();
+  if(typeof window.jspdf==='undefined'){showToast('PDF library loading, try again','err');return;}
+  const issues=validateInvoice();
+  if(issues.length&&!confirm('⚠ '+issues.join('\n')+'\n\nOK = Continue anyway, Cancel = go back'))return;
+  askFileName('pdf',(name,o)=>buildPDF(name,o.remarks));
+}
+function exportExcel(){
+  if(typeof XLSX==='undefined'){showToast('Excel library loading, try again','err');return;}
+  askFileName('xlsx',name=>buildExcel(name));
+}
+
+/* ═══ EXCEL IMPORT ═══ */
+const XL_FIELDS=[['ignore','Ignore'],['desc','Description'],['hsn','HSN'],['qty','Quantity'],['length','Length'],['width','Width'],['height','Height'],['area','Area'],['unit','Unit'],['rate','Rate'],['amount','Amount'],['calc','Calc Type'],['remarks','Remarks'],['meta','Extra (keep as note)']];
+const XL_SYN={
+  desc:['description','descriptionofwork','product','item','particulars','workdescription','descriptionofproduct','itemdescription','details','work'],
+  hsn:['hsn','sac','hsnsac','sachsn','hsncode','saccode'],
+  qty:['qty','quantity','nos','number','qnty'],
+  length:['length','l','len'],width:['width','w','breadth'],height:['height','h'],
+  area:['area','areas','areasqft','sqft','squarefeet','areasqm','sqm'],
+  unit:['unit','uom','units'],
+  rate:['rate','price','unitprice','rateinr','rateinrs','rateperunit'],
+  amount:['amount','total','totalamount','value','amountinr','lineamount'],
+  calc:['calctype','calculation','calculationtype'],
+  remarks:['remarks','remark','notes','note'],
+  ser:['sno','srno','slno','sl','serial','serialno','sr'],
+  meta:['brand','model','size','colour','color','material','finish','specification','spec','category']
+};
+const XL_SKIP=/^(grand\s*total|sub\s*-?\s*total|total|gst|cgst|sgst|igst|round\s*off|net\s*total|amount\s*in\s*words|authori[sz]ed)/i;
+let _xl=null;
+const xlNorm=s=>String(s==null?'':s).toLowerCase().replace(/[^a-z0-9]/g,'');
+const xlNum=v=>{const n=parseFloat(String(v==null?'':v).replace(/[₹,\s]/g,''));return isNaN(n)?0:n;};
+function xlGuess(h,all){
+  const k=xlNorm(h);if(!k)return'ignore';
+  if(k==='no')return all.some(x=>XL_SYN.qty.includes(xlNorm(x)))?'ignore':'qty';
+  for(const f of Object.keys(XL_SYN))if(XL_SYN[f].includes(k))return f==='ser'?'ignore':f;
+  return'ignore';
+}
+function pickExcel(){document.getElementById('xl-file').click();}
+function handleExcelFile(e){
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  const rd=new FileReader();
+  rd.onload=ev=>{
+    try{
+      const wb=XLSX.read(ev.target.result,{type:'array'});
+      const aoa=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',blankrows:false});
+      // locate header row = row whose cells map to most known fields (must include a description)
+      let best=-1,bs=0;
+      aoa.slice(0,40).forEach((r,i)=>{const m=r.map(c=>xlGuess(c,r));const s=m.filter(x=>x!=='ignore').length;if(m.includes('desc')&&s>bs){bs=s;best=i;}});
+      if(best<0){showToast('Could not find a header row with a Description column','err');return;}
+      const head=aoa[best].map(c=>String(c).trim());
+      let bill='',cust='';
+      aoa.slice(0,best).forEach(r=>r.forEach((c,j)=>{
+        const s=String(c);
+        if(/^(bill|invoice)\s*no\.?\s*:?/i.test(s)&&!bill)bill=(s.replace(/^(bill|invoice)\s*no\.?\s*:?/i,'').trim())||String(r.slice(j+1).find(x=>String(x).trim())||'').trim();
+        if(/^bill\s*to\s*:?/i.test(s)&&!cust)cust=(s.replace(/^bill\s*to\s*:?/i,'').trim())||String(r.slice(j+1).find(x=>String(x).trim())||'').trim();
+      }));
+      _xl={head,data:aoa.slice(best+1),map:head.map(h=>xlGuess(h,head)),bill,cust};
+      xlShowMap();
+    }catch(err){showToast('Could not read this Excel file','err');}
+  };
+  rd.readAsArrayBuffer(f);
+}
+function xlShowMap(){
+  const opts=sel=>XL_FIELDS.map(([v,l])=>`<option value="${v}"${v===sel?' selected':''}>${l}</option>`).join('');
+  const sample=i=>esc(String((_xl.data.find(r=>String(r[i]).trim())||[])[i]||'').slice(0,28));
+  document.getElementById('xl-body').innerHTML=`<div style="font-weight:700;font-size:16px;margin-bottom:4px">📊 Excel Import</div>
+   <div style="color:#667;font-size:12.5px;margin-bottom:10px">Detected ${_xl.data.length} rows${_xl.bill?' · Bill No: <b>'+esc(_xl.bill)+'</b>':''}. Check the column mapping:</div>
+   <div style="max-height:46vh;overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:12.5px">${_xl.head.map((h,i)=>h?`<tr><td style="padding:4px 6px;border-bottom:1px solid #eee"><b>${esc(h)}</b><div style="color:#99a;font-size:11px">${sample(i)}</div></td><td style="padding:4px 6px;border-bottom:1px solid #eee">→</td><td style="padding:4px 6px;border-bottom:1px solid #eee"><select onchange="_xl.map[${i}]=this.value" style="padding:5px;border:1px solid #ccd;border-radius:6px">${opts(_xl.map[i])}</select></td></tr>`:'').join('')}</table></div>
+   <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end"><button class="btn" onclick="xlClose()">Cancel</button><button class="btn btn-primary" onclick="xlImport()">Import Items</button></div>`;
+  document.getElementById('xl-modal').style.display='flex';
+}
+function xlClose(){document.getElementById('xl-modal').style.display='none';}
+function xlItem(o,meta){
+  const unitRaw=String(o.unit||'').trim(),u=xlNorm(unitRaw);
+  const qty=xlNum(o.qty),L=xlNum(o.length),Wd=xlNum(o.width),H=xlNum(o.height),area=xlNum(o.area),rate=xlNum(o.rate),amt=xlNum(o.amount);
+  const sqft=/^(sqft|sft|sqfeet|squarefeet)$/.test(u),sqm=/^(sqm|sqmeter|squaremeter)$/.test(u),rft=/^(rft|rf|runningfeet|rm|runningmeter|meter|mtr)$/.test(u);
+  const rem=[o.remarks?String(o.remarks).trim():'',...meta,H?'Height: '+H:''].filter(Boolean).join(' | ');
+  const it={desc:String(o.desc||'').trim(),hsn:String(o.hsn||'').trim(),calcType:'qty',qty:qty||1,unit:unitRaw||'Nos',rate,area:0,areaSqm:0,sheets:0,sheetSize:'8x4',length:0,lengthUnit:'ft',width:0,areaUnit:'ft',remarks:rem};
+  if(L&&Wd){it.calcType='custom';it.length=L;it.width=Wd;if(sqm)it.areaUnit='m';}
+  else if(sqm){it.calcType='sqm';it.areaSqm=area||qty;}
+  else if(area||sqft){it.calcType='sqft';it.area=area||qty;}
+  else if(rft||L){it.calcType='rft';it.length=L||qty;if(/^(rm|runningmeter|meter|mtr)$/.test(u))it.lengthUnit='m';}
+  // Excel amount is the source of truth when it differs from rate × displayed qty (e.g. rounded areas)
+  if(amt>0){
+    const q=getFinalQtyUnit(it).qty;
+    if(!rate&&q)it.rate=amt/q;
+    else if(rate&&Math.abs(q*rate-amt)>0.01){
+      const nq=amt/rate;
+      if(it.calcType==='custom'){it.calcType='sqft';it.area=nq;it.length=it.width=0;}
+      else if(it.calcType==='sqft')it.area=nq;else if(it.calcType==='sqm')it.areaSqm=nq;
+      else if(it.calcType==='rft')it.length=nq;else it.qty=nq;
+    }
+  }
+  return it;
+}
+function xlImport(){
+  const m=_xl.map,items=[];let skipped=0,found=0;
+  for(const r of _xl.data){
+    const o={},meta=[];
+    m.forEach((f,i)=>{const v=r[i];if(f==='meta'){if(String(v).trim())meta.push(_xl.head[i]+': '+String(v).trim());}else if(f!=='ignore'&&!o[f])o[f]=v;});
+    const texts=r.map(c=>String(c).trim()).filter(x=>x&&isNaN(+x.replace(/,/g,'')));
+    if(!r.some(c=>String(c).trim())){continue;}
+    if(texts.some(t=>XL_SKIP.test(t))&&!String(o.desc||'').trim().match(/^\S.{12,}/)){skipped++;continue;}
+    if(!String(o.desc||'').trim()&&!xlNum(o.rate)&&!xlNum(o.amount)){skipped++;continue;}
+    found++;items.push(xlItem(o,meta));
+  }
+  if(!items.length){showToast('No items found with this mapping','err');return;}
+  const hasData=rows.some(r=>(r.desc||'').trim()||+r.rate>0);
+  if(hasData&&!confirm('Replace the current line items?\nOK = Replace, Cancel = Add after existing items'))rows=rows.concat(items);else rows=items;
+  if(_xl.bill)document.getElementById('inv-no').value=_xl.bill;
+  if(_xl.cust&&!g('cust-name'))document.getElementById('cust-name').value=_xl.cust;
+  renderRows();scheduleAutoSave();
+  const t=calc();
+  document.getElementById('xl-body').innerHTML=`<div style="font-weight:700;font-size:16px;color:#1a7f3c;margin-bottom:10px">✓ Excel Imported</div>
+   <div style="line-height:1.9;font-size:14px">Items Found: <b>${found}</b><br>Items Imported: <b>${items.length}</b><br>Skipped Rows: <b>${skipped}</b><br>Subtotal: <b>₹ ${fmt(t.sub)}</b><br>Grand Total: <b>₹ ${fmt(t.grand)}</b></div>
+   <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" onclick="xlClose()">Close</button><button class="btn" onclick="xlClose();goTab(1)">Review Items</button><button class="btn" onclick="xlClose();goTab(2);renderPreview()">Preview</button><button class="btn btn-primary" onclick="xlClose();exportPDF()">Export PDF</button></div>`;
+}
+function downloadTemplate(){
+  const aoa=[['S.No','Description','HSN/SAC','Calc Type','Qty','Length','Width','Height','Unit','Rate','Amount','Remarks'],
+   [1,'Kitchen Unit',9403,'sqft',1,10,4,'','sq.ft',900,'',''],[2,'Wardrobe',9403,'sqft',1,7,6,'','sq.ft',1200,'','']];
+  const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols']=[{wch:6},{wch:36},{wch:10},{wch:10},{wch:6},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:10},{wch:30}];
+  XLSX.utils.book_append_sheet(wb,ws,'Items');XLSX.writeFile(wb,'SS-Interiors-Import-Template.xlsx');
+}
 </script>
+<input type="file" id="xl-file" accept=".xlsx,.xls" style="display:none" onchange="handleExcelFile(event)"/>
+<div id="xl-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;padding:14px"><div id="xl-body" style="background:#fff;border-radius:14px;padding:20px;max-width:560px;width:100%;max-height:90vh;overflow:auto"></div></div>
+<div id="fn-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;padding:14px"><div style="background:#fff;border-radius:14px;padding:20px;max-width:440px;width:100%;font-size:13.5px">
+ <div id="fn-title" style="font-weight:700;font-size:16px;margin-bottom:10px">Save PDF</div>
+ <div style="margin-bottom:8px;color:#556">Bill / Invoice Number: <b id="fn-billno"></b></div>
+ <label style="display:block;margin-bottom:4px">File Name Format</label>
+ <select id="fn-fmt" onchange="fnFmtChange()" style="width:100%;padding:8px;border:1px solid #ccd;border-radius:8px;margin-bottom:10px"><option value="bill">Bill / Invoice Number</option><option value="bill_cust">Bill Number + Customer</option><option value="bill_date">Bill Number + Date</option><option value="cust_bill">Customer + Bill Number</option><option value="custom">Custom</option></select>
+ <label style="display:block;margin-bottom:4px">File Name</label>
+ <input id="fn-name" oninput="document.getElementById('fn-fmt').value='custom'" style="width:100%;padding:8px;border:1px solid #ccd;border-radius:8px;margin-bottom:10px"/>
+ <label id="fn-remarks-wrap" style="display:block;margin-bottom:8px"><input type="checkbox" id="fn-remarks" checked/> Show item remarks under description</label>
+ <label style="display:block;margin-bottom:8px"><input type="checkbox" id="fn-remember" checked/> Remember my filename preference</label>
+ <label style="display:block;margin-bottom:4px">Download Mode</label>
+ <select id="fn-mode" style="width:100%;padding:8px;border:1px solid #ccd;border-radius:8px;margin-bottom:14px"><option value="ask">Ask for filename every time</option><option value="bill">Automatically use Bill Number</option><option value="saved">Automatically use my saved filename format</option></select>
+ <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="fnClose()">Cancel</button><button class="btn btn-primary" onclick="fnGo()">Download</button></div>
+</div></div>
 </body>
 </html>
