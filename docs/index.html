@@ -580,7 +580,7 @@ Ayapakkam, Chennai - 600 077</textarea></div>
       </table>
     </div>
 
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0"><button class="btn" onclick="pickExcel()">📊 Import Excel</button><button class="btn" onclick="downloadTemplate()">⬇ Download Excel Template</button></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0"><button class="btn" onclick="pickExcel()">📊 Import Excel</button><button class="btn" onclick="downloadTemplate()">⬇ Download Excel Template</button><button class="btn" onclick="sfOpen()">📁 Save Location</button></div>
     <button class="add-row-btn" onclick="addRow()">
       <svg><path d="M12 5v14M5 12h14"/></svg>
       Add line item
@@ -928,39 +928,120 @@ const SHEET_SIZES={
   '6x2':{label:'6×2 ft',sqft:12},
 };
 
+/* ═══ CENTRAL CALCULATION ENGINE (single source for UI, preview, PDF, Excel, totals) ═══ */
+const DIM_TYPES={lw:{h:0,q:0},lwh:{h:1,q:0},lwhq:{h:1,q:1},custom:{h:0,q:1}};
+const QTY_TYPES={qty:1,piece:'Piece',set:'Set',lot:'Lot'};
+const ADV_TYPES=['custom','lw','lwh','lwhq','sheet','lump','percent','formula'];
+const num=v=>(v===''||v==null)?NaN:+v;
+// controlled formula parser (no eval): numbers, A-D, Qty, + - * / × ÷ x ( )
+function evalFormula(expr,vars){
+  const src=String(expr||'').trim();if(!src)return{err:'Enter a formula, e.g. A × B × C'};
+  const re=/\s*(\d+\.?\d*|\.\d+|qty|[A-D]|[-+*\/×÷x()])/iy,toks=[];let m;re.lastIndex=0;
+  while(re.lastIndex<src.length&&(m=re.exec(src)))toks.push(m[1]);
+  if(toks.join('').length<src.replace(/\s/g,'').length)return{err:'Formula has an unsupported character'};
+  const prec={'+':1,'-':1,'*':2,'/':2},out=[],ops=[];let prev=null;
+  for(let t of toks){
+    const tl=t.toLowerCase();
+    if(/^[\d.]/.test(t)){out.push(+t);prev='n';}
+    else if(tl==='qty'||/^[A-D]$/i.test(t)){
+      const key=tl==='qty'?'Qty':t.toUpperCase(),v=num(vars[key]);
+      if(isNaN(v))return{err:'Enter a value for '+key};out.push(v);prev='n';
+    }else if(t==='(' ){ops.push(t);prev='(';}
+    else if(t===')'){while(ops.length&&ops[ops.length-1]!=='(')out.push(ops.pop());if(!ops.length)return{err:'Unbalanced brackets'};ops.pop();prev='n';}
+    else{
+      const op=t==='×'||tl==='x'?'*':t==='÷'?'/':t;
+      if(prev!=='n')return{err:'Formula is incomplete'};
+      while(ops.length&&ops[ops.length-1]!=='('&&prec[ops[ops.length-1]]>=prec[op])out.push(ops.pop());
+      ops.push(op);prev='o';
+    }
+  }
+  if(prev!=='n')return{err:'Formula is incomplete'};
+  while(ops.length){const o=ops.pop();if(o==='(')return{err:'Unbalanced brackets'};out.push(o);}
+  const st=[];
+  for(const t of out){
+    if(typeof t==='number'){st.push(t);continue;}
+    const b=st.pop(),a=st.pop();if(a===undefined||b===undefined)return{err:'Formula is incomplete'};
+    if(t==='/'&&b===0)return{err:'Division by zero'};
+    st.push(t==='+'?a+b:t==='-'?a-b:t==='*'?a*b:a/b);
+  }
+  return st.length===1&&isFinite(st[0])?{val:st[0]}:{err:'Formula is incomplete'};
+}
+function fvars(r){return Object.assign({},r.vars||{},{Qty:r.qty});}
+function pctBase(r){return r.percentageBase==='custom'?(+r.baseAmount||0):rows.reduce((s,x)=>x.calcType==='percent'?s:s+rowAmount(x),0);}
+function dimUnit(r,cu){return cu?(r.areaUnit==='m'?'cu.m':'cu.ft'):(r.areaUnit==='m'?'sq.m':'sq.ft');}
+function dimQty(r){const t=DIM_TYPES[r.calcType],L=+r.length||0,W=+r.width||0,H=t.h?(+r.height||0):1,Q=t.q?(+r.qty||(r.calcType==='custom'?1:0)):1;return L*W*H*Q;}
 function getRowAreaQty(r){
   const mode=r.calcType||'qty';
+  if(DIM_TYPES[mode])return{qty:DIM_TYPES[mode].q?(+r.qty||(mode==='custom'?1:0)):'',area:dimQty(r)};
   switch(mode){
     case 'sqft': return{qty:'',area:+r.area||0};
     case 'sqm': return{qty:'',area:+r.areaSqm||0};
     case 'sheet':{const sz=SHEET_SIZES[r.sheetSize]||SHEET_SIZES['8x4'];return{qty:+r.sheets||0,area:(+r.sheets||0)*sz.sqft};}
     case 'rft': return{qty:+r.length||0,area:''};
-    case 'custom': return{qty:+r.qty||1,area:(+r.length||0)*(+r.width||0)*(+r.qty||1)};
+    case 'lump': case 'percent': return{qty:'',area:''};
+    case 'formula':{const f=evalFormula(r.formula,fvars(r));return{qty:f.err?0:f.val,area:''};}
     default: return{qty:+r.qty||0,area:''};
   }
 }
 function getFinalQtyUnit(r){
   const mode=r.calcType||'qty';
+  if(DIM_TYPES[mode])return{qty:dimQty(r),unit:dimUnit(r,DIM_TYPES[mode].h)};
   switch(mode){
     case 'sqft': return{qty:+r.area||0,unit:'sq.ft'};
     case 'sqm': return{qty:+r.areaSqm||0,unit:'sq.m'};
-    case 'sheet':{
-      const sz=SHEET_SIZES[r.sheetSize]||SHEET_SIZES['8x4'];
-      return{qty:(+r.sheets||0)*sz.sqft,unit:'sq.ft'};
-    }
+    case 'sheet':{const sz=SHEET_SIZES[r.sheetSize]||SHEET_SIZES['8x4'];return{qty:(+r.sheets||0)*sz.sqft,unit:'sq.ft'};}
     case 'rft': return{qty:+r.length||0,unit:r.lengthUnit==='m'?'meter':'R.ft'};
-    case 'custom':{
-      const unit=r.areaUnit==='m'?'sq.m':'sq.ft';
-      return{qty:(+r.length||0)*(+r.width||0)*(+r.qty||1),unit};
-    }
+    case 'lump': return{qty:0,unit:'Lump Sum'};
+    case 'percent': return{qty:0,unit:'%'};
+    case 'formula':{const f=evalFormula(r.formula,fvars(r));return{qty:f.err?0:f.val,unit:r.unit||'Nos'};}
+    case 'piece': case 'set': case 'lot': return{qty:+r.qty||0,unit:QTY_TYPES[mode]};
     default: return{qty:+r.qty||0,unit:r.unit||'Nos'};
   }
 }
-function rowAmount(r){const{qty}=getFinalQtyUnit(r);return qty*(+r.rate||0);}
+function rowAmount(r){
+  const mode=r.calcType||'qty';
+  if(mode==='lump')return +r.amount||0;
+  if(mode==='percent')return pctBase(r)*(+r.percentageValue||0)/100;
+  const{qty}=getFinalQtyUnit(r);return qty*(+r.rate||0);
+}
+function rateText(r){return(r.calcType==='lump'||r.calcType==='percent')?'—':rateText(r);}
+// returns a message when the row's input is incomplete/invalid (never silently treated as zero)
+function rowIssue(r){
+  const mode=r.calcType||'qty';
+  for(const f of['qty','area','areaSqm','length','width','height','sheets','rate','amount','percentageValue','baseAmount'])if(+r[f]<0)return'Negative value in '+f;
+  if(DIM_TYPES[mode]){const t=DIM_TYPES[mode];
+    if(!(+r.length>0))return'Length missing';if(!(+r.width>0))return'Width missing';
+    if(t.h&&!(+r.height>0))return'Height missing';if(t.q&&mode!=='custom'&&!(+r.qty>0))return'Quantity missing';}
+  else if(mode==='lump'){if(!(+r.amount>0))return'Lump-sum amount missing';return'';}
+  else if(mode==='percent'){
+    if(!(+r.percentageValue>0)||+r.percentageValue>100)return'Percentage must be between 0 and 100';
+    if(r.percentageBase==='custom'&&!(+r.baseAmount>0))return'Base amount missing';
+    if(r.percentageBase!=='custom'&&!(pctBase(r)>0))return'No items to calculate % of';return'';}
+  else if(mode==='formula'){const f=evalFormula(r.formula,fvars(r));if(f.err)return f.err;if(f.val<=0)return'Formula result must be above zero';}
+  else if(mode==='sqft'&&!(+r.area>0))return'Area missing';
+  else if(mode==='sqm'&&!(+r.areaSqm>0))return'Area missing';
+  else if(mode==='sheet'&&!(+r.sheets>0))return'Number of sheets missing';
+  else if(mode==='rft'&&!(+r.length>0))return'Length missing';
+  else if((mode==='qty'||QTY_TYPES[mode])&&!(+r.qty>0))return'Quantity missing';
+  if(!(+r.rate>0))return'Rate missing';
+  return'';
+}
+// human-readable calculation line (UI helper, PDF sub-line)
+function calcExplain(r){
+  const mode=r.calcType||'qty',u=r.areaUnit==='m'?'m':'ft',n=v=>fmt(+v||0).replace(/\.00$/,'');
+  if(DIM_TYPES[mode]){const t=DIM_TYPES[mode];
+    let p=[n(r.length)+' '+u,n(r.width)+' '+u];if(t.h)p.push(n(r.height)+' '+u);if(t.q)p.push(n(r.qty||(mode==='custom'?1:0))+' Nos');
+    return p.join(' × ')+' = '+n(dimQty(r))+' '+dimUnit(r,t.h);}
+  if(mode==='sheet'){const sz=SHEET_SIZES[r.sheetSize]||SHEET_SIZES['8x4'];return n(r.sheets)+' × '+sz.label+' sheets = '+n((+r.sheets||0)*sz.sqft)+' sq.ft';}
+  if(mode==='lump')return'Lump Sum';
+  if(mode==='percent')return n(r.percentageValue)+'% of '+(r.percentageBase==='custom'?'₹'+n(r.baseAmount):'Subtotal (₹'+fmt(pctBase(r))+')');
+  if(mode==='formula'){const f=evalFormula(r.formula,fvars(r));return String(r.formula||'')+(f.err?'':' = '+n(f.val)+' '+(r.unit||'Nos'));}
+  return'';
+}
 function fmtQty(q,mode){return String(+(+q||0).toFixed(2));} // whole numbers show without decimals (1, 8, 20); fractions keep up to 2 (2.5)
 
 function calcTypeSelectHtml(r,i){
-  const modes=[['qty','Quantity'],['sqft','Square Feet'],['sqm','Square Meter'],['sheet','Sheet Work'],['rft','Running Feet / Meter'],['custom','Custom Area']];
+  const modes=[['qty','Quantity'],['piece','Per Piece'],['set','Per Set'],['lot','Per Lot'],['sqft','Square Feet'],['sqm','Square Meter'],['sheet','Sheet Work'],['rft','Running Feet / Meter'],['lw','Length × Width'],['custom','L × W × Qty'],['lwh','L × W × H (cubic)'],['lwhq','L × W × H × Qty'],['lump','Lump Sum'],['percent','Percentage'],['formula','Custom Formula']];
   const cur=r.calcType||'qty';
   const opts=modes.map(([v,l])=>`<option value="${v}" ${cur===v?'selected':''}>${l}</option>`).join('');
   return`<select class="calc-mini-select" style="width:100%!important" onchange="rows[${i}].calcType=this.value;renderRows()">${opts}</select>`;
@@ -1024,13 +1105,29 @@ function calcCellHtml(r,i){
       </div>
     </div>`;
   }
+  const ni=(f,ph,t)=>`<input type="number" inputmode="decimal" step="0.01" value="${r[f]||''}" placeholder="${ph}" title="${t||ph}" oninput="rows[${i}].${f}=+this.value||0;updateRowLive(${i})"/>`;
+  const hp=`<span class="calc-helper" id="helper-${i}">${esc(rowHelper(r))}</span>`;
+  if(DIM_TYPES[mode]&&mode!=='custom'){const t=DIM_TYPES[mode];
+    return`<div class="calc-cell"><div class="calc-inline">${ni('length','L')}<span>×</span>${ni('width','W')}${t.h?'<span>×</span>'+ni('height','H'):''}${t.q?'<span>×</span>'+ni('qty','Qty'):''}</div><div class="calc-inline"><select class="calc-mini-select" onchange="rows[${i}].areaUnit=this.value;updateRowLive(${i})"><option value="ft" ${r.areaUnit!=='m'?'selected':''}>ft</option><option value="m" ${r.areaUnit==='m'?'selected':''}>meter</option></select>${hp}</div></div>`;}
+  if(QTY_TYPES[mode])return ni('qty','Qty');
+  if(mode==='lump')return`<div class="calc-cell">${ni('amount','Lump sum ₹')}${hp}</div>`;
+  if(mode==='percent'){const c=r.percentageBase==='custom';
+    return`<div class="calc-cell"><div class="calc-inline">${ni('percentageValue','%')}<select class="calc-mini-select" onchange="rows[${i}].percentageBase=this.value;renderRows()"><option value="subtotal" ${c?'':'selected'}>of Subtotal</option><option value="custom" ${c?'selected':''}>of Custom amount</option></select></div>${c?ni('baseAmount','Base ₹'):''}${hp}</div>`;}
+  if(mode==='formula'){const vi=k=>`<input type="number" inputmode="decimal" step="0.01" style="width:48px" value="${(r.vars||{})[k]??''}" placeholder="${k}" title="${k}" oninput="(rows[${i}].vars=rows[${i}].vars||{}).${k}=this.value;updateRowLive(${i})"/>`;
+    return`<div class="calc-cell"><input value="${esc(r.formula||'')}" placeholder="e.g. A × B × C" oninput="rows[${i}].formula=this.value;updateRowLive(${i})"/><div class="calc-inline">${vi('A')}${vi('B')}${vi('C')}${vi('D')}</div>${hp}</div>`;}
   return'';
+}
+
+function rowHelper(r){
+  const e=rowIssue(r);
+  if(e)return'⚠ '+e;
+  const x=calcExplain(r);return x?x+'  →  ₹'+fmt(rowAmount(r)):'';
 }
 
 function unitCellHtml(r,i){
   const mode=r.calcType||'qty';
   if(mode==='qty'){
-    return`<input value="${esc(r.unit)}" oninput="rows[${i}].unit=this.value" placeholder="Nos"/>`;
+    return`<input value="${esc(r.unit)}" oninput="rows[${i}].unit=this.value" placeholder="Nos" list="unit-list"/>`;
   }
   const{unit}=getFinalQtyUnit(r);
   return`<span id="unitdisp-${i}" style="font-size:12px;color:var(--muted);padding:8px 4px;display:inline-block">${unit}</span>`;
@@ -1053,6 +1150,9 @@ function updateRowLive(i){
       helperEl.textContent=fmt(area)+' '+unitLbl+' (Calculated)';
     }
   }
+  if(helperEl&&(ADV_TYPES.includes(r.calcType)&&r.calcType!=='sheet'))helperEl.textContent=rowHelper(r);
+  if(r.calcType==='percent'||r.calcType==='lump')rows.forEach((x,k)=>{if(x.calcType==='percent'){const e=document.getElementById('amt-'+k);if(e)e.textContent='₹'+fmt(rowAmount(x));}});
+  else rows.forEach((x,k)=>{if(x.calcType==='percent'){const e=document.getElementById('amt-'+k);if(e)e.textContent='₹'+fmt(rowAmount(x));}});
   const unitEl=document.getElementById('unitdisp-'+i);
   if(unitEl){const{unit}=getFinalQtyUnit(r);unitEl.textContent=unit;}
   calcUI();
@@ -1268,7 +1368,7 @@ function renderPreview(){
     <td style="white-space:pre-line;max-width:180px">${r.desc}</td>
     <td class="c">${r.hsn}</td><td class="r">${aq===''?'—':fmtQty(aq,r.calcType)}</td>
     <td class="r">${aa===''?'—':fmt(aa)}</td>
-    <td class="c">${fu}</td><td class="r">${fmt(r.rate)}</td>
+    <td class="c">${fu}</td><td class="r">${rateText(r)}</td>
     <td class="r"><strong>${fmt(amt)}</strong></td>
   </tr>`;
   }).join('');
@@ -1400,7 +1500,8 @@ function buildPDF(fname,showRem){
     doc.setFontSize(7.5);
     const lines=doc.splitTextToSize(r.desc||'',44);
     doc.setFontSize(6.5);
-    const rem=(showRem&&r.remarks)?doc.splitTextToSize(String(r.remarks),44):[];
+    const remTxt=[calcExplain(r),showRem?r.remarks:''].filter(Boolean).join('\n');
+    const rem=remTxt?doc.splitTextToSize(remTxt,44):[];
     const rh=Math.max(7,3+lines.length*3.1+rem.length*2.7+1.5);
     if(y+rh>PB)newPage(true);               // never split a row across pages
     doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(30,30,30);
@@ -1414,7 +1515,7 @@ function buildPDF(fname,showRem){
     doc.text(aq===''?'—':fmtQty(aq,r.calcType),lx+cw[3]-2,y+3,{align:'right'});lx+=cw[3];
     doc.text(aa===''?'—':fmt(aa),lx+cw[4]-2,y+3,{align:'right'});lx+=cw[4];
     doc.text(fu,lx+cw[5]/2,y+3,{align:'center'});lx+=cw[5];
-    doc.text(fmt(r.rate),lx+cw[6]-2,y+3,{align:'right'});lx+=cw[6];
+    doc.text(rateText(r),lx+cw[6]-2,y+3,{align:'right'});lx+=cw[6];
     doc.text(fmt(amt),lx+cw[7]-2,y+3,{align:'right'});
     y+=rh;
   });
@@ -1459,8 +1560,7 @@ function buildPDF(fname,showRem){
     doc.text((gstOn?'Invoice':'Bill')+' No: '+bill,14,291);
     doc.text('Page '+p+' of '+N,W-14,291,{align:'right'});
   }
-  doc.save(fname);
-  showToast('PDF saved to Downloads','ok');
+  saveOut(doc.output('blob'),fname,'PDF',()=>doc.save(fname));
 }
 
 /* ── EXPORT EXCEL ── */
@@ -1485,7 +1585,7 @@ function buildExcel(fname){
     ...(gstOnXl?[['Bill To:',g('cust-name'),'','','Customer GSTIN:',g('cust-gstin')]]:[['Bill To:',g('cust-name')]]),
     ['Address:',g('cust-addr').replace(/\n/g,', ')],[],
     ['S.No','Description','HSN/SAC','Qty','Area','Unit','Rate (₹)','Amount (₹)'],
-    ...rows.map((r,i)=>{const{unit:fu}=getFinalQtyUnit(r);const{qty:aq,area:aa}=getRowAreaQty(r);return[i+1,r.desc+(r.remarks?'\n'+r.remarks:''),r.hsn,aq===''?'':+(+aq).toFixed(3),aa===''?'':+(+aa).toFixed(2),fu,r.rate,+rowAmount(r).toFixed(2)];}),
+    ...rows.map((r,i)=>{const{unit:fu}=getFinalQtyUnit(r);const{qty:aq,area:aa}=getRowAreaQty(r);return[i+1,r.desc+(calcExplain(r)?'\n'+calcExplain(r):'')+(r.remarks?'\n'+r.remarks:''),r.hsn,aq===''?'':+(+aq).toFixed(3),aa===''?'':+(+aa).toFixed(2),fu,(r.calcType==='lump'||r.calcType==='percent')?'':r.rate,+rowAmount(r).toFixed(2)];}),
     [],
     ['','','','','','','Sub-Total (₹):',+t.sub.toFixed(2)],
     ...taxRows,
@@ -1498,8 +1598,7 @@ function buildExcel(fname){
   ws['!cols']=[{wch:6},{wch:40},{wch:12},{wch:8},{wch:8},{wch:8},{wch:20},{wch:16}];
   ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:7}},{s:{r:1,c:0},e:{r:1,c:7}},{s:{r:6,c:0},e:{r:6,c:7}}];
   XLSX.utils.book_append_sheet(wb,ws,'Invoice');
-  XLSX.writeFile(wb,fname);
-  showToast('Excel saved to Downloads','ok');
+  saveOut(new Blob([XLSX.write(wb,{bookType:'xlsx',type:'array'})],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),fname,'Excel',()=>XLSX.writeFile(wb,fname));
 }
 
 /* ── SUPABASE: STATE COLLECTION ── */
@@ -1821,7 +1920,7 @@ function askFileName(ext,cb){
   document.getElementById('fn-remarks-wrap').style.display=ext==='pdf'?'':'none';
   document.getElementById('fn-title').textContent='Save '+(ext==='pdf'?'PDF':'Excel');
   document.getElementById('fn-name').value=p.fmt==='custom'?p.custom:fnBuild(p.fmt);
-  document.getElementById('fn-modal').style.display='flex';
+  document.getElementById('fn-sf-state').textContent=SF.dir?'saving to '+SF.dir.name:'Downloads';document.getElementById('fn-modal').style.display='flex';
 }
 function fnFmtChange(){const f=document.getElementById('fn-fmt').value;if(f!=='custom')document.getElementById('fn-name').value=fnBuild(f);}
 function fnClose(){document.getElementById('fn-modal').style.display='none';}
@@ -1836,13 +1935,11 @@ function fnGo(){
 
 /* ═══ VALIDATION ═══ */
 function validateInvoice(){
-  const bad={desc:0,rate:0,qty:0};
-  rows.forEach(r=>{if(!(r.desc||'').trim())bad.desc++;if(!(+r.rate>0))bad.rate++;if(!(getFinalQtyUnit(r).qty>0))bad.qty++;});
-  const out=[];
+  const out=[],groups={};let nd=0;
+  rows.forEach(r=>{if(!(r.desc||'').trim())nd++;const e=rowIssue(r);if(e)groups[e]=(groups[e]||0)+1;});
   if(!rows.length)out.push('No line items added.');
-  if(bad.desc)out.push(bad.desc+' item(s) have no description.');
-  if(bad.rate)out.push(bad.rate+' item(s) have no rate.');
-  if(bad.qty)out.push(bad.qty+' item(s) have zero quantity / area.');
+  if(nd)out.push(nd+' item(s) have no description.');
+  Object.keys(groups).forEach(e=>out.push(groups[e]+' item(s): '+e+'.'));
   return out;
 }
 function exportPDF(){
@@ -1924,6 +2021,7 @@ function xlItem(o,meta){
   const sqft=/^(sqft|sft|sqfeet|squarefeet)$/.test(u),sqm=/^(sqm|sqmeter|squaremeter)$/.test(u),rft=/^(rft|rf|runningfeet|rm|runningmeter|meter|mtr)$/.test(u);
   const rem=[o.remarks?String(o.remarks).trim():'',...meta,H?'Height: '+H:''].filter(Boolean).join(' | ');
   const it={desc:String(o.desc||'').trim(),hsn:String(o.hsn||'').trim(),calcType:'qty',qty:qty||1,unit:unitRaw||'Nos',rate,area:0,areaSqm:0,sheets:0,sheetSize:'8x4',length:0,lengthUnit:'ft',width:0,areaUnit:'ft',remarks:rem};
+  if(!rate&&amt>0&&!qty&&!area&&!L&&!Wd){it.calcType='lump';it.amount=amt;it.unit='Lump Sum';it.qty=0;return it;}
   if(L&&Wd){it.calcType='custom';it.length=L;it.width=Wd;if(sqm)it.areaUnit='m';}
   else if(sqm){it.calcType='sqm';it.areaSqm=area||qty;}
   else if(area||sqft){it.calcType='sqft';it.area=area||qty;}
@@ -1970,6 +2068,90 @@ function downloadTemplate(){
   ws['!cols']=[{wch:6},{wch:36},{wch:10},{wch:10},{wch:6},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:10},{wch:30}];
   XLSX.utils.book_append_sheet(wb,ws,'Items');XLSX.writeFile(wb,'SS-Interiors-Import-Template.xlsx');
 }
+
+/* ═══ CONNECTED SAVE FOLDER (File System Access API) ═══ */
+const SF_KEY='ssi_sf_prefs',SF_ROOT="SS Interior's Documents";
+const SF={dir:null,state:'none'}; // state: none | ready | needs-permission | unsupported
+const sfSupported=()=>'showDirectoryPicker' in window;
+function sfPrefs(){try{return Object.assign({layout:'year_type',dup:'copy'},JSON.parse(localStorage.getItem(SF_KEY)||'{}'));}catch(e){return{layout:'year_type',dup:'copy'};}}
+function sfIdb(){return new Promise((res,rej)=>{const q=indexedDB.open('ssi_fs',1);q.onupgradeneeded=()=>q.result.createObjectStore('kv');q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error);});}
+async function sfIdbGet(k){const d=await sfIdb();return new Promise((res,rej)=>{const r=d.transaction('kv').objectStore('kv').get(k);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
+async function sfIdbSet(k,v){const d=await sfIdb();return new Promise((res,rej)=>{const t=d.transaction('kv','readwrite');v===null?t.objectStore('kv').delete(k):t.objectStore('kv').put(v,k);t.oncomplete=res;t.onerror=()=>rej(t.error);});}
+async function sfInit(){
+  if(!sfSupported()){SF.state='unsupported';sfRender();return;}
+  try{SF.dir=await sfIdbGet('dir')||null;
+    if(SF.dir)SF.state=(await SF.dir.queryPermission({mode:'readwrite'}))==='granted'?'ready':'needs-permission';
+  }catch(e){SF.dir=null;}
+  sfRender();
+}
+async function sfConnect(){
+  try{
+    const h=await window.showDirectoryPicker({mode:'readwrite',id:'ssi-docs'});
+    SF.dir=h;SF.state='ready';await sfIdbSet('dir',h);sfRender();showToast('Folder connected: '+h.name,'ok');
+  }catch(e){if(e.name!=='AbortError')showToast('Could not connect folder: '+(e.message||e.name),'err');}
+}
+async function sfDisconnect(){SF.dir=null;SF.state=sfSupported()?'none':'unsupported';try{await sfIdbSet('dir',null);}catch(e){}sfRender();showToast('Folder disconnected','ok');}
+async function sfEnsure(){ // must run from a user gesture to be able to re-ask permission
+  if(!SF.dir)return false;
+  if(await SF.dir.queryPermission({mode:'readwrite'})==='granted'){SF.state='ready';return true;}
+  if(await SF.dir.requestPermission({mode:'readwrite'})==='granted'){SF.state='ready';sfRender();return true;}
+  SF.state='needs-permission';sfRender();return false;
+}
+function sfFY(){const d=new Date(g('inv-date')||Date.now());const y=isNaN(d)?new Date().getFullYear():d.getFullYear(),m=isNaN(d)?new Date().getMonth():d.getMonth();const s=m>=3?y:y-1;return s+'-'+String(s+1).slice(2);}
+function sfPath(){
+  const p=sfPrefs(),type=gstOn?'Invoices':'Bills',cust=safeName(g('cust-name'))||'No Customer';
+  const parts=[SF_ROOT];
+  if(p.layout==='type')parts.push(type);
+  else if(p.layout==='year_type')parts.push(sfFY(),type);
+  else if(p.layout==='year_cust_type')parts.push(sfFY(),cust,type);
+  return parts;
+}
+async function sfUniqueName(dir,name){
+  const p=sfPrefs(),dot=name.lastIndexOf('.'),base=name.slice(0,dot),ext=name.slice(dot);
+  const exists=async n=>{try{await dir.getFileHandle(n);return true;}catch(e){return false;}};
+  if(!(await exists(name)))return name;
+  if(p.dup==='replace')return name;
+  if(p.dup==='ask'){
+    const r=prompt('"'+name+'" already exists.\nType a new name, or leave as-is and press OK to replace it:',name);
+    if(r===null)return null;
+    return withExt(r,ext.slice(1));
+  }
+  let i=1;while(await exists(base+' ('+i+')'+ext))i++;
+  return base+' ('+i+')'+ext;
+}
+function sfDownload(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);}
+async function saveOut(blob,fname,label,fallback){
+  if(SF.dir){
+    try{
+      if(await sfEnsure()){
+        let dir=SF.dir;const path=sfPath();
+        for(const part of path)dir=await dir.getDirectoryHandle(part,{create:true});
+        const final=await sfUniqueName(dir,fname);
+        if(final===null){showToast('Save cancelled','err');return;}
+        const fh=await dir.getFileHandle(final,{create:true}),w=await fh.createWritable();
+        await w.write(blob);await w.close();
+        showToast('Saved: '+path.join(' / ')+' / '+final,'ok');return;
+      }
+      showToast('Folder permission not granted — downloading instead','err');
+    }catch(e){showToast('Folder save failed ('+(e.message||e.name)+') — downloading instead','err');}
+  }
+  fallback();showToast(label+' saved to Downloads','ok');
+}
+function sfRender(){
+  const el=document.getElementById('sf-status');if(!el)return;
+  const txt=SF.state==='ready'?'🟢 Connected: <b>'+esc(SF.dir.name)+'</b>':SF.state==='needs-permission'?'🟡 <b>'+esc(SF.dir.name)+'</b> — permission needed (it will ask on next save)':SF.state==='unsupported'?'⚪ Not supported in this browser (use Chrome or Edge) — files go to Downloads':'⚪ Not Connected — files go to Downloads';
+  el.innerHTML=txt;
+  const has=!!SF.dir;
+  document.getElementById('sf-connect').textContent=has?'Change Folder':'Connect Folder';
+  document.getElementById('sf-connect').disabled=!sfSupported();
+  document.getElementById('sf-disc').style.display=has?'':'none';
+  const p=sfPrefs();document.getElementById('sf-layout').value=p.layout;document.getElementById('sf-dup').value=p.dup;
+  document.getElementById('sf-preview').textContent=SF_ROOT.replace(/\/$/,'')+(sfPath().slice(1).length?' / '+sfPath().slice(1).join(' / '):'')+' / <file>';
+}
+function sfPrefChange(){const p={layout:document.getElementById('sf-layout').value,dup:document.getElementById('sf-dup').value};try{localStorage.setItem(SF_KEY,JSON.stringify(p));}catch(e){}sfRender();}
+function sfOpen(){sfRender();document.getElementById('sf-modal').style.display='flex';}
+function sfClose(){document.getElementById('sf-modal').style.display='none';}
+sfInit();
 </script>
 <input type="file" id="xl-file" accept=".xlsx,.xls" style="display:none" onchange="handleExcelFile(event)"/>
 <div id="xl-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;padding:14px"><div id="xl-body" style="background:#fff;border-radius:14px;padding:20px;max-width:560px;width:100%;max-height:90vh;overflow:auto"></div></div>
@@ -1984,7 +2166,19 @@ function downloadTemplate(){
  <label style="display:block;margin-bottom:8px"><input type="checkbox" id="fn-remember" checked/> Remember my filename preference</label>
  <label style="display:block;margin-bottom:4px">Download Mode</label>
  <select id="fn-mode" style="width:100%;padding:8px;border:1px solid #ccd;border-radius:8px;margin-bottom:14px"><option value="ask">Ask for filename every time</option><option value="bill">Automatically use Bill Number</option><option value="saved">Automatically use my saved filename format</option></select>
+ <div style="margin-bottom:12px;font-size:12.5px;color:#556">📁 <a href="#" onclick="event.preventDefault();sfOpen()" style="color:#1a5fa8">Save location settings</a> — currently <span id="fn-sf-state"></span></div>
  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="fnClose()">Cancel</button><button class="btn btn-primary" onclick="fnGo()">Download</button></div>
 </div></div>
-</body>
+<div id="sf-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;padding:14px"><div style="background:#fff;border-radius:14px;padding:20px;max-width:460px;width:100%;font-size:13.5px">
+ <div style="font-weight:700;font-size:16px;margin-bottom:10px">📁 Save Location</div>
+ <div id="sf-status" style="margin-bottom:10px"></div>
+ <div style="display:flex;gap:8px;margin-bottom:14px"><button class="btn btn-primary" id="sf-connect" onclick="sfConnect()">Connect Folder</button><button class="btn" id="sf-disc" onclick="sfDisconnect()">Disconnect</button></div>
+ <label style="display:block;margin-bottom:4px">Folder Structure</label>
+ <select id="sf-layout" onchange="sfPrefChange()" style="width:100%;padding:8px;border:1px solid #ccd;border-radius:8px;margin-bottom:10px"><option value="flat">All files in one folder</option><option value="type">Document Type</option><option value="year_type">Year → Document Type (default)</option><option value="year_cust_type">Year → Customer → Document Type</option></select>
+ <label style="display:block;margin-bottom:4px">If the file already exists</label>
+ <select id="sf-dup" onchange="sfPrefChange()" style="width:100%;padding:8px;border:1px solid #ccd;border-radius:8px;margin-bottom:10px"><option value="copy">Save as new copy — SS-2026-105 (1).pdf (default)</option><option value="ask">Ask me to rename</option><option value="replace">Replace</option></select>
+ <div style="font-size:12px;color:#667;background:#f3f6fb;border-radius:8px;padding:8px;margin-bottom:14px">Saves to:<br><span id="sf-preview"></span></div>
+ <div style="text-align:right"><button class="btn" onclick="sfClose()">Close</button></div>
+</div></div>
+<datalist id="unit-list"><option value="Nos"><option value="Set"><option value="Pair"><option value="Piece"><option value="Box"><option value="Lot"><option value="Job"><option value="Day"><option value="Hour"><option value="Trip"><option value="Bundle"><option value="ft"><option value="inch"><option value="meter"><option value="R.ft"><option value="R.m"><option value="sq.ft"><option value="sq.m"><option value="cu.ft"><option value="cu.m"></datalist></body>
 </html>
