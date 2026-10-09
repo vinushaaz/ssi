@@ -382,6 +382,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <span class="tb-name">SS Interior's</span>
   </div>
   <div style="display:flex;align-items:center;gap:8px">
+    <button class="history-btn" onclick="memoOpen()">📝 Memo</button>
     <button class="history-btn" onclick="openHistory()">
       <svg viewBox="0 0 24 24"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 106 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
       History
@@ -423,6 +424,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <button class="sb-btn sb-btn-xl" onclick="exportExcel()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8l3 4-3 4M13 8h4M13 12h3M13 16h4"/></svg>Export Excel
     </button>
+    <button class="sb-btn" onclick="memoOpen()" style="background:var(--blue-lt,#e8f1fb);color:#1a5fa8;margin-bottom:6px">📝 Memo Pad</button>
     <button class="sb-btn" onclick="openHistory()" style="background:var(--purple-lt);color:var(--purple)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 106 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>History
     </button>
@@ -1425,134 +1427,149 @@ function renderPreview(){
 
 /* ── EXPORT PDF ── */
 const PDF_THEMES={
-  classic:{c:[26,95,168],soft:[234,242,251],band:1,zebra:1,serif:0,pad:1.7,fs:8},
-  premium:{c:[22,43,82],soft:[240,244,250],band:0,zebra:0,serif:1,pad:2.4,fs:8},
-  minimal:{c:[45,45,45],soft:[246,246,246],band:0,zebra:0,serif:0,pad:1.9,fs:8},
-  corporate:{c:[30,58,95],soft:[237,241,246],band:1,zebra:1,serif:0,pad:1.9,fs:8},
-  compact:{c:[26,95,168],soft:[234,242,251],band:1,zebra:1,serif:0,pad:1,fs:7.2}
+  classic:{c:[26,95,168],soft:[234,242,251],band:1,zebra:0,serif:0,pad:2.3,fs:8.8},
+  premium:{c:[22,43,82],soft:[240,244,250],band:0,zebra:0,serif:1,pad:3,fs:8.8},
+  minimal:{c:[45,45,45],soft:[246,246,246],band:0,zebra:0,serif:0,pad:2.4,fs:8.8},
+  corporate:{c:[30,58,95],soft:[237,241,246],band:1,zebra:1,serif:0,pad:2.3,fs:8.8},
+  compact:{c:[26,95,168],soft:[234,242,251],band:1,zebra:0,serif:0,pad:1.5,fs:7.9}
 };
+const RUP_R='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',RUP_B='AAEAAAAOAIAAAwBgR0RFRgARAAIAAATsAAAAFkdQT1NEdkx1AAAFBAAAACBHU1VCJ6Q/wwAABSQAAACWT1MvMmslkisAAAH8AAAAVmNtYXBBcCIiAAACVAAAAGxnYXNwAAcABwAABOAAAAAMZ2x5ZiA3FSAAAADsAAAAfmhlYWQN9wG6AAABlAAAADZoaGVhDq8HdAAAAdgAAAAkaG10eA0nAM0AAAHMAAAADGxvY2EAAAA/AAABjAAAAAhtYXhwAEMDywAAAWwAAAAgbmFtZSwMQXIAAALAAAAB/nBvc3T/gQBaAAAEwAAAACAAAQBnAAAFLQXVACUAABM3IQchFhchByEGBwYHFhcWFxMhAy4BKwERMzI3NjchNyEmJyYjZ1gEblb+xCAMAWZW/usRK0iQTz8/P9H+ZrY3cV6Wy3k1Gg3+KFgBfQ0XNXkFEsPDOErDTTpfLRJAQID+WAFzcFIBCkMhKsMlHUAAAAABAAAAAwNOACsAeAAMAAEAAAAAAAAAAAAAAAAACAAEAAAAAAAAAD8AAQAAAAJeuEsR1v5fDzz1AB8IAAAAAADTwiv5AAAAANPCK/n3cvyuD80JZQABAAgAAAAAAAAAAATNAGYCyQAABZEAZwABAAAHbf4dAAAQIfdy+TIPzQABAAAAAAAAAAAAAAAAAAAAAwABBJUCvAAFAAAFMwWZAAABHgUzBZkAAAPXAGYCEgAAAgsIAwMGBAICBAAAAAEAAAACAAAAAAAAAABQZkVkACAAICC5BhT+FAGaB20B4wAAAAEAAAAAAAAAAAADAAAAAwAAABwAAAAKAAAARAADAAEAAAAcAAQAKAAAAAYABAABAAIAICC5//8AAAAgILn////h30kAAQAAAAAAAAAMAAAAAAAoAAAAAAAAAAIAAAAgAAAAIAAAAAEAACC5AAAguQAAAAIAAAAHAFoAAwABBAkAAAEwAAAAAwABBAkAAQAWATAAAwABBAkAAgAIAUYAAwABBAkAAwAgAU4AAwABBAkABAAgAU4AAwABBAkABQAYAW4AAwABBAkABgAeAYYAQwBvAHAAeQByAGkAZwBoAHQAIAAoAGMAKQAgADIAMAAwADMAIABiAHkAIABCAGkAdABzAHQAcgBlAGEAbQAsACAASQBuAGMALgAgAEEAbABsACAAUgBpAGcAaAB0AHMAIABSAGUAcwBlAHIAdgBlAGQALgAKAEMAbwBwAHkAcgBpAGcAaAB0ACAAKABjACkAIAAyADAAMAA2ACAAYgB5ACAAVABhAHYAbQBqAG8AbgBnACAAQgBhAGgALgAgAEEAbABsACAAUgBpAGcAaAB0AHMAIABSAGUAcwBlAHIAdgBlAGQALgAKAEQAZQBqAGEAVgB1ACAAYwBoAGEAbgBnAGUAcwAgAGEAcgBlACAAaQBuACAAcAB1AGIAbABpAGMAIABkAG8AbQBhAGkAbgAKAEQAZQBqAGEAVgB1ACAAUwBhAG4AcwBCAG8AbABkAEQAZQBqAGEAVgB1ACAAUwBhAG4AcwAgAEIAbwBsAGQAVgBlAHIAcwBpAG8AbgAgADIALgAzADcARABlAGoAYQBWAHUAUwBhAG4AcwAtAEIAbwBsAGQAAAADAAAAAAAA/34AWgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAIAAL//wADAAEAAAAMAAAAAAAAAAEAAQACAAEAAQAAAAEAAAAKABwAHgABREZMVAAIAAQAAAAA//8AAAAAAAAAAQAAAAoAkgCUABRERkxUAHphcmFiAIRhcm1uAIRicmFpAIRjYW5zAIRjaGVyAIRjeXJsAIRnZW9yAIRncmVrAIRoYW5pAIRoZWJyAIRrYW5hAIRsYW8gAIRsYXRuAIRtYXRoAIRua28gAIRvZ2FtAIRydW5yAIR0Zm5nAIR0aGFpAIQABAAAAAD//wAAAAAAAAAAAAAAAA==';
+function pdfFonts(doc){doc.addFileToVFS('rupR.ttf',RUP_R);doc.addFont('rupR.ttf','RupF','normal');doc.addFileToVFS('rupB.ttf',RUP_B);doc.addFont('rupB.ttf','RupF','bold');}
+// text with a real rupee glyph (standard PDF fonts have none); supports left/right/center
+function pdfTxt(doc,str,x,y,al){
+  const f=doc.getFont(),fam=f.fontName,st=f.fontStyle,b=/bold/.test(st)?'bold':'normal';
+  const parts=String(str).split('\u20b9'),segs=[];let tot=0;
+  parts.forEach((p,i)=>{
+    if(p){doc.setFont(fam,st);const w=doc.getTextWidth(p);segs.push([p,fam,st,w]);tot+=w;}
+    if(i<parts.length-1){doc.setFont('RupF',b);const w=doc.getTextWidth('\u20b9')+.4;segs.push(['\u20b9','RupF',b,w]);tot+=w;}
+  });
+  let cx=al==='right'?x-tot:al==='center'?x-tot/2:x;
+  segs.forEach(s=>{doc.setFont(s[1],s[2]);doc.text(s[0],cx,y);cx+=s[3];});
+  doc.setFont(fam,st);
+}
+// "Kitchen Base Unit – 10'-3" x 2'-6" = 1 No.; … with accessories (Tandem Box)" → name + detail lines
+function splitDesc(d){
+  d=String(d||'').replace(/\s+/g,' ').trim();
+  const m=d.match(/^(.{2,90}?)\s+[–—]\s+(.+)$/)||d.match(/^(.{2,60}?)\s+-\s+(.+)$/);
+  if(!m)return{name:d,det:[]};
+  const det=[];
+  m[2].split(/\s*;\s*/).forEach(seg=>{
+    const w=seg.match(/^(.*?)\s+with\s+(.+)$/i);
+    const fx=s=>s.replace(/(\d["'”]?)\s*[xX]\s*(?=\d)/g,'$1 × ');
+    if(w&&w[1].trim()){det.push(fx(w[1].trim()));det.push('With '+w[2]);}else if(w){det.push('With '+w[2]);}else det.push(fx(seg));
+  });
+  return{name:m[1],det:det.filter(Boolean)};
+}
 function buildPDF(fname,showRem,tplKey){
   const T=PDF_THEMES[tplKey]||PDF_THEMES.classic,{jsPDF}=window.jspdf;
-  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-  const W=210,M=14,CW=W-2*M,PB=274,bill=g('inv-no'),gstOn=isGstMode(),title=gstOn?'INVOICE':'BILL';
-  const HF=T.serif?'times':'helvetica',INK=[33,41,56],MUTE=[110,120,135],LINE=[218,224,233];
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});pdfFonts(doc);
+  const W=210,M=14,CW=W-2*M,PB=270,bill=g('inv-no'),gstOn=isGstMode(),title=gstOn?'INVOICE':'BILL';
+  const HF=T.serif?'times':'helvetica',INK=[33,41,56],MUTE=[110,120,135],LINE=[222,228,236],VL=[238,242,247];
   const col=a=>doc.setTextColor(a[0],a[1],a[2]),fil=a=>doc.setFillColor(a[0],a[1],a[2]),drw=a=>doc.setDrawColor(a[0],a[1],a[2]);
   const cs=n=>{if(doc.setCharSpace)doc.setCharSpace(n);};
-  const label=(txt,x,yy,c)=>{doc.setFont('helvetica','bold');doc.setFontSize(6.8);col(c||T.c);cs(.5);doc.text(txt,x,yy);cs(0);};
+  const label=(txt,x,yy,c)=>{doc.setFont('helvetica','bold');doc.setFontSize(7);col(c||T.c);cs(.5);doc.text(txt,x,yy);cs(0);};
   let y=M;
-  // ── page-1 letterhead
-  let lx=M;
-  if(logoDataUrl){try{doc.addImage(logoDataUrl,'PNG',M,y-2,32,15);lx=M+36;}catch(e){}}
-  doc.setFont(HF,'bold');doc.setFontSize(T.serif?22:20);col(T.c);doc.text(g('co-name'),lx,y+6);
-  doc.setFont('helvetica','normal');doc.setFontSize(6.8);col(MUTE);cs(.9);doc.text('OFFICE  |  COMMERCIAL  |  RESIDENTIAL',lx,y+11);cs(0);
-  doc.setFont(HF,'bold');doc.setFontSize(24);col(T.c);doc.text(title,W-M,y+6,{align:'right'});
-  doc.setFont('helvetica','bold');doc.setFontSize(9);col(INK);doc.text((gstOn?'Invoice No: ':'Bill No: ')+bill,W-M,y+12,{align:'right'});
-  doc.setFont('helvetica','normal');doc.setFontSize(8.5);col(MUTE);doc.text('Date: '+fmtDate(g('inv-date')),W-M,y+17,{align:'right'});
-  y+=19;
-  drw(T.c);doc.setLineWidth(.7);doc.line(M,y,W-M,y);y+=4.5;
-  doc.setFont('helvetica','normal');doc.setFontSize(7.4);col(MUTE);
-  const c1=g('co-addr').replace(/\n+/g,', ');
-  doc.text(c1,M,y);
-  const c2=[g('co-person'),g('co-ph1'),g('co-ph2')].filter(Boolean).join('  ·  ');
-  doc.text(c2,W-M,y,{align:'right'});y+=3.8;
-  doc.text('Email: '+g('co-email')+(gstOn?'     GSTIN: '+g('co-gstin'):''),M,y);y+=6;
-  // ── customer + details
-  const lw=CW*0.58,rw=CW-lw-4;
-  doc.setFontSize(8.4);doc.setFont('helvetica','normal');
-  const addr=doc.splitTextToSize(g('cust-addr')||'',lw-10);
-  const bh=Math.max(25,13+addr.length*3.7+(gstOn?5:0));
-  fil(T.soft);doc.rect(M,y,lw,bh,'F');doc.rect(M+lw+4,y,rw,bh,'F');
-  fil(T.c);doc.rect(M,y,1.1,bh,'F');doc.rect(M+lw+4,y,1.1,bh,'F');
-  label(gstOn?'BILLED TO':'BILL TO',M+5,y+5.5);
-  doc.setFont('helvetica','bold');doc.setFontSize(10.5);col(INK);doc.text(g('cust-name')||'—',M+5,y+11.5);
-  doc.setFont('helvetica','normal');doc.setFontSize(8.4);col([70,80,95]);doc.text(addr,M+5,y+16.5);
-  if(gstOn){doc.text('GSTIN: '+g('cust-gstin'),M+5,y+16.5+addr.length*3.7+1);}
-  label('DOCUMENT DETAILS',M+lw+9,y+5.5);
-  const det=[[(gstOn?'Invoice No':'Bill No'),bill],['Date',fmtDate(g('inv-date'))]];if(g('inv-delivery'))det.push(['Delivery',g('inv-delivery')]);
-  det.forEach(([k,v],i)=>{const yy=y+11.5+i*5.6;doc.setFont('helvetica','normal');doc.setFontSize(8);col(MUTE);doc.text(k,M+lw+9,yy);doc.setFont('helvetica','bold');doc.setFontSize(8.6);col(INK);doc.text(String(v),W-M-4,yy,{align:'right'});});
-  y+=bh+7;
-  // ── table
-  const cw=[10,60,15,14,18,12,24,29],align=['left','left','center','right','right','center','right','right'];
-  const hd=['S.NO','DESCRIPTION','HSN/SAC','QTY','AREA','UNIT','RATE (Rs.)','AMOUNT (Rs.)'];
+  // ── centered letterhead (follows the company's existing model)
+  if(logoDataUrl){try{doc.addImage(logoDataUrl,'PNG',M,y-1,24,12);}catch(e){}}
+  doc.setFont(HF,'bold');doc.setFontSize(T.serif?27:26);col(T.c);doc.text(g('co-name'),W/2,y+8,{align:'center'});
+  doc.setFont('helvetica','normal');doc.setFontSize(8.2);col(MUTE);doc.text('OFFICE   |   COMMERCIAL   |   RESIDENTIAL',W/2,y+14.2,{align:'center'});
+  y+=19;fil(T.c);doc.rect(M,y,CW,1.1,'F');y+=6;
+  doc.setFont('helvetica','normal');doc.setFontSize(8.8);col([70,80,95]);
+  const al=doc.splitTextToSize(g('co-addr').replace(/\n+/g,', '),CW*0.6).concat(['Email: '+g('co-email')]);
+  const ar=[g('co-person'),g('co-ph1'),g('co-ph2')].filter(Boolean);
+  al.forEach((l,i)=>doc.text(l,M,y+i*4.4));ar.forEach((l,i)=>doc.text(l,W-M,y+i*4.4,{align:'right'}));
+  y+=Math.max(al.length,ar.length)*4.4+1;drw(LINE);doc.setLineWidth(.3);doc.line(M,y,W-M,y);y+=5.5;
+  if(gstOn){doc.setFont('helvetica','bold');doc.setFontSize(9.5);col(INK);doc.text('GSTIN: '+g('co-gstin'),W/2,y,{align:'center'});y+=3.5;}
+  fil(T.c);doc.rect(M,y,CW,9,'F');doc.setFont('helvetica','bold');doc.setFontSize(12);col([255,255,255]);cs(2);doc.text(title,W/2+1,y+6.2,{align:'center'});cs(0);y+=14;
+  // ── Bill To box + Invoice details box
+  const lw=CW*0.62,rw=CW-lw-4;doc.setFontSize(9);doc.setFont('helvetica','normal');
+  const addr=doc.splitTextToSize(g('cust-addr')||'',lw-10),ph=g('cust-phone');
+  const bh=Math.max(27,15+addr.length*4.3+(ph?4.6:0)+(gstOn?4.8:0)+4);
+  drw([185,196,212]);doc.setLineWidth(.35);fil([255,255,255]);doc.rect(M,y,lw,bh,'FD');doc.rect(M+lw+4,y,rw,bh,'FD');
+  fil(T.soft);doc.rect(M,y,lw,6.4,'F');doc.rect(M+lw+4,y,rw,6.4,'F');
+  label(gstOn?'BILLED TO':'BILL TO',M+4,y+4.4);label('DOCUMENT DETAILS',M+lw+8,y+4.4);
+  doc.setFont('helvetica','bold');doc.setFontSize(11);col(INK);doc.text(g('cust-name')||'—',M+4,y+12.5);
+  doc.setFont('helvetica','normal');doc.setFontSize(9);col([70,80,95]);let cy=y+17.4;doc.text(addr,M+4,cy);cy+=addr.length*4.3;
+  if(ph){doc.text('Phone: '+ph,M+4,cy+.4);cy+=4.6;}
+  if(gstOn){doc.setFont('helvetica','bold');col(INK);doc.text('GSTIN: '+g('cust-gstin'),M+4,cy+.4);}
+  doc.setFont('helvetica','bold');doc.setFontSize(10);col(INK);doc.text((gstOn?'INVOICE NO: ':'BILL NO: ')+bill,M+lw+8,y+13);
+  doc.setFont('helvetica','normal');doc.setFontSize(9.2);col([70,80,95]);doc.text('DATE: '+fmtDate(g('inv-date')),M+lw+8,y+19);
+  if(g('inv-delivery'))doc.text('Delivery: '+g('inv-delivery'),M+lw+8,y+24.6);
+  y+=bh+8;
+  // table
+  const cw=[10,68,14,13,17,12,22,26],align=['left','left','center','right','right','center','right','right'];
+  const hd=['S.NO','DESCRIPTION','HSN/SAC','QTY','AREA','UNIT','RATE (\u20b9)','AMOUNT (\u20b9)'];
   const tblHead=()=>{
-    if(T.band){fil(T.c);doc.rect(M,y,CW,7.5,'F');}
-    else{drw(T.c);doc.setLineWidth(.6);doc.line(M,y,M+CW,y);doc.line(M,y+7.5,M+CW,y+7.5);}
-    doc.setFont('helvetica','bold');doc.setFontSize(6.9);col(T.band?[255,255,255]:T.c);
-    let x=M;hd.forEach((h,k)=>{const ty=y+4.9;
-      if(align[k]==='right')doc.text(h,x+cw[k]-2.2,ty,{align:'right'});
-      else if(align[k]==='center')doc.text(h,x+cw[k]/2,ty,{align:'center'});
-      else doc.text(h,x+2,ty);x+=cw[k];});y+=7.5;
+    fil(T.soft);doc.rect(M,y,CW,8.5,'F');drw(T.c);doc.setLineWidth(.5);doc.line(M,y+8.5,M+CW,y+8.5);
+    doc.setFont('helvetica','bold');doc.setFontSize(7.4);col(T.c);
+    let x=M;hd.forEach((h,k)=>{const ty=y+5.5;
+      if(align[k]==='right')pdfTxt(doc,h,x+cw[k]-2.5,ty,'right');else if(align[k]==='center')pdfTxt(doc,h,x+cw[k]/2,ty,'center');else pdfTxt(doc,h,x+2.5,ty);x+=cw[k];});y+=8.5;
   };
   const contHead=()=>{
-    doc.addPage();y=M;
-    doc.setFont(HF,'bold');doc.setFontSize(13);col(T.c);doc.text(g('co-name'),M,y+4);
-    doc.setFont('helvetica','bold');doc.setFontSize(8.5);col(INK);doc.text(title+' No: '+bill,W-M,y+3,{align:'right'});
-    doc.setFont('helvetica','normal');doc.setFontSize(7.5);col(MUTE);doc.text('Date: '+fmtDate(g('inv-date'))+'   (continued)',W-M,y+7.5,{align:'right'});
-    y+=10.5;drw(T.c);doc.setLineWidth(.6);doc.line(M,y,W-M,y);y+=6;
+    doc.addPage();y=M;doc.setFont(HF,'bold');doc.setFontSize(14);col(T.c);doc.text(g('co-name'),M,y+4);
+    doc.setFont('helvetica','bold');doc.setFontSize(9.5);col(INK);doc.text(title+' No: '+bill,W-M,y+3.5,{align:'right'});
+    doc.setFont('helvetica','normal');doc.setFontSize(8);col(MUTE);doc.text('Date: '+fmtDate(g('inv-date'))+'   ·   continued',W-M,y+8,{align:'right'});
+    y+=11.5;drw(T.c);doc.setLineWidth(.6);doc.line(M,y,W-M,y);y+=6;
   };
   tblHead();
-  const lh=T.fs*.4056,lh2=6.8*.4056;
+  const lhN=9.2*.4056,lhD=8.2*.4056,lhR=7*.4056,dw=cw[1]-5.5;
   rows.forEach((r,idx)=>{
-    const{unit:fu}=getFinalQtyUnit(r),{qty:aq,area:aa}=getRowAreaQty(r),amt=rowAmount(r);
-    doc.setFont('helvetica','normal');doc.setFontSize(T.fs);
-    const lines=doc.splitTextToSize(r.desc||'',cw[1]-4.5);
+    const{unit:fu}=getFinalQtyUnit(r),{qty:aq,area:aa}=getRowAreaQty(r),amt=rowAmount(r),sd=splitDesc(r.desc);
+    doc.setFont('helvetica','bold');doc.setFontSize(9.2);const nl=doc.splitTextToSize(sd.name,dw);
+    doc.setFont('helvetica','normal');doc.setFontSize(8.2);const dl=[];sd.det.forEach(s=>doc.splitTextToSize(s,dw).forEach(x=>dl.push(x)));
     const remTxt=[calcExplain(r),showRem?r.remarks:''].filter(Boolean).join('\n');
-    doc.setFontSize(6.8);const rem=remTxt?doc.splitTextToSize(remTxt,cw[1]-4.5):[];
-    const rh=Math.max(8,T.pad*2+lines.length*lh+(rem.length?1+rem.length*lh2:0));
-    if(y+rh>PB){contHead();tblHead();}                 // rows never split across pages
+    doc.setFontSize(7);const rl=remTxt?doc.splitTextToSize(remTxt,dw):[];
+    const rh=Math.max(9.5,T.pad*2+nl.length*lhN+(dl.length?1.2+dl.length*lhD:0)+(rl.length?1.2+rl.length*lhR:0));
+    if(y+rh>PB){contHead();tblHead();}
     if(T.zebra&&idx%2===1){fil([248,250,253]);doc.rect(M,y,CW,rh,'F');}
     drw(LINE);doc.setLineWidth(.2);doc.line(M,y+rh,M+CW,y+rh);
-    const b=y+T.pad+T.fs*.3528+.4;let x=M;
-    doc.setFontSize(T.fs);doc.setFont('helvetica','normal');col(MUTE);doc.text(String(idx+1),x+2,b);x+=cw[0];
-    col(INK);doc.text(lines,x+2,b);
-    if(rem.length){doc.setFont('helvetica','italic');doc.setFontSize(6.8);col(MUTE);doc.text(rem,x+2,b+(lines.length-1)*lh+lh2+.9);}
+    drw(VL);doc.setLineWidth(.15);let vx=M;cw.forEach((w,k)=>{vx+=w;if(k<cw.length-1&&k>0)doc.line(vx,y+2,vx,y+rh-2);});
+    const b=y+T.pad+9.2*.3528;let x=M;
+    doc.setFont('helvetica','normal');doc.setFontSize(T.fs);col(MUTE);doc.text(String(idx+1),x+2.5,b);x+=cw[0];
+    doc.setFont('helvetica','bold');doc.setFontSize(9.2);col(INK);doc.text(nl,x+2.5,b);
+    let dy=b+(nl.length-1)*lhN;
+    if(dl.length){doc.setFont('helvetica','normal');doc.setFontSize(8.2);col([95,105,120]);doc.text(dl,x+2.5,dy+1.2+lhD*.85);dy+=1.2+dl.length*lhD;}
+    if(rl.length){doc.setFont('helvetica','italic');doc.setFontSize(7);col(MUTE);doc.text(rl,x+2.5,dy+1.2+lhR*.85);}
     x+=cw[1];doc.setFont('helvetica','normal');doc.setFontSize(T.fs);col(INK);
     doc.text(r.hsn||'',x+cw[2]/2,b,{align:'center'});x+=cw[2];
-    doc.text(aq===''?'—':fmtQty(aq,r.calcType),x+cw[3]-2.2,b,{align:'right'});x+=cw[3];
-    doc.text(aa===''?'—':fmt(aa),x+cw[4]-2.2,b,{align:'right'});x+=cw[4];
+    doc.text(aq===''?'—':fmtQty(aq,r.calcType),x+cw[3]-2.5,b,{align:'right'});x+=cw[3];
+    doc.text(aa===''?'—':fmt(aa),x+cw[4]-2.5,b,{align:'right'});x+=cw[4];
     doc.text(fu,x+cw[5]/2,b,{align:'center'});x+=cw[5];
-    doc.text(rateText(r),x+cw[6]-2.2,b,{align:'right'});x+=cw[6];
-    doc.setFont('helvetica','bold');doc.text(fmt(amt),x+cw[7]-2.2,b,{align:'right'});
+    doc.text(rateText(r),x+cw[6]-2.5,b,{align:'right'});x+=cw[6];
+    doc.setFont('helvetica','bold');doc.setFontSize(9.4);pdfTxt(doc,'\u20b9'+fmt(amt),x+cw[7]-2.5,b,'right');
     y+=rh;
   });
-  // ── totals / words / terms / signature (kept together)
+  // ── summary: totals right, grand-total bar, amount in words, terms + signature
   const t=calc(),trs=[['Sub-Total',fmt(t.sub)]];
   buildTotalsLines(t).forEach(l=>trs.push([l.label,l.value]));
-  const TW=88,tx=W-M-TW,words=doc.splitTextToSize(numWords(t.grand),CW-TW-12);
-  const totH=trs.length*6.1+12,wordsH=11+words.length*3.9,blockH=Math.max(totH,wordsH)+8+40;
-  if(y+8+blockH>PB+4)contHead();
-  y+=7;const top=y;
-  doc.setFont('helvetica','normal');doc.setFontSize(8.6);
-  trs.forEach(([l,v],i)=>{
-    col(MUTE);doc.setFont('helvetica','normal');doc.text(l,tx+2,y+4.3);
-    col(INK);doc.text('Rs. '+v,W-M-2,y+4.3,{align:'right'});
-    drw(LINE);doc.setLineWidth(.2);doc.line(tx,y+6.1,W-M,y+6.1);y+=6.1;
+  const RH=6.6,lblX=W-M-38;doc.setFont('helvetica','italic');doc.setFontSize(10.5);
+  const words=doc.splitTextToSize(numWords(t.grand),CW-10),wh=words.length*5+12;
+  if(y+8+trs.length*RH+4+12+6+wh+10+42>PB+6)contHead();
+  y+=7;
+  trs.forEach(([l,v])=>{
+    doc.setFont('helvetica','normal');doc.setFontSize(9.6);col(MUTE);doc.text(l+':',lblX,y+4.6,{align:'right'});
+    col(INK);pdfTxt(doc,'\u20b9'+v,W-M-2,y+4.6,'right');
+    drw(LINE);doc.setLineWidth(.15);doc.line(W-M-92,y+RH,W-M,y+RH);y+=RH;
   });
-  y+=2;fil(T.c);doc.rect(tx,y,TW,9.5,'F');
-  doc.setFont('helvetica','bold');doc.setFontSize(9);col([255,255,255]);cs(.4);doc.text('GRAND TOTAL',tx+3,y+6.1);cs(0);
-  doc.setFontSize(11.5);doc.text('Rs. '+fmt(t.grand),W-M-3,y+6.3,{align:'right'});
-  const totEnd=y+9.5;
-  // words box (left)
-  fil(T.soft);doc.rect(M,top,CW-TW-6,wordsH,'F');fil(T.c);doc.rect(M,top,1.1,wordsH,'F');
-  label('AMOUNT IN WORDS',M+5,top+5.5);
-  doc.setFont('helvetica','italic');doc.setFontSize(8.4);col(INK);doc.text(words,M+5,top+10.8);
-  y=Math.max(totEnd,top+wordsH)+9;
-  // terms (left) + signature (right)
+  y+=3;fil(T.c);doc.rect(M,y,CW,12,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(10);col([255,255,255]);cs(.8);doc.text('GRAND TOTAL',M+6,y+7.8);cs(0);
+  doc.setFontSize(14.5);pdfTxt(doc,'\u20b9'+fmt(t.grand),W-M-3,y+8.3,'right');y+=17;
+  drw([185,196,212]);doc.setLineWidth(.35);fil([248,251,255]);doc.rect(M,y,CW,wh,'FD');
+  label('AMOUNT IN WORDS',M+5,y+5.6);doc.setFont('helvetica','italic');doc.setFontSize(10.5);col(INK);doc.text(words,M+5,y+11.4);
+  y+=wh+10;
   label('TERMS & CONDITIONS',M,y);
-  doc.setFont('helvetica','normal');doc.setFontSize(7.8);col([80,90,105]);
-  doc.text(['1.  Goods once sold cannot be taken back.','2.  All disputes are subject to Chennai Jurisdiction.','3.  Thank you for your business.'],M,y+5.2);
-  doc.setFont('helvetica','bold');doc.setFontSize(9);col(T.c);doc.text('For '+g('co-name'),W-M,y,{align:'right'});
-  if(sigDataUrl){try{doc.addImage(sigDataUrl,'JPEG',W-M-46,y+2.5,44,19);}catch(e){}}
-  drw(MUTE);doc.setLineWidth(.3);doc.line(W-M-58,y+25,W-M,y+25);
-  doc.setFont('helvetica','normal');doc.setFontSize(8);col(MUTE);doc.text('Authorised Signature',W-M,y+29.5,{align:'right'});
-  // ── footer on every page
+  doc.setFont('helvetica','normal');doc.setFontSize(8.6);col([80,90,105]);
+  doc.text(['1.  Goods once sold cannot be taken back.','2.  All disputes are subject to Chennai Jurisdiction.','3.  Thank you for your business.'],M,y+6);
+  doc.setFont('helvetica','bold');doc.setFontSize(9.5);col(T.c);doc.text('For '+g('co-name'),W-M,y,{align:'right'});
+  if(sigDataUrl){try{doc.addImage(sigDataUrl,'JPEG',W-M-48,y+3,46,20);}catch(e){}}
+  drw(MUTE);doc.setLineWidth(.3);doc.line(W-M-60,y+26,W-M,y+26);
+  doc.setFont('helvetica','normal');doc.setFontSize(8.4);col(MUTE);doc.text('Authorised Signature',W-M,y+31,{align:'right'});
+  // footer
   const N=doc.getNumberOfPages();
   for(let p=1;p<=N;p++){
-    doc.setPage(p);drw(LINE);doc.setLineWidth(.3);doc.line(M,283,W-M,283);
-    doc.setFont('helvetica','normal');doc.setFontSize(7);col(MUTE);
-    doc.text(g('co-name')+(g('co-ph1')?'  ·  '+g('co-ph1'):''),M,288);
-    doc.text(title+' No: '+bill,W/2,288,{align:'center'});
-    doc.text('Page '+p+' of '+N,W-M,288,{align:'right'});
+    doc.setPage(p);drw(LINE);doc.setLineWidth(.3);doc.line(M,281,W-M,281);
+    doc.setFont('helvetica','bold');doc.setFontSize(7);col(T.c);cs(.4);doc.text("SS INTERIOR'S  |  OFFICE  |  COMMERCIAL  |  RESIDENTIAL",M,285.5);cs(0);
+    doc.setFont('helvetica','normal');col(MUTE);doc.text(title+' No: '+bill,M,289.5);doc.text('Page '+p+' of '+N,W-M,289.5,{align:'right'});
   }
   saveOut(doc.output('blob'),fname,'PDF',()=>{try{sfDownload(doc.output('blob'),fname);}catch(e){doc.save(fname);}});
 }
@@ -1850,6 +1867,7 @@ async function openHistoryItem(id){
   try{
     const{data,error}=await sb.from('invoices').select('data').eq('id',id).maybeSingle();
     if(error||!data)throw(error||new Error('not found'));
+    if(data.data&&data.data.document_type==='memo'){closeHistory();memoOpen(data.data);return;}
     suppressAutoSave=true;
     applyState(data.data);
     suppressAutoSave=false;
@@ -1898,7 +1916,7 @@ function fnSave(p){try{localStorage.setItem(FN_KEY,JSON.stringify(p));}catch(e){
 function safeName(s){return String(s||'').replace(/[\\\/:*?"<>|\x00-\x1f]+/g,'-').replace(/-{2,}/g,'-').replace(/^[-.\s]+|[-.\s]+$/g,'');}
 function withExt(name,ext){const n=safeName(String(name||'').replace(/\.(pdf|xlsx|xls)\s*$/i,''))||'Invoice';return n+'.'+ext;}
 function fnBuild(fmt){
-  const bill=safeName(g('inv-no')),cust=safeName(g('cust-name').trim().replace(/\s+/g,'-')),date=fmtDate(g('inv-date')).replace(/\//g,'-');
+  const bill=safeName(FN_CTX?FN_CTX.no:g('inv-no')),cust=safeName((FN_CTX?FN_CTX.cust:g('cust-name')).trim().replace(/\s+/g,'-')),date=fmtDate(FN_CTX?FN_CTX.date:g('inv-date')).replace(/\//g,'-');
   const j=a=>a.filter(Boolean).join('-');
   return fmt==='bill_cust'?j([bill,cust]):fmt==='bill_date'?j([bill,date]):fmt==='cust_bill'?j([cust,bill]):bill;
 }
@@ -1908,16 +1926,16 @@ function askFileName(ext,cb){
   if(p.mode==='bill'){cb(withExt(fnBuild('bill'),ext),{remarks:p.remarks,tpl:p.tpl});return;}
   if(p.mode==='saved'){cb(withExt(p.fmt==='custom'?p.custom:fnBuild(p.fmt),ext),{remarks:p.remarks,tpl:p.tpl});return;}
   _fnCb=cb;_fnExt=ext;
-  document.getElementById('fn-billno').textContent=g('inv-no')||'—';
+  document.getElementById('fn-billno').textContent=(FN_CTX?FN_CTX.no:g('inv-no'))||'—';
   document.getElementById('fn-fmt').value=p.fmt;document.getElementById('fn-mode').value=p.mode;
   document.getElementById('fn-remember').checked=p.remember;document.getElementById('fn-remarks').checked=p.remarks;
-  document.getElementById('fn-remarks-wrap').style.display=ext==='pdf'?'':'none';document.getElementById('fn-tpl-wrap').style.display=ext==='pdf'?'':'none';document.getElementById('fn-tpl').value=p.tpl||'classic';
+  document.getElementById('fn-remarks-wrap').style.display=ext==='pdf'?'':'none';document.getElementById('fn-tpl-wrap').style.display=(ext==='pdf'&&!FN_CTX)?'':'none';document.getElementById('fn-tpl').value=p.tpl||'classic';
   document.getElementById('fn-title').textContent='Save '+(ext==='pdf'?'PDF':'Excel');
   document.getElementById('fn-name').value=p.fmt==='custom'?p.custom:fnBuild(p.fmt);
   document.getElementById('fn-sf-state').textContent=SF.dir?'saving to '+SF.dir.name:'Downloads';document.getElementById('fn-modal').style.display='flex';
 }
 function fnFmtChange(){const f=document.getElementById('fn-fmt').value;if(f!=='custom')document.getElementById('fn-name').value=fnBuild(f);}
-function fnClose(){document.getElementById('fn-modal').style.display='none';}
+function fnClose(){document.getElementById('fn-modal').style.display='none';FN_CTX=null;}
 function fnGo(){
   const fmt=document.getElementById('fn-fmt').value,raw=document.getElementById('fn-name').value;
   const rem=document.getElementById('fn-remarks').checked;
@@ -1964,6 +1982,7 @@ const XL_SYN={
   ser:['sno','srno','slno','sl','serial','serialno','sr'],
   meta:['brand','model','size','colour','color','material','finish','specification','spec','category']
 };
+const XL_STOP=/^(grand\s*total|sub\s*-?\s*total|amount\s*in\s*words|\(?rupees\b.*\bonly\b|terms\s*(&|and)\s*conditions|goods\s*once\s*sold|all\s*subject\s*to|for\s+ss\s+interior|authori[sz]ed\s*sign|thank\s*you|signature\s*:?$|page\s+\d+\s*(of|\/)\s*\d+)/i;
 const XL_SKIP=/^(grand\s*total|sub\s*-?\s*total|total|gst|cgst|sgst|igst|round\s*off|net\s*total|amount\s*in\s*words|authori[sz]ed)/i;
 let _xl=null;
 const xlNorm=s=>String(s==null?'':s).toLowerCase().replace(/[^a-z0-9]/g,'');
@@ -2040,7 +2059,8 @@ function xlImport(){
     m.forEach((f,i)=>{const v=r[i];if(f==='meta'){if(String(v).trim())meta.push(_xl.head[i]+': '+String(v).trim());}else if(f!=='ignore'&&!o[f])o[f]=v;});
     const texts=r.map(c=>String(c).trim()).filter(x=>x&&isNaN(+x.replace(/,/g,'')));
     if(!r.some(c=>String(c).trim())){continue;}
-    if(texts.some(t=>XL_SKIP.test(t))&&!String(o.desc||'').trim().match(/^\S.{12,}/)){skipped++;continue;}
+    if(texts.some(t=>XL_STOP.test(t))){skipped++;break;}   // totals / words / terms / signature end the item list
+    if(texts.some(t=>XL_SKIP.test(t))){skipped++;continue;}
     if(!String(o.desc||'').trim()&&!xlNum(o.rate)&&!xlNum(o.amount)){skipped++;continue;}
     found++;items.push(xlItem(o,meta));
   }
@@ -2091,13 +2111,13 @@ async function sfEnsure(){ // must run from a user gesture to be able to re-ask 
   if(await SF.dir.requestPermission({mode:'readwrite'})==='granted'){SF.state='ready';sfRender();return true;}
   SF.state='needs-permission';sfRender();return false;
 }
-function sfFY(){const d=new Date(g('inv-date')||Date.now());const y=isNaN(d)?new Date().getFullYear():d.getFullYear(),m=isNaN(d)?new Date().getMonth():d.getMonth();const s=m>=3?y:y-1;return s+'-'+String(s+1).slice(2);}
-function sfPath(){
-  const p=sfPrefs(),type=isGstMode()?'Invoices':'Bills',cust=safeName(g('cust-name'))||'No Customer';
+function sfFY(ds){const d=new Date(ds||g('inv-date')||Date.now());const y=isNaN(d)?new Date().getFullYear():d.getFullYear(),m=isNaN(d)?new Date().getMonth():d.getMonth();const s=m>=3?y:y-1;return s+'-'+String(s+1).slice(2);}
+function sfPath(docType,custName,ds){
+  const p=sfPrefs(),type=docType||(isGstMode()?'Invoices':'Bills'),cust=safeName(custName!=null?custName:g('cust-name'))||'No Customer';
   const parts=[SF_ROOT];
   if(p.layout==='type')parts.push(type);
-  else if(p.layout==='year_type')parts.push(sfFY(),type);
-  else if(p.layout==='year_cust_type')parts.push(sfFY(),cust,type);
+  else if(p.layout==='year_type')parts.push(sfFY(ds),type);
+  else if(p.layout==='year_cust_type')parts.push(sfFY(ds),cust,type);
   return parts;
 }
 async function sfUniqueName(dir,name){
@@ -2114,11 +2134,11 @@ async function sfUniqueName(dir,name){
   return base+' ('+i+')'+ext;
 }
 function sfDownload(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);}
-async function saveOut(blob,fname,label,fallback){
+async function saveOut(blob,fname,label,fallback,docType,custName,ds){
   if(SF.dir){
     try{
       if(await sfEnsure()){
-        let dir=SF.dir;const path=sfPath();
+        let dir=SF.dir;const path=sfPath(docType,custName,ds);
         for(const part of path)dir=await dir.getDirectoryHandle(part,{create:true});
         const final=await sfUniqueName(dir,fname);
         if(final===null){showToast('Save cancelled','err');return;}
@@ -2146,6 +2166,195 @@ function sfPrefChange(){const p={layout:document.getElementById('sf-layout').val
 function sfOpen(){sfRender();document.getElementById('sf-modal').style.display='flex';}
 function sfClose(){document.getElementById('sf-modal').style.display='none';}
 sfInit().catch(e=>{SF.state=sfSupported()?'none':'unsupported';try{sfRender();}catch(_){}});
+
+/* ═══ MEMO PAD ═══ */
+let FN_CTX=null; // when set, the filename manager builds names from a memo instead of the invoice
+const MEMO_TYPES={
+ general:['General Memo','<p><br></p>'],
+ site:['Site Note','<h3>Site Observations</h3><ol><li><br></li><li><br></li><li><br></li></ol><h3>Measurements / Notes</h3><p><br></p><h3>Action Required</h3><p><br></p>'],
+ requirement:['Customer Requirement','<h3>Requirements</h3><ol><li><br></li><li><br></li><li><br></li></ol><h3>Material / Finish</h3><p><br></p><h3>Additional Notes</h3><p><br></p><h3>Customer Confirmation</h3><p><br></p>'],
+ instruction:['Work Instruction','<p><b>Assigned To:</b> </p><h3>Instructions</h3><ol><li><br></li><li><br></li><li><br></li></ol><h3>Materials Required</h3><p><br></p><p><b>Deadline:</b> </p><h3>Remarks</h3><p><br></p>'],
+ modification:['Modification Note','<h3>Original Requirement</h3><p><br></p><h3>Requested Modification</h3><p><br></p><h3>Reason</h3><p><br></p><p><b>Additional Cost:</b> </p><p><b>Additional Time:</b> </p><p><b>Approved By:</b> </p>'],
+ material:['Material Requirement','<p>Material required for the above project:</p>'],
+ payment:['Payment Reminder','<p><b>Invoice No:</b> </p><p><b>Invoice Date:</b> </p><p><b>Total Amount:</b> </p><p><b>Amount Received:</b> </p><p><b>Balance:</b> </p><p><b>Due Date:</b> </p><p><br></p><p>Dear Sir / Madam,</p><p>This is a gentle reminder that the above balance payment is pending. Kindly arrange the payment at the earliest. Please ignore this note if the payment has already been made.</p><p>Thank you for your continued support.</p>'],
+ completion:['Work Completion Note','<p><b>Completion Date:</b> </p><h3>Work Completed</h3><ol><li><br></li><li><br></li><li><br></li></ol><h3>Remarks</h3><p><br></p><h3>Customer Confirmation</h3><p>We confirm that the above work has been completed to our satisfaction.</p>'],
+ delivery:['Delivery Note','<p><b>Delivery Address:</b> </p><p>Items delivered:</p>'],
+ internal:['Internal Note','<p><br></p>']
+};
+const MEMO_TABLES={material:['Material','Specification','Qty','Unit','Remarks'],delivery:['Item','Quantity','Unit','Remarks']};
+const MEMO_THEMES={classic:{c:[26,95,168],soft:[234,242,251],serif:0},premium:{c:[22,43,82],soft:[240,244,250],serif:1},minimal:{c:[45,45,45],soft:[246,246,246],serif:0},office:{c:[35,45,60],soft:[238,240,243],serif:0}};
+let MEMO=null;
+const mg=id=>document.getElementById(id);
+function memoBlank(){return{id:(window.crypto&&crypto.randomUUID)?crypto.randomUUID():'memo-'+Date.now(),no:'',date:new Date().toISOString().slice(0,10),type:'general',status:'draft',to:'',project:'',location:'',subject:'',html:MEMO_TYPES.general[1],tbl:[],sig:{prepared:true,auth:true,cust:false},preparedBy:'',tpl:'classic'};}
+const memoFmtNo=n=>'MEMO-'+String(n).padStart(3,'0');
+async function memoNextNo(){
+  let max=+(localStorage.getItem('ssi_memo_counter')||0);
+  try{if(sb){const{data}=await sb.from('invoices').select('invoice_no').like('invoice_no','MEMO-%').order('invoice_no',{ascending:false}).limit(1);
+    if(data&&data[0]){const n=parseInt(String(data[0].invoice_no).replace(/\D/g,''),10);if(n>max)max=n;}}}catch(e){}
+  return memoFmtNo(max+1);
+}
+async function memoOpen(m){
+  MEMO=m||memoBlank();
+  if(!MEMO.no)MEMO.no=await memoNextNo();
+  memoFill();mg('memo-overlay').style.display='block';document.body.style.overflow='hidden';
+}
+function memoClose(){mg('memo-overlay').style.display='none';document.body.style.overflow='';}
+function memoFill(){
+  const m=MEMO;mg('mm-type').innerHTML=Object.entries(MEMO_TYPES).map(([k,v])=>`<option value="${k}">${v[0]}</option>`).join('');
+  mg('mm-type').value=m.type;['no','date','to','project','location','subject','tpl','preparedBy'].forEach(k=>mg('mm-'+k).value=m[k]||'');
+  mg('mm-body').innerHTML=m.html||'<p><br></p>';
+  mg('mm-sp').checked=m.sig.prepared;mg('mm-sa').checked=m.sig.auth;mg('mm-sc').checked=m.sig.cust;
+  mg('mm-status').textContent=m.status==='final'?'● Final':'● Draft';memoTable();
+}
+function memoRead(){
+  const m=MEMO;['no','date','to','project','location','subject','tpl','preparedBy'].forEach(k=>m[k]=mg('mm-'+k).value.trim());
+  m.type=mg('mm-type').value;m.html=mg('mm-body').innerHTML;m.sig={prepared:mg('mm-sp').checked,auth:mg('mm-sa').checked,cust:mg('mm-sc').checked};return m;
+}
+function memoTypeChange(){
+  const old=MEMO.type,nu=mg('mm-type').value,cur=mg('mm-body').innerHTML.trim();
+  const isTpl=!cur||cur===MEMO_TYPES[old][1]||mg('mm-body').innerText.trim()==='';
+  if(isTpl||confirm('Replace the current content with the "'+MEMO_TYPES[nu][0]+'" template?'))mg('mm-body').innerHTML=MEMO_TYPES[nu][1];
+  MEMO.type=nu;if(!MEMO_TABLES[nu])MEMO.tbl=[];else if(!MEMO.tbl.length)MEMO.tbl=[Array(MEMO_TABLES[nu].length).fill('')];memoTable();
+}
+function memoTable(){
+  const cols=MEMO_TABLES[MEMO.type],box=mg('mm-tbl');
+  if(!cols){box.style.display='none';return;}
+  box.style.display='block';
+  box.innerHTML='<div class="mm-lab">'+(MEMO.type==='delivery'?'Items Delivered':'Materials Required')+'</div><div style="overflow-x:auto"><table class="mm-t"><tr><th>#</th>'+cols.map(c=>'<th>'+c+'</th>').join('')+'<th></th></tr>'+
+   MEMO.tbl.map((r,i)=>'<tr><td>'+(i+1)+'</td>'+cols.map((c,j)=>`<td><input value="${esc(r[j]||'')}" oninput="MEMO.tbl[${i}][${j}]=this.value"/></td>`).join('')+`<td><button class="mm-x" onclick="MEMO.tbl.splice(${i},1);memoTable()">✕</button></td></tr>`).join('')+'</table></div><button class="btn" onclick="MEMO.tbl.push(Array('+cols.length+').fill(\'\'));memoTable()">+ Add Row</button>';
+}
+function memoCmd(c,v){mg('mm-body').focus();document.execCommand(c,false,v||null);}
+function memoPickCustomer(){ // reuses the customer entered in the invoice form until a customer database exists
+  const n=g('cust-name').trim();if(!n){showToast('Enter a customer on the invoice screen first','err');return;}
+  mg('mm-to').value=n;showToast('Customer filled from the invoice form','ok');
+}
+async function memoSave(status){
+  const m=memoRead();m.status=status;
+  if(!m.no){showToast('Memo number is required','err');return false;}
+  const n=parseInt(m.no.replace(/\D/g,''),10);if(n)localStorage.setItem('ssi_memo_counter',Math.max(+(localStorage.getItem('ssi_memo_counter')||0),n));
+  if(!sb){showToast('Storage not connected — memo not saved to history','err');return false;}
+  try{
+    const{error}=await sb.from('invoices').upsert({id:m.id,status:'saved',invoice_no:m.no,bill_date:m.date||null,customer_name:m.to,grand_total:0,folder:'Memos',
+      data:Object.assign({document_type:'memo',memo_status:status,memo_type:m.type},m),updated_at:new Date().toISOString()});
+    if(error)throw error;mg('mm-status').textContent=status==='final'?'● Final':'● Draft';
+    showToast('Memo '+m.no+' saved as '+status+' ✓','ok');return true;
+  }catch(e){console.error(e);showToast('Memo save failed — check connection','err');return false;}
+}
+async function memoDuplicate(){
+  const m=memoRead();const c=JSON.parse(JSON.stringify(m));c.id=memoBlank().id;c.status='draft';c.no=await memoNextNo();
+  const keep=localStorage.getItem('ssi_memo_counter');MEMO=c;memoFill();showToast('Duplicated as '+c.no,'ok');
+}
+function memoClear(){if(confirm('Clear this memo?')){const n=MEMO.no,id=MEMO.id;MEMO=memoBlank();MEMO.no=n;MEMO.id=id;memoFill();}}
+function memoNew(){if(confirm('Start a new memo? Unsaved changes will be lost.')){MEMO=null;memoOpen();}}
+async function memoExport(){
+  const m=memoRead();
+  if(!m.subject&&!mg('mm-body').innerText.trim()&&!m.tbl.length){showToast('The memo is empty','err');return;}
+  FN_CTX={no:m.no,cust:m.to,date:m.date};
+  askFileName('pdf',(name)=>{FN_CTX=null;try{buildMemoPDF(name,false);}catch(e){console.error(e);showToast('Memo PDF failed: '+(e.message||e),'err');}});
+}
+function memoPreview(){try{buildMemoPDF('',false,'preview');}catch(e){console.error(e);showToast('Preview failed: '+(e.message||e),'err');}}
+function memoPrint(){try{buildMemoPDF('',false,'print');}catch(e){console.error(e);showToast('Print failed: '+(e.message||e),'err');}}
+// ── inline-rich-text → positioned PDF text
+function memoBlocks(html){
+  const d=new DOMParser().parseFromString('<body>'+html+'<\/body>','text/html').body,out=[];
+  const runs=(n,st,acc)=>{n.childNodes.forEach(c=>{
+    if(c.nodeType===3){acc.push({t:c.textContent.replace(/\s+/g,' '),b:st.b,i:st.i,u:st.u});}
+    else if(c.nodeType===1){const tg=c.tagName,s=Object.assign({},st);
+      if(tg==='BR'){acc.push({br:1});return;}
+      if(/^(B|STRONG)$/.test(tg)||/bold|[6-9]00/.test(c.style.fontWeight))s.b=1;if(/^(I|EM)$/.test(tg)||c.style.fontStyle==='italic')s.i=1;if(tg==='U'||/underline/.test(c.style.textDecoration))s.u=1;
+      runs(c,s,acc);}});return acc;};
+  const al=n=>(n.style&&n.style.textAlign)||n.getAttribute&&n.getAttribute('align')||'left';
+  const walk=(n,ctx)=>{n.childNodes.forEach(c=>{
+    if(c.nodeType===3){if(c.textContent.trim())out.push({k:'p',runs:[{t:c.textContent.replace(/\s+/g,' ')}],al:'left'});return;}
+    if(c.nodeType!==1)return;const tg=c.tagName;
+    if(/^H[1-6]$/.test(tg))out.push({k:'h',runs:runs(c,{b:1},[]),al:al(c)});
+    else if(tg==='UL'||tg==='OL'){let k=0;c.querySelectorAll(':scope > li').forEach(li=>{k++;out.push({k:'li',num:tg==='OL'?k+'.':'•',runs:runs(li,{},[]),al:'left'});});}
+    else if(tg==='P'||tg==='DIV'){if(c.querySelector('p,div,ul,ol,h1,h2,h3,h4')){walk(c,ctx);}else out.push({k:'p',runs:runs(c,{},[]),al:al(c)});}
+    else if(tg==='BR'){out.push({k:'p',runs:[],al:'left'});}
+    else out.push({k:'p',runs:runs(c.parentNode===n?{childNodes:[c]}:c,{},[]),al:'left'});});};
+  walk(d,{});return out;
+}
+function buildMemoPDF(fname,_x,mode){
+  const m=memoRead(),T=MEMO_THEMES[m.tpl]||MEMO_THEMES.classic,{jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});pdfFonts(doc);
+  const W=210,M=18,CW=W-2*M,PB=268,HF=T.serif?'times':'helvetica',INK=[33,41,56],MUTE=[110,120,135],LINE=[222,228,236];
+  const col=a=>doc.setTextColor(a[0],a[1],a[2]),fil=a=>doc.setFillColor(a[0],a[1],a[2]),drw=a=>doc.setDrawColor(a[0],a[1],a[2]);
+  const cs=n=>{if(doc.setCharSpace)doc.setCharSpace(n);};
+  const lab=(t,x,yy)=>{doc.setFont('helvetica','bold');doc.setFontSize(7);col(T.c);cs(.5);doc.text(t,x,yy);cs(0);};
+  const title=(m.type==='general'||m.type==='internal'?'MEMO':MEMO_TYPES[m.type][0].toUpperCase());
+  let y=14,lx=M;
+  if(logoDataUrl){try{doc.addImage(logoDataUrl,'PNG',M,y-2,26,12);lx=M+30;}catch(e){}}
+  doc.setFont(HF,'bold');doc.setFontSize(19);col(T.c);doc.text(g('co-name'),lx,y+5.5);
+  doc.setFont('helvetica','normal');doc.setFontSize(6.8);col(MUTE);cs(.9);doc.text('OFFICE  |  COMMERCIAL  |  RESIDENTIAL',lx,y+10.5);cs(0);
+  doc.setFontSize(7.6);doc.text(g('co-addr').replace(/\n+/g,', '),W-M,y+3,{align:'right'});
+  doc.text([g('co-ph1'),g('co-ph2')].filter(Boolean).join('  ·  ')+'   '+g('co-email'),W-M,y+7.4,{align:'right'});
+  if(isGstMode())doc.text('GSTIN: '+g('co-gstin'),W-M,y+11.8,{align:'right'});
+  y+=16;drw(T.c);doc.setLineWidth(.7);doc.line(M,y,W-M,y);
+  if(m.tpl==='office'){doc.setLineWidth(.2);doc.line(M,y+1.2,W-M,y+1.2);}
+  y+=11;
+  doc.setFont(HF,'bold');doc.setFontSize(21);col(T.c);doc.text(title,M,y+3);
+  doc.setFont('helvetica','bold');doc.setFontSize(9.5);col(INK);doc.text('Memo No: '+m.no,W-M,y,{align:'right'});
+  doc.setFont('helvetica','normal');col(MUTE);doc.text('Date: '+fmtDate(m.date),W-M,y+5,{align:'right'});y+=12;
+  const info=[['TO',m.to],['PROJECT',m.project],['LOCATION',m.location],['SUBJECT',m.subject]].filter(r=>r[1]);
+  if(info.length){
+    const hh=info.length*7+5;fil(T.soft);doc.rect(M,y,CW,hh,'F');fil(T.c);doc.rect(M,y,1.1,hh,'F');
+    info.forEach(([k,v],i)=>{const yy=y+7+i*7;lab(k,M+6,yy);doc.setFont('helvetica',k==='SUBJECT'?'bold':'normal');doc.setFontSize(10);col(INK);doc.text(doc.splitTextToSize(v,CW-40)[0],M+30,yy);});
+    y+=hh+9;}
+  const contHead=()=>{doc.addPage();y=14;doc.setFont(HF,'bold');doc.setFontSize(13);col(T.c);doc.text(g('co-name'),M,y+4);
+    doc.setFont('helvetica','normal');doc.setFontSize(8.5);col(MUTE);doc.text('Memo No: '+m.no+(m.subject?'  ·  '+m.subject.slice(0,40):''),W-M,y+3.5,{align:'right'});
+    y+=8;drw(T.c);doc.setLineWidth(.5);doc.line(M,y,W-M,y);y+=9;};
+  // body
+  const FS=10.5,LH=5.7,sty=r=>(r.b&&r.i?'bolditalic':r.b?'bold':r.i?'italic':'normal');
+  memoBlocks(m.html).forEach(b=>{
+    const ind=b.k==='li'?7:0,w=CW-ind,fs=b.k==='h'?12.5:FS;
+    const words=[];b.runs.forEach(r=>{if(r.br){words.push({br:1});return;}String(r.t||'').split(/(\s+)/).forEach(t=>{if(t)words.push({t,st:sty(r),u:r.u});});});
+    const lines=[[]];let lw=0;
+    words.forEach(wd=>{
+      if(wd.br){lines.push([]);lw=0;return;}
+      doc.setFont('helvetica',b.k==='h'?'bold':wd.st);doc.setFontSize(fs);const ww=doc.getTextWidth(wd.t);
+      if(/^\s+$/.test(wd.t)){if(lines[lines.length-1].length){lines[lines.length-1].push({...wd,w:ww});lw+=ww;}return;}
+      if(lw+ww>w&&lines[lines.length-1].length){lines.push([]);lw=0;}
+      lines[lines.length-1].push({...wd,w:ww});lw+=ww;});
+    if(b.k==='h')y+=2.5;
+    lines.forEach((ln,li)=>{
+      if(y+LH>PB)contHead();
+      const tw=ln.reduce((s,x)=>s+x.w,0);let x=M+ind+(b.al==='center'?(w-tw)/2:b.al==='right'?w-tw:0);
+      if(li===0&&b.k==='li'){doc.setFont('helvetica','normal');doc.setFontSize(fs);col(T.c);doc.text(b.num,M+1,y+4);}
+      ln.forEach(wd=>{doc.setFont('helvetica',b.k==='h'?'bold':wd.st);doc.setFontSize(fs);col(b.k==='h'?T.c:INK);doc.text(wd.t,x,y+4);
+        if(wd.u){drw(INK);doc.setLineWidth(.2);doc.line(x,y+4.6,x+wd.w,y+4.6);}x+=wd.w;});
+      y+=LH;});
+    y+=b.k==='li'?1.2:b.k==='h'?1.2:2.6;
+  });
+  // table
+  const tc=MEMO_TABLES[m.type],trows=(m.tbl||[]).filter(r=>r.some(c=>String(c).trim()));
+  if(tc&&trows.length){
+    const wd=tc.length===5?[10,42,48,16,16,CW-132]:[10,60,22,20,CW-112],ws=[10,...wd.slice(1)];const cw=tc.length===5?[10,40,46,14,14,CW-124]:[10,66,22,20,CW-118];
+    const head=()=>{fil(T.c);doc.rect(M,y,CW,8,'F');doc.setFont('helvetica','bold');doc.setFontSize(7.6);col([255,255,255]);let x=M;['#',...tc].forEach((h,k)=>{doc.text(h.toUpperCase(),x+2,y+5.3);x+=cw[k];});y+=8;};
+    if(y+30>PB)contHead();y+=2;head();
+    trows.forEach((r,i)=>{doc.setFont('helvetica','normal');doc.setFontSize(9.5);
+      const cells=[String(i+1),...r.map(String)],ls=cells.map((c,k)=>doc.splitTextToSize(c,cw[k]-4)),rh=Math.max(8.5,Math.max(...ls.map(a=>a.length))*4.4+4);
+      if(y+rh>PB){contHead();head();}
+      drw(LINE);doc.setLineWidth(.2);doc.line(M,y+rh,M+CW,y+rh);col(INK);let x=M;ls.forEach((a,k)=>{doc.text(a,x+2,y+5.4);x+=cw[k];});y+=rh;});
+    y+=6;
+  }
+  // signatures (kept together with labels)
+  const sg=[];if(m.sig.prepared)sg.push(['Prepared By',m.preparedBy,0]);if(m.sig.auth)sg.push(['Authorised Signature',"For "+g('co-name'),1]);if(m.sig.cust)sg.push(['Customer Signature','',0]);
+  if(sg.length){
+    if(y+42>PB)contHead();y+=10;const cwid=CW/sg.length;
+    sg.forEach(([lb,nm,img],i)=>{const x0=M+i*cwid;
+      if(img&&sigDataUrl){try{doc.addImage(sigDataUrl,'JPEG',x0,y,38,17);}catch(e){}}
+      drw(MUTE);doc.setLineWidth(.3);doc.line(x0,y+20,x0+cwid-10,y+20);
+      doc.setFont('helvetica','normal');doc.setFontSize(8.6);col(MUTE);doc.text(lb,x0,y+25);
+      if(nm){doc.setFont('helvetica','bold');col(INK);doc.text(nm,x0,y+30);}});
+  }
+  const N=doc.getNumberOfPages();
+  for(let p=1;p<=N;p++){doc.setPage(p);drw(LINE);doc.setLineWidth(.3);doc.line(M,281,W-M,281);
+    doc.setFont('helvetica','bold');doc.setFontSize(7);col(T.c);cs(.4);doc.text("SS INTERIOR'S",M,285.5);cs(0);
+    doc.setFont('helvetica','normal');col(MUTE);doc.text('Memo No: '+m.no,M,289.5);doc.text('Page '+p+' of '+N,W-M,289.5,{align:'right'});}
+  if(mode==='preview'){window.open(doc.output('bloburl'),'_blank')||showToast('Allow pop-ups to preview','err');return;}
+  if(mode==='print'){const f=document.createElement('iframe');f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';f.src=doc.output('bloburl');f.onload=()=>{try{f.contentWindow.focus();f.contentWindow.print();}catch(e){showToast('Print failed','err');}setTimeout(()=>f.remove(),60000);};document.body.appendChild(f);return;}
+  saveOut(doc.output('blob'),fname,'Memo PDF',()=>{try{sfDownload(doc.output('blob'),fname);}catch(e){doc.save(fname);}},'Memo Pads',m.to,m.date);
+}
 </script>
 <input type="file" id="xl-file" accept=".xlsx,.xls" style="display:none" onchange="handleExcelFile(event)"/>
 <div id="xl-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;padding:14px"><div id="xl-body" style="background:#fff;border-radius:14px;padding:20px;max-width:560px;width:100%;max-height:90vh;overflow:auto"></div></div>
@@ -2175,5 +2384,42 @@ sfInit().catch(e=>{SF.state=sfSupported()?'none':'unsupported';try{sfRender();}c
  <div style="font-size:12px;color:#667;background:#f3f6fb;border-radius:8px;padding:8px;margin-bottom:14px">Saves to:<br><span id="sf-preview"></span></div>
  <div style="text-align:right"><button class="btn" onclick="sfClose()">Close</button></div>
 </div></div>
-<datalist id="unit-list"><option value="Nos"><option value="Set"><option value="Pair"><option value="Piece"><option value="Box"><option value="Lot"><option value="Job"><option value="Day"><option value="Hour"><option value="Trip"><option value="Bundle"><option value="ft"><option value="inch"><option value="meter"><option value="R.ft"><option value="R.m"><option value="sq.ft"><option value="sq.m"><option value="cu.ft"><option value="cu.m"></datalist></body>
+<datalist id="unit-list"><option value="Nos"><option value="Set"><option value="Pair"><option value="Piece"><option value="Box"><option value="Lot"><option value="Job"><option value="Day"><option value="Hour"><option value="Trip"><option value="Bundle"><option value="ft"><option value="inch"><option value="meter"><option value="R.ft"><option value="R.m"><option value="sq.ft"><option value="sq.m"><option value="cu.ft"><option value="cu.m"></datalist><style>
+#memo-overlay{display:none;position:fixed;inset:0;z-index:9000;background:#f1f4f9;overflow:auto;font-family:'DM Sans',system-ui,sans-serif}
+.mm-wrap{max-width:900px;margin:0 auto;padding:12px 12px 80px}
+.mm-bar{position:sticky;top:0;z-index:2;background:#0f2a4d;color:#fff;border-radius:0 0 14px 14px;padding:10px 12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 -12px 12px}
+.mm-bar b{font-size:15px;margin-right:auto}.mm-bar .btn{padding:7px 11px;font-size:12.5px}
+.mm-card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(15,42,77,.08);margin-bottom:12px}
+.mm-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.mm-g label,.mm-lab{display:block;font-size:11px;font-weight:700;color:#5a6a85;letter-spacing:.4px;text-transform:uppercase;margin-bottom:4px}
+.mm-g input,.mm-g select{width:100%;padding:9px;border:1px solid #d3dbe8;border-radius:9px;font:inherit;font-size:14px;box-sizing:border-box}
+.mm-tb{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}.mm-tb button{border:1px solid #d3dbe8;background:#fff;border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer}
+#mm-body{min-height:300px;border:1px solid #d3dbe8;border-radius:10px;padding:14px;font-size:15px;line-height:1.65;outline:none;background:#fff}
+#mm-body h3{color:#1a5fa8;font-size:15px;margin:14px 0 4px}
+.mm-t{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:13px}.mm-t th{background:#eaf2fb;color:#1a5fa8;font-size:11px;text-align:left;padding:6px}.mm-t td{padding:3px}.mm-t td input{width:100%;min-width:70px;padding:7px;border:1px solid #e1e7f0;border-radius:7px;box-sizing:border-box}
+.mm-x{border:0;background:#fde8e8;color:#b42318;border-radius:6px;padding:5px 8px;cursor:pointer}
+.mm-sig label{margin-right:16px;font-size:13.5px}
+@media(max-width:600px){.mm-bar .btn{flex:1 1 30%}#mm-body{font-size:16px;min-height:260px}}
+</style>
+<div id="memo-overlay"><div class="mm-wrap">
+ <div class="mm-bar"><b>📝 Memo Pad <span id="mm-status" style="font-weight:400;font-size:12px;opacity:.8;margin-left:6px">● Draft</span></b>
+  <button class="btn" onclick="memoNew()">+ New</button><button class="btn" onclick="memoSave('draft')">Save Draft</button><button class="btn btn-primary" onclick="memoSave('final')">Save</button>
+  <button class="btn" onclick="memoPreview()">Preview</button><button class="btn btn-primary" onclick="memoExport()">Export PDF</button><button class="btn" onclick="memoPrint()">🖨 Print</button>
+  <button class="btn" onclick="memoDuplicate()">Duplicate</button><button class="btn" onclick="memoClear()">Clear</button><button class="btn" onclick="memoClose()">✕ Close</button></div>
+ <div class="mm-card"><div class="mm-g">
+  <div><label>Memo Type</label><select id="mm-type" onchange="memoTypeChange()"></select></div>
+  <div><label>Memo No</label><input id="mm-no"/></div><div><label>Date</label><input id="mm-date" type="date"/></div>
+  <div><label>PDF Template</label><select id="mm-tpl"><option value="classic">Classic Blue</option><option value="premium">Premium Interior</option><option value="minimal">Minimal</option><option value="office">Office Memo</option></select></div>
+  <div><label>To <a href="#" onclick="event.preventDefault();memoPickCustomer()" style="text-transform:none;letter-spacing:0;font-weight:600">🔍 use invoice customer</a></label><input id="mm-to" placeholder="Customer / person / company"/></div>
+  <div><label>Project</label><input id="mm-project"/></div><div><label>Location</label><input id="mm-location"/></div>
+  <div style="grid-column:1/-1"><label>Subject</label><input id="mm-subject"/></div></div></div>
+ <div class="mm-card"><div class="mm-lab">Memo Content</div>
+  <div class="mm-tb"><button onclick="memoCmd('bold')"><b>B</b></button><button onclick="memoCmd('italic')"><i>I</i></button><button onclick="memoCmd('underline')"><u>U</u></button><button onclick="memoCmd('formatBlock','h3')">Heading</button><button onclick="memoCmd('formatBlock','p')">Text</button><button onclick="memoCmd('insertUnorderedList')">• List</button><button onclick="memoCmd('insertOrderedList')">1. List</button><button onclick="memoCmd('justifyLeft')">⬅</button><button onclick="memoCmd('justifyCenter')">↔</button><button onclick="memoCmd('justifyRight')">➡</button></div>
+  <div id="mm-body" contenteditable="true"></div></div>
+ <div class="mm-card" id="mm-tbl" style="display:none"></div>
+ <div class="mm-card mm-sig"><div class="mm-lab">Signatures</div>
+  <label><input type="checkbox" id="mm-sp"/> Prepared By</label><label><input type="checkbox" id="mm-sa"/> Authorised (company signature)</label><label><input type="checkbox" id="mm-sc"/> Customer</label>
+  <div class="mm-g" style="margin-top:10px"><div><label>Prepared By (name)</label><input id="mm-preparedBy"/></div></div></div>
+</div></div>
+</body>
 </html>
