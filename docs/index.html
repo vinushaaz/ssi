@@ -1460,7 +1460,100 @@ function splitDesc(d){
   });
   return{name:m[1],det:det.filter(Boolean)};
 }
+// "Standard" template — matches the on-screen invoice preview (serif, italic company name, grid table, totals inside the table)
+function buildPDFStandard(fname,showRem){
+  const{jsPDF}=window.jspdf,doc=new jsPDF({unit:'mm',format:'a4'});pdfFonts(doc);
+  const W=210,M=14,CW=182,PB=268,bill=g('inv-no'),gstOn=isGstMode(),title=gstOn?'INVOICE':'BILL';
+  const BL=[26,95,168],INK=[28,32,44],GR=[105,112,125],GL=[170,196,228],SOFT=[214,230,245],F='times';
+  const col=a=>doc.setTextColor(a[0],a[1],a[2]),fil=a=>doc.setFillColor(a[0],a[1],a[2]),drw=a=>doc.setDrawColor(a[0],a[1],a[2]);
+  const cs=n=>{if(doc.setCharSpace)doc.setCharSpace(n);};
+  const cw=[10,64,17,12,16,15,20,28],X=[M];cw.forEach((w,i)=>X.push(X[i]+w));
+  const spaced=(txt,cx,yy,c)=>{cs(c);const w=doc.getTextWidth(txt)+txt.length*c;doc.text(txt,cx-w/2,yy);cs(0);};
+  let y=M+1;
+  if(logoDataUrl){try{doc.addImage(logoDataUrl,'PNG',M,y,22,11);}catch(e){}}
+  doc.setFont(F,'bolditalic');doc.setFontSize(29);col(BL);doc.text(g('co-name'),W/2,y+9,{align:'center'});
+  // tagline with blue separators
+  doc.setFont(F,'normal');doc.setFontSize(8.6);
+  const words=['OFFICE','COMMERCIAL','RESIDENTIAL'],sp=1.1,gap=7;
+  const ww=words.map(w=>{cs(sp);const v=doc.getTextWidth(w)+w.length*sp;cs(0);return v;});
+  let tx=W/2-(ww.reduce((a,b)=>a+b,0)+gap*2+2*1.5)/2;
+  words.forEach((w,i)=>{col(GR);cs(sp);doc.text(w,tx,y+15.5);cs(0);tx+=ww[i];if(i<2){col(BL);doc.text('|',tx+gap/2,y+15.5,{align:'center'});tx+=gap+1.5;}});
+  y+=20;fil(BL);doc.rect(M,y,CW,1,'F');y+=6;
+  doc.setFont(F,'normal');doc.setFontSize(9.2);col([55,70,100]);
+  const al=doc.splitTextToSize(g('co-addr').replace(/\n+/g,', '),CW*.62).concat(['Email: '+g('co-email')]);
+  al.forEach((l,i)=>doc.text(l,M,y+i*4.8));
+  const ar=[g('co-person'),g('co-ph1'),g('co-ph2')].filter(Boolean);
+  ar.forEach((l,i)=>{doc.setFont(F,i===0?'bold':'normal');doc.text(l,W-M,y+i*4.8,{align:'right'});});
+  y+=Math.max(al.length,ar.length)*4.8;drw([200,205,215]);doc.setLineWidth(.25);doc.line(M,y,W-M,y);y+=7;
+  if(gstOn){doc.setFont(F,'bold');doc.setFontSize(12);col(INK);doc.text('GSTIN: '+g('co-gstin'),W/2,y,{align:'center'});y+=3.5;}
+  fil(BL);doc.rect(M,y,CW,8.5,'F');doc.setFont(F,'bold');doc.setFontSize(12);col([255,255,255]);spaced(title,W/2,y+5.9,3);y+=8.5;
+  // bill-to / details box
+  const half=CW*.5;doc.setFont(F,'normal');doc.setFontSize(9.6);
+  const addr=doc.splitTextToSize(g('cust-addr')||'',half-10),ph=g('cust-phone');
+  const bh=Math.max(27,15+addr.length*4.6+(ph?4.8:0)+(gstOn?7:0)+3);
+  drw(GL);doc.setLineWidth(.3);doc.rect(M,y,CW,bh);doc.line(M+half,y,M+half,y+bh);
+  doc.setFont(F,'bold');doc.setFontSize(9);col(BL);doc.text('BILL TO',M+5,y+6);
+  doc.setFontSize(11);col(INK);doc.text(g('cust-name')||'—',M+5,y+12);
+  doc.setFont(F,'normal');doc.setFontSize(9.6);col([50,55,70]);let cy=y+17;doc.text(addr,M+5,cy);cy+=addr.length*4.6;
+  if(ph){doc.text('Phone: '+ph,M+5,cy+.5);cy+=4.8;}
+  if(gstOn){doc.setFont(F,'bold');col(INK);doc.text('GSTIN: '+g('cust-gstin'),M+5,y+bh-4);}
+  doc.setFont(F,'bold');doc.setFontSize(10.5);col(INK);doc.text((gstOn?'INVOICE NO: ':'BILL NO: ')+bill,M+half+5,y+8.5);
+  doc.text('DATE: '+fmtDate(g('inv-date')),M+half+5,y+15);
+  if(g('inv-delivery')){doc.setFont(F,'normal');doc.setFontSize(9.6);doc.text('Delivery: '+g('inv-delivery'),M+half+5,y+21);}
+  y+=bh+6;
+  // grid table
+  const hd=['S.No','Description of Work',gstOn?'SAC/HSN':'HSN','Qty','Area','Unit','Rate (\u20b9)','Amount (\u20b9)'],al8=['center','center','center','center','center','center','right','right'];
+  const vlines=(y0,h)=>{drw(GL);doc.setLineWidth(.25);X.forEach(x=>doc.line(x,y0,x,y0+h));};
+  const tblHead=()=>{fil(SOFT);doc.rect(M,y,CW,8,'F');drw(GL);doc.setLineWidth(.25);doc.line(M,y,M+CW,y);doc.line(M,y+8,M+CW,y+8);vlines(y,8);
+    doc.setFont(F,'bold');doc.setFontSize(9);col(INK);hd.forEach((h,k)=>{pdfTxt(doc,h,al8[k]==='right'?X[k]+cw[k]-2.5:X[k]+cw[k]/2,y+5.4,al8[k]);});y+=8;};
+  const contHead=()=>{doc.addPage();y=M;doc.setFont(F,'bolditalic');doc.setFontSize(17);col(BL);doc.text(g('co-name'),M,y+5);
+    doc.setFont(F,'bold');doc.setFontSize(10);col(INK);doc.text(title+' NO: '+bill,W-M,y+3.5,{align:'right'});doc.setFont(F,'normal');doc.setFontSize(9);col(GR);doc.text('DATE: '+fmtDate(g('inv-date'))+'  (continued)',W-M,y+8,{align:'right'});
+    y+=11;fil(BL);doc.rect(M,y,CW,.8,'F');y+=6;};
+  tblHead();
+  rows.forEach((r,idx)=>{
+    const{unit:fu}=getFinalQtyUnit(r),{qty:aq,area:aa}=getRowAreaQty(r),amt=rowAmount(r),sd=splitDesc(r.desc);
+    doc.setFont(F,'bold');doc.setFontSize(10);const nl=doc.splitTextToSize(sd.name,cw[1]-5);
+    doc.setFont(F,'normal');doc.setFontSize(8.4);const dl=[];sd.det.forEach(s=>doc.splitTextToSize(s,cw[1]-5).forEach(x=>dl.push(x)));
+    const rt=[calcExplain(r),showRem?r.remarks:''].filter(Boolean).join('\n').replace(/\u20b9\s?/g,'Rs. ');doc.setFontSize(7.8);const rl=rt?doc.splitTextToSize(rt,cw[1]-5):[];
+    const rh=Math.max(10,5.2+nl.length*4.3+(dl.length?1+dl.length*3.6:0)+(rl.length?1+rl.length*3.4:0));
+    if(y+rh>PB){contHead();tblHead();}
+    drw(GL);doc.setLineWidth(.25);doc.line(M,y+rh,M+CW,y+rh);vlines(y,rh);
+    const b=y+5.3;col(INK);doc.setFont(F,'normal');doc.setFontSize(9.6);
+    doc.text(String(idx+1),X[0]+cw[0]/2,b,{align:'center'});
+    doc.setFont(F,'bold');doc.setFontSize(10);doc.text(nl,X[1]+2.5,b);let dy=b+(nl.length-1)*4.3;
+    if(dl.length){doc.setFont(F,'normal');doc.setFontSize(8.4);col(GR);doc.text(dl,X[1]+2.5,dy+4);dy+=dl.length*3.6+1;}
+    if(rl.length){doc.setFont(F,'italic');doc.setFontSize(7.8);col(GR);doc.text(rl,X[1]+2.5,dy+3.8);}
+    col(INK);doc.setFont(F,'normal');doc.setFontSize(9.6);
+    doc.text(r.hsn||'',X[2]+cw[2]/2,b,{align:'center'});
+    doc.text(aq===''?'—':fmtQty(aq,r.calcType),X[3]+cw[3]/2,b,{align:'center'});
+    doc.text(aa===''?'—':fmt(aa),X[4]+cw[4]/2,b,{align:'center'});
+    doc.text(doc.splitTextToSize(fu,cw[5]-2),X[5]+cw[5]/2,b,{align:'center'});
+    doc.text(rateText(r),X[6]+cw[6]-2.5,b,{align:'right'});
+    doc.setFont(F,'bold');pdfTxt(doc,'\u20b9'+fmt(amt),X[7]+cw[7]-2.5,b,'right');
+    y+=rh;
+  });
+  // totals as table rows
+  const t=calc(),trs=[['Sub-Total:',fmt(t.sub)]];buildTotalsLines(t).forEach(l=>trs.push([l.label+':',l.value]));
+  doc.setFont(F,'italic');doc.setFontSize(9.6);const wl=doc.splitTextToSize('('+numWords(t.grand)+')',CW-10),wh=wl.length*4.8+6;
+  if(y+trs.length*8+11+wh+8+44>PB+6)contHead();
+  trs.forEach(([l,v])=>{drw(GL);doc.setLineWidth(.25);doc.line(M,y+8,M+CW,y+8);doc.line(M,y,M,y+8);doc.line(M+CW,y,M+CW,y+8);doc.line(X[7],y,X[7],y+8);
+    doc.setFont(F,'bold');doc.setFontSize(10);col(INK);doc.text(l,X[7]-3,y+5.5,{align:'right'});pdfTxt(doc,'\u20b9'+v,X[8]-2.5,y+5.5,'right');y+=8;});
+  fil(SOFT);doc.rect(M,y,CW,11,'F');drw(GL);doc.rect(M,y,CW,11);
+  doc.setFont(F,'bold');doc.setFontSize(13);col(INK);const gw=doc.getTextWidth(fmt(t.grand))+6;pdfTxt(doc,'\u20b9'+fmt(t.grand),X[8]-3,y+7.5,'right');doc.setFontSize(12);doc.text('GRAND TOTAL:',X[8]-3-gw-6,y+7.4,{align:'right'});y+=11;
+  fil([248,251,255]);doc.rect(M,y,CW,wh,'FD');doc.setFont(F,'italic');doc.setFontSize(9.6);col(INK);doc.text(wl,M+5,y+5.3);y+=wh+9;
+  doc.setFont(F,'normal');doc.setFontSize(9.4);col(GR);
+  doc.text(['Goods once sold cannot be taken.','All subject to Chennai Jurisdiction.','','Thank you for your business.'],M,y);
+  doc.setFont(F,'bold');doc.setFontSize(10);col(BL);doc.text('for '+g('co-name'),W-M,y,{align:'right'});
+  if(sigDataUrl){try{doc.addImage(sigDataUrl,'JPEG',W-M-48,y+2,46,20);}catch(e){}}
+  drw(GR);doc.setLineWidth(.3);doc.line(W-M-62,y+25,W-M,y+25);doc.setFont(F,'normal');doc.setFontSize(9);col(GR);doc.text('Authorised Signature',W-M,y+29.5,{align:'right'});
+  const N=doc.getNumberOfPages();
+  for(let p=1;p<=N;p++){doc.setPage(p);drw([200,205,215]);doc.setLineWidth(.25);doc.line(M,283,W-M,283);doc.setFont(F,'normal');doc.setFontSize(8.5);col(GR);
+    doc.text(title+' No: '+bill,M,288);doc.text("SS Interior's  |  Office  |  Commercial  |  Residential",W/2,288,{align:'center'});doc.text('Page '+p+' of '+N,W-M,288,{align:'right'});}
+  saveOut(doc.output('blob'),fname,'PDF',()=>{try{sfDownload(doc.output('blob'),fname);}catch(e){doc.save(fname);}});
+}
+
 function buildPDF(fname,showRem,tplKey){
+  if(!tplKey||tplKey==='standard')return buildPDFStandard(fname,showRem);
   const T=PDF_THEMES[tplKey]||PDF_THEMES.classic,{jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});pdfFonts(doc);
   const W=210,M=14,CW=W-2*M,PB=270,bill=g('inv-no'),gstOn=isGstMode(),title=gstOn?'INVOICE':'BILL';
@@ -1911,7 +2004,7 @@ window.addEventListener('resize',()=>{
 
 /* ═══ FILE NAME MANAGER ═══ */
 const FN_KEY='ssi_fn_prefs';
-function fnPrefs(){try{return Object.assign({fmt:'bill',mode:'ask',custom:'',remember:true,remarks:true,tpl:'classic'},JSON.parse(localStorage.getItem(FN_KEY)||'{}'));}catch(e){return{fmt:'bill',mode:'ask',custom:'',remember:true,remarks:true,tpl:'classic'};}}
+function fnPrefs(){try{const _s=JSON.parse(localStorage.getItem(FN_KEY)||'{}');if(_s.tplv!==2){_s.tpl='standard';_s.tplv=2;localStorage.setItem(FN_KEY,JSON.stringify(_s));}}catch(e){}try{return Object.assign({fmt:'bill',mode:'ask',custom:'',remember:true,remarks:true,tpl:'standard'},JSON.parse(localStorage.getItem(FN_KEY)||'{}'));}catch(e){return{fmt:'bill',mode:'ask',custom:'',remember:true,remarks:true,tpl:'standard'};}}
 function fnSave(p){try{localStorage.setItem(FN_KEY,JSON.stringify(p));}catch(e){}}
 function safeName(s){return String(s||'').replace(/[\\\/:*?"<>|\x00-\x1f]+/g,'-').replace(/-{2,}/g,'-').replace(/^[-.\s]+|[-.\s]+$/g,'');}
 function withExt(name,ext){const n=safeName(String(name||'').replace(/\.(pdf|xlsx|xls)\s*$/i,''))||'Invoice';return n+'.'+ext;}
@@ -2365,7 +2458,7 @@ function buildMemoPDF(fname,_x,mode){
  <select id="fn-fmt" onchange="fnFmtChange()" style="width:100%;padding:8px;border:1px solid #ccd;border-radius:8px;margin-bottom:10px"><option value="bill">Bill / Invoice Number</option><option value="bill_cust">Bill Number + Customer</option><option value="bill_date">Bill Number + Date</option><option value="cust_bill">Customer + Bill Number</option><option value="custom">Custom</option></select>
  <label style="display:block;margin-bottom:4px">File Name</label>
  <input id="fn-name" oninput="document.getElementById('fn-fmt').value='custom'" style="width:100%;padding:8px;border:1px solid #ccd;border-radius:8px;margin-bottom:10px"/>
- <div id="fn-tpl-wrap"><label style="display:block;margin-bottom:4px">PDF Template</label><select id="fn-tpl" style="width:100%;padding:8px;border:1px solid #ccd;border-radius:8px;margin-bottom:10px"><option value="classic">Classic Blue (default)</option><option value="premium">Premium Interior</option><option value="minimal">Minimal</option><option value="corporate">Corporate</option><option value="compact">Compact</option></select></div>
+ <div id="fn-tpl-wrap"><label style="display:block;margin-bottom:4px">PDF Template</label><select id="fn-tpl" style="width:100%;padding:8px;border:1px solid #ccd;border-radius:8px;margin-bottom:10px"><option value="standard">Standard — matches preview (default)</option><option value="classic">Classic Blue</option><option value="premium">Premium Interior</option><option value="minimal">Minimal</option><option value="corporate">Corporate</option><option value="compact">Compact</option></select></div>
  <label id="fn-remarks-wrap" style="display:block;margin-bottom:8px"><input type="checkbox" id="fn-remarks" checked/> Show item remarks under description</label>
  <label style="display:block;margin-bottom:8px"><input type="checkbox" id="fn-remember" checked/> Remember my filename preference</label>
  <label style="display:block;margin-bottom:4px">Download Mode</label>
