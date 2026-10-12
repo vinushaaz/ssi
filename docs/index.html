@@ -229,7 +229,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .inv-sign .sig-line{border-top:1px solid #aaa;margin-top:4px;padding-top:4px;font-size:8.5px;color:#666;width:160px;margin-left:auto}
 
 /* ── Toast ── */
-.toast{position:fixed;bottom:calc(var(--nav-h) + 12px);left:50%;transform:translateX(-50%);padding:12px 20px;border-radius:var(--rs);font-size:13px;font-weight:500;display:none;align-items:center;gap:10px;z-index:9999;box-shadow:var(--shadow-lg);white-space:nowrap;animation:slideUp .3s ease}
+.toast{position:fixed;bottom:calc(var(--nav-h) + 12px);left:50%;transform:translateX(-50%);padding:12px 20px;border-radius:var(--rs);font-size:13px;font-weight:500;display:none;align-items:center;gap:10px;z-index:9999;box-shadow:var(--shadow-lg);white-space:normal;max-width:92vw;animation:slideUp .3s ease}
 @media(min-width:769px){.toast{bottom:24px;right:24px;left:auto;transform:none}}
 .toast.show{display:flex}
 .toast.ok{background:#fff;border-left:4px solid var(--green);color:var(--green)}
@@ -837,6 +837,15 @@ const SUPABASE_URL='https://flkpanjohvqgtweruldk.supabase.co';
 const SUPABASE_KEY='sb_publishable_lCWB1go6Qxs-Tcr-lhys-w_zJYmzHXD';
 const sb=(typeof supabase!=='undefined')?supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
 const CURRENT_DRAFT_ID='current-draft';
+function sbErr(e){
+  if(!e)return 'unknown error';
+  const m=(e.message||String(e)),c=e.code?(' ['+e.code+']'):'';
+  if(/row-level security|42501|permission denied/i.test(m+c))return 'Permission blocked (run supabase-migration.sql in Supabase SQL Editor)'+c;
+  if(/column .* does not exist|PGRST204|42703/i.test(m+c))return 'Table is missing a column (run supabase-migration.sql)'+c;
+  if(/relation .* does not exist|PGRST205|42P01/i.test(m+c))return 'Table not found (run supabase-migration.sql)'+c;
+  if(/Failed to fetch|NetworkError|network/i.test(m))return 'No internet / cannot reach Supabase';
+  return m+c;
+}
 
 function init(){
   document.getElementById('inv-date').value=new Date().toISOString().split('T')[0];
@@ -1773,17 +1782,18 @@ async function loadCompanySettings(){
         document.getElementById('sig-actions').classList.add('show');
       }
     }
-  }catch(e){console.error('Could not load saved logo/signature:',e);showToast('Could not load saved logo/signature — '+(e.message||'connection issue'),'err');}
+  }catch(e){console.error('Could not load saved logo/signature:',e);showToast('Could not load saved logo/signature — '+sbErr(e),'err');}
 }
 async function saveCompanySettings(){
   if(!sb)return;
   try{
-    await sb.from('company_settings').upsert({id:SETTINGS_ID,logo_data_url:logoDataUrl,sig_data_url:sigDataUrl,updated_at:new Date().toISOString()});
-  }catch(e){console.error('Could not save logo/signature:',e);}
+    const{error}=await sb.from('company_settings').upsert({id:SETTINGS_ID,logo_data_url:logoDataUrl,sig_data_url:sigDataUrl,updated_at:new Date().toISOString()});
+    if(error)throw error;
+  }catch(e){console.error('Could not save logo/signature:',e);showToast('Logo/signature not saved: '+sbErr(e),'err');}
 }
 
 /* ── SUPABASE: DRAFT AUTOSAVE ── */
-let draftSaveTimer=null,suppressAutoSave=false;
+let draftSaveTimer=null,suppressAutoSave=false,draftFailShown=false;
 function scheduleAutoSave(){
   if(!sb||suppressAutoSave)return;
   clearTimeout(draftSaveTimer);
@@ -1793,12 +1803,14 @@ async function saveDraft(){
   if(!sb)return;
   try{
     const t=calc();
-    await sb.from('invoices').upsert({
+    const{error}=await sb.from('invoices').upsert({
       id:CURRENT_DRAFT_ID,status:'draft',
       invoice_no:g('inv-no'),bill_date:g('inv-date')||null,customer_name:g('cust-name'),
       grand_total:+t.grand.toFixed(2),data:collectState(),updated_at:new Date().toISOString()
     });
-  }catch(e){console.error('Draft autosave failed:',e);}
+    if(error)throw error;
+    if(draftFailShown){draftFailShown=false;}
+  }catch(e){console.error('Draft autosave failed:',e);if(!draftFailShown){draftFailShown=true;showToast('Auto-save failed: '+sbErr(e),'err');}}
 }
 async function loadDraft(){
   if(!sb)return;
@@ -1810,7 +1822,7 @@ async function loadDraft(){
       applyState(data.data);
       suppressAutoSave=false;
     }
-  }catch(e){console.error('Draft load failed (working from blank form):',e);showToast('Could not load your saved draft — '+(e.message||'connection issue'),'err');}
+  }catch(e){console.error('Draft load failed (working from blank form):',e);showToast('Could not load your saved draft — '+sbErr(e),'err');}
 }
 
 /* ── SUPABASE: SAVE TO HISTORY (with folders) ── */
@@ -1875,7 +1887,7 @@ async function saveToHistory(){
     });
     if(error)throw error;
     showToast('Saved to "'+(folder||suggestFolder())+'" ✓','ok');
-  }catch(e){showToast('Save to history failed — check connection','err');console.error(e);}
+  }catch(e){showToast('Save to history failed: '+sbErr(e),'err');console.error('saveToHistory',e);}
 }
 
 /* ── SUPABASE: HISTORY MODAL (grouped by folder) ── */
@@ -1888,7 +1900,7 @@ async function openHistory(){
     if(error)throw error;
     renderHistoryList(data||[]);
   }catch(e){
-    document.getElementById('history-list').innerHTML='<div class="hist-empty">Could not load history. Check connection.</div>';
+    document.getElementById('history-list').innerHTML='<div class="hist-empty">Could not load history: '+esc(sbErr(e))+'</div>';
     console.error(e);
   }
 }
@@ -1954,7 +1966,7 @@ async function moveHistoryItem(id,currentFolder){
     showToast('Moved to "'+(folder||'Unsorted')+'" ✓','ok');
     openFolderNames.add(folder||'Unsorted');
     openHistory();
-  }catch(e){showToast('Move failed','err');console.error(e);}
+  }catch(e){showToast('Move failed: '+sbErr(e),'err');console.error(e);}
 }
 async function openHistoryItem(id){
   try{
@@ -1967,7 +1979,7 @@ async function openHistoryItem(id){
     closeHistory();goTab(0);
     showToast('Invoice loaded ✓','ok');
     scheduleAutoSave(); // carry the opened invoice into the working draft too
-  }catch(e){showToast('Could not open invoice','err');console.error(e);}
+  }catch(e){showToast('Could not open invoice: '+sbErr(e),'err');console.error(e);}
 }
 async function deleteHistoryItem(id){
   if(!confirm('Delete this saved invoice? This cannot be undone.'))return;
@@ -1975,7 +1987,7 @@ async function deleteHistoryItem(id){
     const{error}=await sb.from('invoices').delete().eq('id',id);
     if(error)throw error;
     openHistory();
-  }catch(e){showToast('Delete failed','err');console.error(e);}
+  }catch(e){showToast('Delete failed: '+sbErr(e),'err');console.error(e);}
 }
 
 /* ── RESET ── */
@@ -1992,7 +2004,7 @@ function resetAll(){
 function showToast(msg,type){
   const el=document.getElementById('toast');
   el.textContent=msg;el.className='toast show '+type;
-  setTimeout(()=>el.className='toast',3500);
+  setTimeout(()=>el.className='toast',type==='err'?7000:3500);
 }
 
 /* ── RESIZE ── */
@@ -2331,7 +2343,7 @@ async function memoSave(status){
       data:Object.assign({document_type:'memo',memo_status:status,memo_type:m.type},m),updated_at:new Date().toISOString()});
     if(error)throw error;mg('mm-status').textContent=status==='final'?'● Final':'● Draft';
     showToast('Memo '+m.no+' saved as '+status+' ✓','ok');return true;
-  }catch(e){console.error(e);showToast('Memo save failed — check connection','err');return false;}
+  }catch(e){console.error(e);showToast('Memo save failed: '+sbErr(e),'err');return false;}
 }
 async function memoDuplicate(){
   const m=memoRead();const c=JSON.parse(JSON.stringify(m));c.id=memoBlank().id;c.status='draft';c.no=await memoNextNo();
