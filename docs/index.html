@@ -2387,26 +2387,28 @@ function buildMemoPDF(fname,_x,mode){
   const cs=n=>{if(doc.setCharSpace)doc.setCharSpace(n);};
   const lab=(t,x,yy)=>{doc.setFont('helvetica','bold');doc.setFontSize(7);col(T.c);cs(.5);doc.text(t,x,yy);cs(0);};
   const title=(m.type==='general'||m.type==='internal'?'MEMO':MEMO_TYPES[m.type][0].toUpperCase());
-  let y=14,lx=M;
-  if(logoDataUrl){try{doc.addImage(logoDataUrl,'PNG',M,y-2,26,12);lx=M+30;}catch(e){}}
-  doc.setFont(HF,'bold');doc.setFontSize(19);col(T.c);doc.text(g('co-name'),lx,y+5.5);
-  doc.setFont('helvetica','normal');doc.setFontSize(6.8);col(MUTE);cs(.9);doc.text('OFFICE  |  COMMERCIAL  |  RESIDENTIAL',lx,y+10.5);cs(0);
-  doc.setFontSize(7.6);doc.text(g('co-addr').replace(/\n+/g,', '),W-M,y+3,{align:'right'});
-  doc.text([g('co-ph1'),g('co-ph2')].filter(Boolean).join('  ·  ')+'   '+g('co-email'),W-M,y+7.4,{align:'right'});
-  if(isGstMode())doc.text('GSTIN: '+g('co-gstin'),W-M,y+11.8,{align:'right'});
-  y+=16;drw(T.c);doc.setLineWidth(.7);doc.line(M,y,W-M,y);
-  if(m.tpl==='office'){doc.setLineWidth(.2);doc.line(M,y+1.2,W-M,y+1.2);}
-  y+=11;
-  doc.setFont(HF,'bold');doc.setFontSize(21);col(T.c);doc.text(title,M,y+3);
-  doc.setFont('helvetica','bold');doc.setFontSize(9.5);col(INK);doc.text('Memo No: '+m.no,W-M,y,{align:'right'});
-  doc.setFont('helvetica','normal');col(MUTE);doc.text('Date: '+fmtDate(m.date),W-M,y+5,{align:'right'});y+=12;
+  // letterhead — centred layout, matches the company's printed letterhead
+  const LB=[17,85,204],BK=[0,0,0],HX0=6.4,HX1=W-5.8;
+  let y;
+  if(logoDataUrl){try{doc.addImage(logoDataUrl,'PNG',HX0,7,24,12);}catch(e){}}
+  doc.setFont('helvetica','bold');doc.setFontSize(7.1);col(BK);
+  [[g('co-person'),g('co-ph1')].filter(Boolean).join(' : '),g('co-ph2')].filter(Boolean).forEach((t,i)=>doc.text(t,W-6.7,10.4+i*4.3,{align:'right'}));
+  doc.setFont('helvetica','bolditalic');doc.setFontSize(28);col(LB);doc.text(g('co-name'),W/2,24.4,{align:'center'});
+  doc.setFont('helvetica','bold');doc.setFontSize(6.8);doc.text('OFFICE | COMMERCIAL | RESIDENTIAL',W/2,30,{align:'center'});
+  doc.setFont('helvetica','normal');doc.setFontSize(6.6);col(BK);
+  let ty=33.7;
+  doc.splitTextToSize(g('co-addr').replace(/\s*\n+\s*/g,', '),150).forEach(l=>{doc.text(l,W/2,ty,{align:'center'});ty+=3.7;});
+  doc.text('email: '+g('co-email'),W/2,ty,{align:'center'});
+  if(isGstMode()){ty+=4.4;doc.setFont('helvetica','bold');doc.setFontSize(6.8);doc.text('GSTIN: '+g('co-gstin'),W/2,ty,{align:'center'});}
+  y=ty+1.1;drw(BK);doc.setLineWidth(.3);doc.line(HX0,y,HX1,y);
+  y+=8;
   const info=[['TO',m.to],['PROJECT',m.project],['LOCATION',m.location],['SUBJECT',m.subject]].filter(r=>r[1]);
   if(info.length){
     const hh=info.length*7+5;fil(T.soft);doc.rect(M,y,CW,hh,'F');fil(T.c);doc.rect(M,y,1.1,hh,'F');
     info.forEach(([k,v],i)=>{const yy=y+7+i*7;lab(k,M+6,yy);doc.setFont('helvetica',k==='SUBJECT'?'bold':'normal');doc.setFontSize(10);col(INK);doc.text(doc.splitTextToSize(v,CW-40)[0],M+30,yy);});
     y+=hh+9;}
   const contHead=()=>{doc.addPage();y=14;doc.setFont(HF,'bold');doc.setFontSize(13);col(T.c);doc.text(g('co-name'),M,y+4);
-    doc.setFont('helvetica','normal');doc.setFontSize(8.5);col(MUTE);doc.text('Memo No: '+m.no+(m.subject?'  ·  '+m.subject.slice(0,40):''),W-M,y+3.5,{align:'right'});
+    doc.setFont('helvetica','normal');doc.setFontSize(8.5);col(MUTE);if(m.subject)doc.text(m.subject.slice(0,60),W-M,y+3.5,{align:'right'});
     y+=8;drw(T.c);doc.setLineWidth(.5);doc.line(M,y,W-M,y);y+=9;};
   // body
   const FS=10.5,LH=5.7,sty=r=>(r.b&&r.i?'bolditalic':r.b?'bold':r.i?'italic':'normal');
@@ -2445,7 +2447,11 @@ function buildMemoPDF(fname,_x,mode){
   // signatures (kept together with labels)
   const sg=[];if(m.sig.prepared)sg.push(['Prepared By',m.preparedBy,0]);if(m.sig.auth)sg.push(['Authorised Signature',"For "+g('co-name'),1]);if(m.sig.cust)sg.push(['Customer Signature','',0]);
   if(sg.length){
-    if(y+42>PB)contHead();y+=10;const cwid=CW/sg.length;
+    // anchor to the page bottom (derived from footer rule position, not a magic offset);
+    // if body content already reaches into that zone, move the signature to a fresh page
+    const FOOT=285,SIG_H=32,sigTop=FOOT-7-SIG_H;
+    if(y>sigTop-6)contHead();
+    y=sigTop;const cwid=CW/sg.length;
     sg.forEach(([lb,nm,img],i)=>{const x0=M+i*cwid;
       if(img&&sigDataUrl){try{doc.addImage(sigDataUrl,'JPEG',x0,y,38,17);}catch(e){}}
       drw(MUTE);doc.setLineWidth(.3);doc.line(x0,y+20,x0+cwid-10,y+20);
@@ -2453,9 +2459,7 @@ function buildMemoPDF(fname,_x,mode){
       if(nm){doc.setFont('helvetica','bold');col(INK);doc.text(nm,x0,y+30);}});
   }
   const N=doc.getNumberOfPages();
-  for(let p=1;p<=N;p++){doc.setPage(p);drw(LINE);doc.setLineWidth(.3);doc.line(M,281,W-M,281);
-    doc.setFont('helvetica','bold');doc.setFontSize(7);col(T.c);cs(.4);doc.text("SS INTERIOR'S",M,285.5);cs(0);
-    doc.setFont('helvetica','normal');col(MUTE);doc.text('Memo No: '+m.no,M,289.5);doc.text('Page '+p+' of '+N,W-M,289.5,{align:'right'});}
+  if(N>1)for(let p=1;p<=N;p++){doc.setPage(p);doc.setFont('helvetica','normal');doc.setFontSize(7.5);col(MUTE);doc.text('Page '+p+' of '+N,W/2,291,{align:'center'});}
   if(mode==='preview'){window.open(doc.output('bloburl'),'_blank')||showToast('Allow pop-ups to preview','err');return;}
   if(mode==='print'){const f=document.createElement('iframe');f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';f.src=doc.output('bloburl');f.onload=()=>{try{f.contentWindow.focus();f.contentWindow.print();}catch(e){showToast('Print failed','err');}setTimeout(()=>f.remove(),60000);};document.body.appendChild(f);return;}
   saveOut(doc.output('blob'),fname,'Memo PDF',()=>{try{sfDownload(doc.output('blob'),fname);}catch(e){doc.save(fname);}},'Memo Pads',m.to,m.date);
