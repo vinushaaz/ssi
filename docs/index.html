@@ -142,6 +142,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .items-tbl thead tr{background:#F5F8FD}
 .items-tbl th{padding:10px 10px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
 .items-tbl th.r{text-align:right}
+body.no-gst .col-hsn{display:none}
 .items-tbl td{padding:4px 3px;border-bottom:1px solid #F3F4F6;vertical-align:middle}
 .items-tbl tbody tr:last-child td{border-bottom:none}
 .items-tbl input{width:100%;border:1.5px solid transparent;border-radius:6px;padding:8px 8px;font-size:13px;background:transparent;color:var(--text);font-family:'DM Sans',sans-serif;transition:all .15s}
@@ -570,7 +571,7 @@ Ayapakkam, Chennai - 600 077</textarea></div>
         <thead><tr>
           <th style="width:28px">#</th>
           <th>Description</th>
-          <th style="width:62px">HSN</th>
+          <th class="col-hsn" style="width:62px">HSN</th>
           <th style="width:118px">Calc Type</th>
           <th style="width:210px">Qty / Area</th>
           <th style="width:60px">Unit</th>
@@ -706,6 +707,7 @@ Ayapakkam, Chennai - 600 077</textarea></div>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
       Save to History
     </button>
+    <button class="btn btn-full" style="justify-content:center;grid-column:1/-1;background:var(--blue-lt);color:var(--blue)" onclick="psOpen('inv')">🎨 PDF Studio — templates, margins &amp; page size</button>
     <button class="btn btn-full" onclick="goTab(1)" style="justify-content:center;grid-column:1/-1">
       <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       Edit Items
@@ -781,6 +783,7 @@ Ayapakkam, Chennai - 600 077</textarea></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
@@ -1173,7 +1176,7 @@ function renderRows(){
   document.getElementById('items-body').innerHTML=rows.map((r,i)=>`<tr>
     <td class="row-n">${i+1}</td>
     <td><input value="${esc(r.desc)}" oninput="rows[${i}].desc=this.value" placeholder="Description…" style="min-width:160px"/><input value="${esc(r.remarks)}" oninput="rows[${i}].remarks=this.value" placeholder="Remarks (optional)" style="min-width:160px;font-size:11px;margin-top:3px;color:#667"/></td>
-    <td><input value="${esc(r.hsn)}" oninput="rows[${i}].hsn=this.value" placeholder="9403"/></td>
+    <td class="col-hsn"><input value="${esc(r.hsn)}" oninput="rows[${i}].hsn=this.value" placeholder="9403"/></td>
     <td>${calcTypeSelectHtml(r,i)}</td>
     <td>${calcCellHtml(r,i)}</td>
     <td>${unitCellHtml(r,i)}</td>
@@ -1207,6 +1210,7 @@ function isGstMode(){
 }
 function handleGstInvoiceToggle(){
   const on=isGstMode();
+  document.body.classList.toggle('no-gst',!on);
   document.getElementById('gst-toggle-hint').textContent=on?'Tax invoice with GSTIN & tax breakup':'Plain bill — no GSTIN or tax breakup shown';
   document.getElementById('co-gstin-field').style.display=on?'':'none';
   document.getElementById('cust-gstin-field').style.display=on?'':'none';
@@ -1366,9 +1370,9 @@ function numWords(n){
 
 /* ── PREVIEW ── */
 function renderPreview(){
-  const t=calc();
+  const t=calc(),CS=isGstMode()?6:5; // HSN column is dropped on plain (non-GST) bills
   const taxRowsHtml=buildTotalsLines(t).map(l=>
-    `<tr class="sub"><td colspan="6" style="text-align:right;padding-right:10px">${l.label}</td><td colspan="2" class="r" style="padding-right:12px">${l.value.indexOf('Exempt')>-1?l.value:(l.value.match(/^[+-]/)?l.value.charAt(0)+' &#8377; '+l.value.slice(2):'&#8377; '+l.value)}</td></tr>`
+    `<tr class="sub"><td colspan="${CS}" style="text-align:right;padding-right:10px">${l.label}</td><td colspan="2" class="r" style="padding-right:12px">${l.value.indexOf('Exempt')>-1?l.value:(l.value.match(/^[+-]/)?l.value.charAt(0)+' &#8377; '+l.value.slice(2):'&#8377; '+l.value)}</td></tr>`
   ).join('');
   const irows=rows.map((r,i)=>{
     const{unit:fu}=getFinalQtyUnit(r);
@@ -1377,7 +1381,7 @@ function renderPreview(){
     return`<tr>
     <td class="c">${i+1}</td>
     <td style="white-space:pre-line;max-width:180px">${r.desc}</td>
-    <td class="c">${r.hsn}</td><td class="r">${aq===''?'—':fmtQty(aq,r.calcType)}</td>
+    ${isGstMode()?'<td class="c">'+r.hsn+'</td>':''}<td class="r">${aq===''?'—':fmtQty(aq,r.calcType)}</td>
     <td class="r">${aa===''?'—':fmt(aa)}</td>
     <td class="c">${fu}</td><td class="r">${rateText(r)}</td>
     <td class="r"><strong>${fmt(amt)}</strong></td>
@@ -1404,7 +1408,7 @@ function renderPreview(){
         ${isGstMode()?'<br><strong>GSTIN:</strong> '+g('cust-gstin'):''}
       </div>
       <div class="inv-party" style="background:#FAFCFF">
-        <div><strong>${isGstMode()?'INVOICE NO':'BILL NO'}:</strong> ${g('inv-no')}</div>
+        ${isGstMode()?'<div><strong>INVOICE NO:</strong> '+g('inv-no')+'</div>':''}
         <div><strong>DATE:</strong> ${fmtDate(g('inv-date'))}</div>
         ${g('inv-delivery')?'<br><strong>Delivery:</strong><br>'+g('inv-delivery'):''}
       </div>
@@ -1412,15 +1416,15 @@ function renderPreview(){
     <table class="inv-tbl">
       <thead><tr>
         <th style="width:24px">S.No</th><th>Description of Work</th>
-        <th style="width:48px">SAC/HSN</th><th style="width:40px">Qty</th>
+        ${isGstMode()?'<th style="width:48px">SAC/HSN</th>':''}<th style="width:40px">Qty</th>
         <th style="width:44px">Area</th>
         <th style="width:34px">Unit</th><th style="width:68px;text-align:right;padding-right:10px">Rate (&#8377;)</th><th style="width:82px;text-align:right;padding-right:12px">Amount (&#8377;)</th>
       </tr></thead>
       <tbody>
         ${irows}
-        <tr class="sub"><td colspan="6" style="text-align:right;font-weight:700;padding-right:10px">Sub-Total:</td><td colspan="2" class="r" style="font-weight:700;padding-right:12px">&#8377; ${fmt(t.sub)}</td></tr>
+        <tr class="sub"><td colspan="${CS}" style="text-align:right;font-weight:700;padding-right:10px">Sub-Total:</td><td colspan="2" class="r" style="font-weight:700;padding-right:12px">&#8377; ${fmt(t.sub)}</td></tr>
         ${taxRowsHtml}
-        <tr class="grand"><td colspan="6" style="text-align:right;font-size:11px;font-weight:700;padding-right:10px">GRAND TOTAL:</td><td colspan="2" class="r" style="font-size:12px;font-weight:700;padding-right:12px">&#8377; ${fmt(t.grand)}</td></tr>
+        <tr class="grand"><td colspan="${CS}" style="text-align:right;font-size:11px;font-weight:700;padding-right:10px">GRAND TOTAL:</td><td colspan="2" class="r" style="font-size:12px;font-weight:700;padding-right:12px">&#8377; ${fmt(t.grand)}</td></tr>
       </tbody>
     </table>
     <div class="inv-words">(${numWords(t.grand)})</div>
@@ -1435,6 +1439,24 @@ function renderPreview(){
 }
 
 /* ── EXPORT PDF ── */
+/* ── PDF page options (size / orientation / margins), saved per document type ── */
+const PSET_KEY='ssi_pdf_set';
+const PAGE_SIZES={a4:['A4',210,297],a5:['A5',148,210],letter:['Letter',215.9,279.4],legal:['Legal',215.9,355.6]};
+const PSET_DEF={inv:{size:'a4',orient:'p',mS:14,mT:14,mB:14},memo:{size:'a4',orient:'p',mS:18,mT:14,mB:14}};
+function psetAll(){let s={};try{s=JSON.parse(localStorage.getItem(PSET_KEY)||'{}')||{};}catch(e){}return{inv:Object.assign({},PSET_DEF.inv,s.inv),memo:Object.assign({},PSET_DEF.memo,s.memo)};}
+function psetSave(k,v){const a=psetAll();a[k]=v;try{localStorage.setItem(PSET_KEY,JSON.stringify(a));}catch(e){}}
+function pdfOpts(kind){
+  const o=psetAll()[kind==='memo'?'memo':'inv'],sz=PAGE_SIZES[o.size]||PAGE_SIZES.a4,L=o.orient==='l';
+  const d=PSET_DEF[kind==='memo'?'memo':'inv'],n=(v,df)=>{v=parseFloat(v);return isFinite(v)&&v>=0&&v<=60?v:df;};
+  return{W:L?sz[2]:sz[1],H:L?sz[1]:sz[2],orient:L?'landscape':'portrait',size:o.size in PAGE_SIZES?o.size:'a4',mS:n(o.mS,d.mS),mT:n(o.mT,d.mT),mB:n(o.mB,d.mB)};
+}
+function newPdfDoc(O){const{jsPDF}=window.jspdf;return new jsPDF({orientation:O.orient,unit:'mm',format:[Math.min(O.W,O.H),Math.max(O.W,O.H)]});}
+// keep the description column wide: every other column keeps its width unless the page is too narrow
+function fitCols(cw,di,CW,minD){
+  const o=cw.reduce((t,v,i)=>i===di?t:t+v,0);let k=1,d=CW-o;
+  if(d<minD){k=(CW-minD)/o;d=minD;}
+  return cw.map((v,i)=>i===di?d:v*k);
+}
 const PDF_THEMES={
   classic:{c:[26,95,168],soft:[234,242,251],band:1,zebra:0,serif:0,pad:2.3,fs:8.8},
   premium:{c:[22,43,82],soft:[240,244,250],band:0,zebra:0,serif:1,pad:3,fs:8.8},
@@ -1470,15 +1492,15 @@ function splitDesc(d){
   return{name:m[1],det:det.filter(Boolean)};
 }
 // "Standard" template — matches the on-screen invoice preview (serif, italic company name, grid table, totals inside the table)
-function buildPDFStandard(fname,showRem){
-  const{jsPDF}=window.jspdf,doc=new jsPDF({unit:'mm',format:'a4'});pdfFonts(doc);
-  const W=210,M=14,CW=182,PB=268,bill=g('inv-no'),gstOn=isGstMode(),title=gstOn?'INVOICE':'BILL';
+function buildPDFStandard(fname,showRem,outMode){
+  const O=pdfOpts('inv'),doc=newPdfDoc(O);pdfFonts(doc);
+  const W=O.W,H=O.H,M=O.mS,CW=W-2*M,PB=H-O.mB-15,FY=H-O.mB,bill=g('inv-no'),gstOn=isGstMode(),title=gstOn?'INVOICE':'BILL';
   const BL=[26,95,168],INK=[28,32,44],GR=[105,112,125],GL=[170,196,228],SOFT=[214,230,245],F='times';
   const col=a=>doc.setTextColor(a[0],a[1],a[2]),fil=a=>doc.setFillColor(a[0],a[1],a[2]),drw=a=>doc.setDrawColor(a[0],a[1],a[2]);
   const cs=n=>{if(doc.setCharSpace)doc.setCharSpace(n);};
-  const cw=[10,64,17,12,16,15,20,28],X=[M];cw.forEach((w,i)=>X.push(X[i]+w));
+  const cw=fitCols(gstOn?[10,64,17,12,16,15,20,28]:[10,81,0,12,16,15,20,28],1,CW,50),X=[M];cw.forEach((w,i)=>X.push(X[i]+w));
   const spaced=(txt,cx,yy,c)=>{cs(c);const w=doc.getTextWidth(txt)+txt.length*c;doc.text(txt,cx-w/2,yy);cs(0);};
-  let y=M+1;
+  let y=O.mT+1;
   if(logoDataUrl){try{doc.addImage(logoDataUrl,'PNG',M,y,22,11);}catch(e){}}
   doc.setFont(F,'bolditalic');doc.setFontSize(29);col(BL);doc.text(g('co-name'),W/2,y+9,{align:'center'});
   // tagline with blue separators
@@ -1506,17 +1528,18 @@ function buildPDFStandard(fname,showRem){
   doc.setFont(F,'normal');doc.setFontSize(9.6);col([50,55,70]);let cy=y+17;doc.text(addr,M+5,cy);cy+=addr.length*4.6;
   if(ph){doc.text('Phone: '+ph,M+5,cy+.5);cy+=4.8;}
   if(gstOn){doc.setFont(F,'bold');col(INK);doc.text('GSTIN: '+g('cust-gstin'),M+5,y+bh-4);}
-  doc.setFont(F,'bold');doc.setFontSize(10.5);col(INK);doc.text((gstOn?'INVOICE NO: ':'BILL NO: ')+bill,M+half+5,y+8.5);
-  doc.text('DATE: '+fmtDate(g('inv-date')),M+half+5,y+15);
-  if(g('inv-delivery')){doc.setFont(F,'normal');doc.setFontSize(9.6);doc.text('Delivery: '+g('inv-delivery'),M+half+5,y+21);}
+  let ry=y+8.5;doc.setFont(F,'bold');doc.setFontSize(10.5);col(INK);
+  if(gstOn){doc.text('INVOICE NO: '+bill,M+half+5,ry);ry+=6.5;} // plain (non-GST) bills do not show a bill number
+  doc.text('DATE: '+fmtDate(g('inv-date')),M+half+5,ry);
+  if(g('inv-delivery')){doc.setFont(F,'normal');doc.setFontSize(9.6);doc.text('Delivery: '+g('inv-delivery'),M+half+5,ry+6);}
   y+=bh+6;
   // grid table
   const hd=['S.No','Description of Work',gstOn?'SAC/HSN':'HSN','Qty','Area','Unit','Rate (\u20b9)','Amount (\u20b9)'],al8=['center','center','center','center','center','center','right','right'];
   const vlines=(y0,h)=>{drw(GL);doc.setLineWidth(.25);X.forEach(x=>doc.line(x,y0,x,y0+h));};
   const tblHead=()=>{fil(SOFT);doc.rect(M,y,CW,8,'F');drw(GL);doc.setLineWidth(.25);doc.line(M,y,M+CW,y);doc.line(M,y+8,M+CW,y+8);vlines(y,8);
-    doc.setFont(F,'bold');doc.setFontSize(9);col(INK);hd.forEach((h,k)=>{pdfTxt(doc,h,al8[k]==='right'?X[k]+cw[k]-2.5:X[k]+cw[k]/2,y+5.4,al8[k]);});y+=8;};
-  const contHead=()=>{doc.addPage();y=M;doc.setFont(F,'bolditalic');doc.setFontSize(17);col(BL);doc.text(g('co-name'),M,y+5);
-    doc.setFont(F,'bold');doc.setFontSize(10);col(INK);doc.text(title+' NO: '+bill,W-M,y+3.5,{align:'right'});doc.setFont(F,'normal');doc.setFontSize(9);col(GR);doc.text('DATE: '+fmtDate(g('inv-date'))+'  (continued)',W-M,y+8,{align:'right'});
+    doc.setFont(F,'bold');doc.setFontSize(9);col(INK);hd.forEach((h,k)=>{if(!gstOn&&k===2)return;pdfTxt(doc,h,al8[k]==='right'?X[k]+cw[k]-2.5:X[k]+cw[k]/2,y+5.4,al8[k]);});y+=8;};
+  const contHead=()=>{doc.addPage();y=O.mT;doc.setFont(F,'bolditalic');doc.setFontSize(17);col(BL);doc.text(g('co-name'),M,y+5);
+    doc.setFont(F,'bold');doc.setFontSize(10);col(INK);if(gstOn)doc.text(title+' NO: '+bill,W-M,y+3.5,{align:'right'});doc.setFont(F,'normal');doc.setFontSize(9);col(GR);doc.text('DATE: '+fmtDate(g('inv-date'))+'  (continued)',W-M,y+8,{align:'right'});
     y+=11;fil(BL);doc.rect(M,y,CW,.8,'F');y+=6;};
   tblHead();
   rows.forEach((r,idx)=>{
@@ -1533,7 +1556,7 @@ function buildPDFStandard(fname,showRem){
     if(dl.length){doc.setFont(F,'normal');doc.setFontSize(8.4);col(GR);doc.text(dl,X[1]+2.5,dy+4);dy+=dl.length*3.6+1;}
     if(rl.length){doc.setFont(F,'italic');doc.setFontSize(7.8);col(GR);doc.text(rl,X[1]+2.5,dy+3.8);}
     col(INK);doc.setFont(F,'normal');doc.setFontSize(9.6);
-    doc.text(r.hsn||'',X[2]+cw[2]/2,b,{align:'center'});
+    if(gstOn)doc.text(r.hsn||'',X[2]+cw[2]/2,b,{align:'center'});
     doc.text(aq===''?'—':fmtQty(aq,r.calcType),X[3]+cw[3]/2,b,{align:'center'});
     doc.text(aa===''?'—':fmt(aa),X[4]+cw[4]/2,b,{align:'center'});
     doc.text(doc.splitTextToSize(fu,cw[5]-2),X[5]+cw[5]/2,b,{align:'center'});
@@ -1556,21 +1579,22 @@ function buildPDFStandard(fname,showRem){
   if(sigDataUrl){try{doc.addImage(sigDataUrl,'JPEG',W-M-48,y+2,46,20);}catch(e){}}
   drw(GR);doc.setLineWidth(.3);doc.line(W-M-62,y+25,W-M,y+25);doc.setFont(F,'normal');doc.setFontSize(9);col(GR);doc.text('Authorised Signature',W-M,y+29.5,{align:'right'});
   const N=doc.getNumberOfPages();
-  for(let p=1;p<=N;p++){doc.setPage(p);drw([200,205,215]);doc.setLineWidth(.25);doc.line(M,283,W-M,283);doc.setFont(F,'normal');doc.setFontSize(8.5);col(GR);
-    doc.text(title+' No: '+bill,M,288);doc.text("SS Interior's  |  Office  |  Commercial  |  Residential",W/2,288,{align:'center'});doc.text('Page '+p+' of '+N,W-M,288,{align:'right'});}
+  for(let p=1;p<=N;p++){doc.setPage(p);drw([200,205,215]);doc.setLineWidth(.25);doc.line(M,FY,W-M,FY);doc.setFont(F,'normal');doc.setFontSize(8.5);col(GR);
+    if(gstOn)doc.text(title+' No: '+bill,M,FY+5);doc.text("SS Interior's  |  Office  |  Commercial  |  Residential",W/2,FY+5,{align:'center'});doc.text('Page '+p+' of '+N,W-M,FY+5,{align:'right'});}
+  if(outMode==='doc')return doc;
   saveOut(doc.output('blob'),fname,'PDF',()=>{try{sfDownload(doc.output('blob'),fname);}catch(e){doc.save(fname);}});
 }
 
-function buildPDF(fname,showRem,tplKey){
-  if(!tplKey||tplKey==='standard')return buildPDFStandard(fname,showRem);
-  const T=PDF_THEMES[tplKey]||PDF_THEMES.classic,{jsPDF}=window.jspdf;
-  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});pdfFonts(doc);
-  const W=210,M=14,CW=W-2*M,PB=270,bill=g('inv-no'),gstOn=isGstMode(),title=gstOn?'INVOICE':'BILL';
+function buildPDF(fname,showRem,tplKey,outMode){
+  if(!tplKey||tplKey==='standard')return buildPDFStandard(fname,showRem,outMode);
+  const T=PDF_THEMES[tplKey]||PDF_THEMES.classic,O=pdfOpts('inv');
+  const doc=newPdfDoc(O);pdfFonts(doc);
+  const W=O.W,H=O.H,M=O.mS,CW=W-2*M,PB=H-O.mB-13,FY=H-O.mB-2,bill=g('inv-no'),gstOn=isGstMode(),title=gstOn?'INVOICE':'BILL';
   const HF=T.serif?'times':'helvetica',INK=[33,41,56],MUTE=[110,120,135],LINE=[222,228,236],VL=[238,242,247];
   const col=a=>doc.setTextColor(a[0],a[1],a[2]),fil=a=>doc.setFillColor(a[0],a[1],a[2]),drw=a=>doc.setDrawColor(a[0],a[1],a[2]);
   const cs=n=>{if(doc.setCharSpace)doc.setCharSpace(n);};
   const label=(txt,x,yy,c)=>{doc.setFont('helvetica','bold');doc.setFontSize(7);col(c||T.c);cs(.5);doc.text(txt,x,yy);cs(0);};
-  let y=M;
+  let y=O.mT;
   // ── centered letterhead (follows the company's existing model)
   if(logoDataUrl){try{doc.addImage(logoDataUrl,'PNG',M,y-1,24,12);}catch(e){}}
   doc.setFont(HF,'bold');doc.setFontSize(T.serif?27:26);col(T.c);doc.text(g('co-name'),W/2,y+8,{align:'center'});
@@ -1594,22 +1618,23 @@ function buildPDF(fname,showRem,tplKey){
   doc.setFont('helvetica','normal');doc.setFontSize(9);col([70,80,95]);let cy=y+17.4;doc.text(addr,M+4,cy);cy+=addr.length*4.3;
   if(ph){doc.text('Phone: '+ph,M+4,cy+.4);cy+=4.6;}
   if(gstOn){doc.setFont('helvetica','bold');col(INK);doc.text('GSTIN: '+g('cust-gstin'),M+4,cy+.4);}
-  doc.setFont('helvetica','bold');doc.setFontSize(10);col(INK);doc.text((gstOn?'INVOICE NO: ':'BILL NO: ')+bill,M+lw+8,y+13);
-  doc.setFont('helvetica','normal');doc.setFontSize(9.2);col([70,80,95]);doc.text('DATE: '+fmtDate(g('inv-date')),M+lw+8,y+19);
-  if(g('inv-delivery'))doc.text('Delivery: '+g('inv-delivery'),M+lw+8,y+24.6);
+  let ry=y+13;
+  if(gstOn){doc.setFont('helvetica','bold');doc.setFontSize(10);col(INK);doc.text('INVOICE NO: '+bill,M+lw+8,ry);ry+=6;} // no bill number on plain bills
+  doc.setFont('helvetica','normal');doc.setFontSize(9.2);col([70,80,95]);doc.text('DATE: '+fmtDate(g('inv-date')),M+lw+8,ry);
+  if(g('inv-delivery'))doc.text('Delivery: '+g('inv-delivery'),M+lw+8,ry+5.6);
   y+=bh+8;
   // table
-  const cw=[10,68,14,13,17,12,22,26],align=['left','left','center','right','right','center','right','right'];
+  const cw=fitCols(gstOn?[10,68,14,13,17,12,22,26]:[10,82,0,13,17,12,22,26],1,CW,50),align=['left','left','center','right','right','center','right','right'];
   const hd=['S.NO','DESCRIPTION','HSN/SAC','QTY','AREA','UNIT','RATE (\u20b9)','AMOUNT (\u20b9)'];
   const tblHead=()=>{
     fil(T.soft);doc.rect(M,y,CW,8.5,'F');drw(T.c);doc.setLineWidth(.5);doc.line(M,y+8.5,M+CW,y+8.5);
     doc.setFont('helvetica','bold');doc.setFontSize(7.4);col(T.c);
-    let x=M;hd.forEach((h,k)=>{const ty=y+5.5;
+    let x=M;hd.forEach((h,k)=>{if(!gstOn&&k===2)return;const ty=y+5.5;
       if(align[k]==='right')pdfTxt(doc,h,x+cw[k]-2.5,ty,'right');else if(align[k]==='center')pdfTxt(doc,h,x+cw[k]/2,ty,'center');else pdfTxt(doc,h,x+2.5,ty);x+=cw[k];});y+=8.5;
   };
   const contHead=()=>{
-    doc.addPage();y=M;doc.setFont(HF,'bold');doc.setFontSize(14);col(T.c);doc.text(g('co-name'),M,y+4);
-    doc.setFont('helvetica','bold');doc.setFontSize(9.5);col(INK);doc.text(title+' No: '+bill,W-M,y+3.5,{align:'right'});
+    doc.addPage();y=O.mT;doc.setFont(HF,'bold');doc.setFontSize(14);col(T.c);doc.text(g('co-name'),M,y+4);
+    doc.setFont('helvetica','bold');doc.setFontSize(9.5);col(INK);if(gstOn)doc.text(title+' No: '+bill,W-M,y+3.5,{align:'right'});
     doc.setFont('helvetica','normal');doc.setFontSize(8);col(MUTE);doc.text('Date: '+fmtDate(g('inv-date'))+'   ·   continued',W-M,y+8,{align:'right'});
     y+=11.5;drw(T.c);doc.setLineWidth(.6);doc.line(M,y,W-M,y);y+=6;
   };
@@ -1633,7 +1658,7 @@ function buildPDF(fname,showRem,tplKey){
     if(dl.length){doc.setFont('helvetica','normal');doc.setFontSize(8.2);col([95,105,120]);doc.text(dl,x+2.5,dy+1.2+lhD*.85);dy+=1.2+dl.length*lhD;}
     if(rl.length){doc.setFont('helvetica','italic');doc.setFontSize(7);col(MUTE);doc.text(rl,x+2.5,dy+1.2+lhR*.85);}
     x+=cw[1];doc.setFont('helvetica','normal');doc.setFontSize(T.fs);col(INK);
-    doc.text(r.hsn||'',x+cw[2]/2,b,{align:'center'});x+=cw[2];
+    if(gstOn)doc.text(r.hsn||'',x+cw[2]/2,b,{align:'center'});x+=cw[2];
     doc.text(aq===''?'—':fmtQty(aq,r.calcType),x+cw[3]-2.5,b,{align:'right'});x+=cw[3];
     doc.text(aa===''?'—':fmt(aa),x+cw[4]-2.5,b,{align:'right'});x+=cw[4];
     doc.text(fu,x+cw[5]/2,b,{align:'center'});x+=cw[5];
@@ -1669,10 +1694,11 @@ function buildPDF(fname,showRem,tplKey){
   // footer
   const N=doc.getNumberOfPages();
   for(let p=1;p<=N;p++){
-    doc.setPage(p);drw(LINE);doc.setLineWidth(.3);doc.line(M,281,W-M,281);
-    doc.setFont('helvetica','bold');doc.setFontSize(7);col(T.c);cs(.4);doc.text("SS INTERIOR'S  |  OFFICE  |  COMMERCIAL  |  RESIDENTIAL",M,285.5);cs(0);
-    doc.setFont('helvetica','normal');col(MUTE);doc.text(title+' No: '+bill,M,289.5);doc.text('Page '+p+' of '+N,W-M,289.5,{align:'right'});
+    doc.setPage(p);drw(LINE);doc.setLineWidth(.3);doc.line(M,FY,W-M,FY);
+    doc.setFont('helvetica','bold');doc.setFontSize(7);col(T.c);cs(.4);doc.text("SS INTERIOR'S  |  OFFICE  |  COMMERCIAL  |  RESIDENTIAL",M,FY+4.5);cs(0);
+    doc.setFont('helvetica','normal');col(MUTE);if(gstOn)doc.text(title+' No: '+bill,M,FY+8.5);doc.text('Page '+p+' of '+N,W-M,FY+8.5,{align:'right'});
   }
+  if(outMode==='doc')return doc;
   saveOut(doc.output('blob'),fname,'PDF',()=>{try{sfDownload(doc.output('blob'),fname);}catch(e){doc.save(fname);}});
 }
 
@@ -1694,7 +1720,7 @@ function buildExcel(fname){
     [g('co-addr').replace(/\n/g,', ')],
     ['Ph: '+g('co-ph1')+' / '+g('co-ph2')+'  |  '+g('co-email')],
     ...(gstOnXl?[['GSTIN: '+g('co-gstin')]]:[]),[],[gstOnXl?'INVOICE':'BILL'],[],
-    [gstOnXl?'Invoice No:':'Bill No:',g('inv-no'),'','','Date:',fmtDate(g('inv-date'))],
+    (gstOnXl?['Invoice No:',g('inv-no'),'','','Date:',fmtDate(g('inv-date'))]:['Date:',fmtDate(g('inv-date'))]),
     ...(gstOnXl?[['Bill To:',g('cust-name'),'','','Customer GSTIN:',g('cust-gstin')]]:[['Bill To:',g('cust-name')]]),
     ['Address:',g('cust-addr').replace(/\n/g,', ')],[],
     ['S.No','Description','HSN/SAC','Qty','Area','Unit','Rate (₹)','Amount (₹)'],
@@ -1706,10 +1732,20 @@ function buildExcel(fname){
     [],['Amount in Words:',numWords(t.grand)],
     [],['Authorised Signature:',g('co-person')],
   ];
+  if(!gstOnXl){ // plain bill: drop the HSN/SAC column from the item table, sub-total, tax and grand-total rows
+    let inTbl=false;
+    aoa.forEach(r=>{
+      if(r[0]==='S.No')inTbl=true;
+      if(inTbl&&r.length>=8)r.splice(2,1);
+      if(inTbl&&r.length>=7&&/Grand Total/.test(String(r[r.length-2])))inTbl=false;
+    });
+  }
+  const lastCol=gstOnXl?7:6;
   const wb=XLSX.utils.book_new();
   const ws=XLSX.utils.aoa_to_sheet(aoa);
   ws['!cols']=[{wch:6},{wch:40},{wch:12},{wch:8},{wch:8},{wch:8},{wch:20},{wch:16}];
-  ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:7}},{s:{r:1,c:0},e:{r:1,c:7}},{s:{r:6,c:0},e:{r:6,c:7}}];
+  if(!gstOnXl)ws['!cols'].splice(2,1);
+  ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:lastCol}},{s:{r:1,c:0},e:{r:1,c:lastCol}},{s:{r:6,c:0},e:{r:6,c:lastCol}}];
   XLSX.utils.book_append_sheet(wb,ws,'Invoice');
   saveOut(new Blob([XLSX.write(wb,{bookType:'xlsx',type:'array'})],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),fname,'Excel',()=>XLSX.writeFile(wb,fname));
 }
@@ -2381,8 +2417,8 @@ function memoBlocks(html){
 }
 function buildMemoPDF(fname,_x,mode){
   const m=memoRead(),T=MEMO_THEMES[m.tpl]||MEMO_THEMES.classic,{jsPDF}=window.jspdf;
-  const doc=new jsPDF({unit:'mm',format:'a4'});pdfFonts(doc);
-  const W=210,M=18,CW=W-2*M,PB=268,HF=T.serif?'times':'helvetica',INK=[33,41,56],MUTE=[110,120,135],LINE=[222,228,236];
+  const O=pdfOpts('memo'),doc=newPdfDoc(O);pdfFonts(doc);
+  const W=O.W,M=O.mS,CW=W-2*M,PB=O.H-O.mB-15,HF=T.serif?'times':'helvetica',INK=[33,41,56],MUTE=[110,120,135],LINE=[222,228,236];
   const col=a=>doc.setTextColor(a[0],a[1],a[2]),fil=a=>doc.setFillColor(a[0],a[1],a[2]),drw=a=>doc.setDrawColor(a[0],a[1],a[2]);
   const cs=n=>{if(doc.setCharSpace)doc.setCharSpace(n);};
   const lab=(t,x,yy)=>{doc.setFont('helvetica','bold');doc.setFontSize(7);col(T.c);cs(.5);doc.text(t,x,yy);cs(0);};
@@ -2435,7 +2471,7 @@ function buildMemoPDF(fname,_x,mode){
   // table
   const tc=MEMO_TABLES[m.type],trows=(m.tbl||[]).filter(r=>r.some(c=>String(c).trim()));
   if(tc&&trows.length){
-    const wd=tc.length===5?[10,42,48,16,16,CW-132]:[10,60,22,20,CW-112],ws=[10,...wd.slice(1)];const cw=tc.length===5?[10,40,46,14,14,CW-124]:[10,66,22,20,CW-118];
+    const fx=tc.length===5?[10,40,46,14,14]:[10,66,22,20],fs0=fx.reduce((a,b)=>a+b,0),kf=Math.min(1,CW*0.7/fs0),cw=fx.map(v=>v*kf);cw.push(CW-cw.reduce((a,b)=>a+b,0));
     const head=()=>{fil(T.c);doc.rect(M,y,CW,8,'F');doc.setFont('helvetica','bold');doc.setFontSize(7.6);col([255,255,255]);let x=M;['#',...tc].forEach((h,k)=>{doc.text(h.toUpperCase(),x+2,y+5.3);x+=cw[k];});y+=8;};
     if(y+30>PB)contHead();y+=2;head();
     trows.forEach((r,i)=>{doc.setFont('helvetica','normal');doc.setFontSize(9.5);
@@ -2449,7 +2485,7 @@ function buildMemoPDF(fname,_x,mode){
   if(sg.length){
     // anchor to the page bottom (derived from footer rule position, not a magic offset);
     // if body content already reaches into that zone, move the signature to a fresh page
-    const FOOT=285,SIG_H=32,sigTop=FOOT-7-SIG_H;
+    const FOOT=O.H-O.mB+2,SIG_H=32,sigTop=FOOT-7-SIG_H;
     if(y>sigTop-6)contHead();
     y=sigTop;const cwid=CW/sg.length;
     sg.forEach(([lb,nm,img],i)=>{const x0=M+i*cwid;
@@ -2459,7 +2495,8 @@ function buildMemoPDF(fname,_x,mode){
       if(nm){doc.setFont('helvetica','bold');col(INK);doc.text(nm,x0,y+30);}});
   }
   const N=doc.getNumberOfPages();
-  if(N>1)for(let p=1;p<=N;p++){doc.setPage(p);doc.setFont('helvetica','normal');doc.setFontSize(7.5);col(MUTE);doc.text('Page '+p+' of '+N,W/2,291,{align:'center'});}
+  if(N>1)for(let p=1;p<=N;p++){doc.setPage(p);doc.setFont('helvetica','normal');doc.setFontSize(7.5);col(MUTE);doc.text('Page '+p+' of '+N,W/2,O.H-O.mB+8,{align:'center'});}
+  if(mode==='doc')return doc;
   if(mode==='preview'){window.open(doc.output('bloburl'),'_blank')||showToast('Allow pop-ups to preview','err');return;}
   if(mode==='print'){const f=document.createElement('iframe');f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';f.src=doc.output('bloburl');f.onload=()=>{try{f.contentWindow.focus();f.contentWindow.print();}catch(e){showToast('Print failed','err');}setTimeout(()=>f.remove(),60000);};document.body.appendChild(f);return;}
   saveOut(doc.output('blob'),fname,'Memo PDF',()=>{try{sfDownload(doc.output('blob'),fname);}catch(e){doc.save(fname);}},'Memo Pads',m.to,m.date);
@@ -2513,7 +2550,7 @@ function buildMemoPDF(fname,_x,mode){
 <div id="memo-overlay"><div class="mm-wrap">
  <div class="mm-bar"><b>📝 Memo Pad <span id="mm-status" style="font-weight:400;font-size:12px;opacity:.8;margin-left:6px">● Draft</span></b>
   <button class="btn" onclick="memoNew()">+ New</button><button class="btn" onclick="memoSave('draft')">Save Draft</button><button class="btn btn-primary" onclick="memoSave('final')">Save</button>
-  <button class="btn" onclick="memoPreview()">Preview</button><button class="btn btn-primary" onclick="memoExport()">Export PDF</button><button class="btn" onclick="memoPrint()">🖨 Print</button>
+  <button class="btn" onclick="memoPreview()">Preview</button><button class="btn" onclick="psOpen('memo')">🎨 PDF Studio</button><button class="btn btn-primary" onclick="memoExport()">Export PDF</button><button class="btn" onclick="memoPrint()">🖨 Print</button>
   <button class="btn" onclick="memoDuplicate()">Duplicate</button><button class="btn" onclick="memoClear()">Clear</button><button class="btn" onclick="memoClose()">✕ Close</button></div>
  <div class="mm-card"><div class="mm-g">
   <div><label>Memo Type</label><select id="mm-type" onchange="memoTypeChange()"></select></div>
@@ -2530,5 +2567,109 @@ function buildMemoPDF(fname,_x,mode){
   <label><input type="checkbox" id="mm-sp"/> Prepared By</label><label><input type="checkbox" id="mm-sa"/> Authorised (company signature)</label><label><input type="checkbox" id="mm-sc"/> Customer</label>
   <div class="mm-g" style="margin-top:10px"><div><label>Prepared By (name)</label><input id="mm-preparedBy"/></div></div></div>
 </div></div>
+
+<style>
+#ps-overlay{display:none;position:fixed;inset:0;z-index:9600;background:#e9edf4;font-family:'DM Sans',system-ui,sans-serif;overflow:auto}
+.ps-top{position:sticky;top:0;z-index:3;background:#0f2a4d;color:#fff;padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ps-top b{font-size:15px;margin-right:auto}
+.ps-ctl{background:#fff;margin:10px auto;max-width:1100px;border-radius:12px;padding:12px 14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;box-shadow:0 1px 4px rgba(15,42,77,.1)}
+.ps-ctl label{display:block;font-size:10.5px;font-weight:700;color:#5a6a85;letter-spacing:.4px;text-transform:uppercase;margin-bottom:3px}
+.ps-ctl select,.ps-ctl input[type=number]{width:100%;padding:8px;border:1px solid #d3dbe8;border-radius:8px;font:inherit;font-size:13.5px;box-sizing:border-box;background:#fff}
+.ps-chk{display:flex;align-items:center;gap:6px;font-size:13px;padding-top:18px}
+.ps-status{max-width:1100px;margin:0 auto;padding:0 16px 6px;font-size:12px;color:#5a6a85}
+.ps-stack{display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 8px 60px}
+.ps-stack canvas,.ps-card canvas{background:#fff;box-shadow:0 4px 18px rgba(0,0,0,.22);display:block;max-width:100%}
+.ps-single{display:flex;flex-direction:column;align-items:center;gap:14px}
+.ps-grid{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;padding:6px 10px 60px}
+.ps-card{cursor:pointer;border:3px solid transparent;border-radius:10px;padding:8px;background:#f6f8fc}
+.ps-card:hover{border-color:#8fb4e8}.ps-card.sel{border-color:#1a5fa8}
+.ps-cap{font-size:13px;font-weight:700;color:#1a3a66;margin-bottom:6px;text-align:center}
+</style>
+<div id="ps-overlay">
+ <div class="ps-top"><b id="ps-title">PDF Studio</b>
+  <button class="btn btn-primary" onclick="psDownload()">⬇ Download PDF</button><button class="btn" onclick="psClose()">✕ Close</button></div>
+ <div class="ps-ctl">
+  <div><label>Template</label><select id="ps-tpl" onchange="psChange()"></select></div>
+  <div><label>Page size</label><select id="ps-size" onchange="psChange()"><option value="a4">A4 (210×297)</option><option value="a5">A5 (148×210)</option><option value="letter">Letter</option><option value="legal">Legal</option></select></div>
+  <div><label>Orientation</label><select id="ps-orient" onchange="psChange()"><option value="p">Portrait</option><option value="l">Landscape</option></select></div>
+  <div><label>Side margin (mm)</label><input id="ps-ms" type="number" min="0" max="60" step="1" oninput="psChange()"/></div>
+  <div id="ps-mt-wrap"><label>Top margin (mm)</label><input id="ps-mt" type="number" min="0" max="60" step="1" oninput="psChange()"/></div>
+  <div><label>Bottom margin (mm)</label><input id="ps-mb" type="number" min="0" max="60" step="1" oninput="psChange()"/></div>
+  <label class="ps-chk" id="ps-rem-wrap"><input type="checkbox" id="ps-rem" onchange="psChange()"/> Item remarks</label>
+  <label class="ps-chk"><input type="checkbox" id="ps-compare" onchange="psChange()"/> Compare all templates</label>
+  <div style="padding-top:16px"><button class="btn" onclick="psReset()">Reset page settings</button></div>
+ </div>
+ <div class="ps-status" id="ps-status"></div>
+ <div id="ps-pages" class="ps-stack"></div>
+</div>
+<script>
+/* ═══ PDF STUDIO — live preview of every template, page size & margins ═══ */
+if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const PS_INV_TPL=[['standard','Standard (matches preview)'],['classic','Classic Blue'],['premium','Premium Interior'],['minimal','Minimal'],['corporate','Corporate'],['compact','Compact']];
+const PS_MEMO_TPL=[['classic','Classic Blue'],['premium','Premium Interior'],['minimal','Minimal'],['office','Office Memo']];
+const PS={kind:'inv',tpl:'standard',rem:true,compare:false,timer:null,gen:0};
+const psEl=id=>document.getElementById(id);
+function psFillInputs(){
+  const o=psetAll()[PS.kind];
+  psEl('ps-size').value=o.size;psEl('ps-orient').value=o.orient;psEl('ps-ms').value=o.mS;psEl('ps-mt').value=o.mT;psEl('ps-mb').value=o.mB;
+}
+function psOpen(kind){
+  PS.kind=kind;
+  const list=kind==='memo'?PS_MEMO_TPL:PS_INV_TPL,cur=kind==='memo'?mg('mm-tpl').value:fnPrefs().tpl;
+  PS.tpl=list.some(x=>x[0]===cur)?cur:list[0][0];PS.rem=fnPrefs().remarks!==false;PS.compare=false;
+  psEl('ps-tpl').innerHTML=list.map(([v,l])=>'<option value="'+v+'">'+l+'</option>').join('');psEl('ps-tpl').value=PS.tpl;
+  psFillInputs();
+  psEl('ps-rem-wrap').style.display=kind==='inv'?'':'none';psEl('ps-mt-wrap').style.display=kind==='inv'?'':'none';
+  psEl('ps-rem').checked=PS.rem;psEl('ps-compare').checked=false;
+  psEl('ps-title').textContent=kind==='memo'?'Memo — PDF Studio':(isGstMode()?'Invoice':'Bill')+' — PDF Studio';
+  psEl('ps-pages').innerHTML='';psEl('ps-overlay').style.display='block';document.body.style.overflow='hidden';psRender();
+}
+function psClose(){psEl('ps-overlay').style.display='none';document.body.style.overflow=(mg('memo-overlay')&&mg('memo-overlay').style.display==='block')?'hidden':'';}
+function psRead(){
+  psetSave(PS.kind,{size:psEl('ps-size').value,orient:psEl('ps-orient').value,mS:psEl('ps-ms').value,mT:psEl('ps-mt').value,mB:psEl('ps-mb').value});
+  PS.tpl=psEl('ps-tpl').value;PS.rem=psEl('ps-rem').checked;PS.compare=psEl('ps-compare').checked;
+}
+function psChange(){clearTimeout(PS.timer);PS.timer=setTimeout(()=>{psRead();psRender();},250);}
+function psReset(){psetSave(PS.kind,PSET_DEF[PS.kind]);psFillInputs();psRead();psRender();}
+function psBuild(tpl){
+  if(PS.kind==='memo'){const el=mg('mm-tpl'),old=el.value;el.value=tpl;try{return buildMemoPDF('','','doc');}finally{el.value=old;}}
+  return buildPDF('preview.pdf',PS.rem,tpl,'doc');
+}
+async function psRender(){
+  const gen=++PS.gen,box=psEl('ps-pages'),st=psEl('ps-status');
+  if(typeof pdfjsLib==='undefined'||typeof window.jspdf==='undefined'){st.textContent='Preview libraries are still loading — check your internet connection and reopen.';return;}
+  st.textContent='Rendering…';
+  try{
+    const list=PS.kind==='memo'?PS_MEMO_TPL:PS_INV_TPL,tpls=PS.compare?list:[[PS.tpl,'']];
+    const frag=document.createDocumentFragment(),dpr=window.devicePixelRatio||1;
+    for(const[t,label]of tpls){
+      const doc=psBuild(t);
+      const pdf=await pdfjsLib.getDocument({data:new Uint8Array(doc.output('arraybuffer'))}).promise;
+      if(gen!==PS.gen)return;
+      const pages=PS.compare?1:pdf.numPages,wrap=document.createElement('div');
+      wrap.className=PS.compare?'ps-card'+(t===PS.tpl?' sel':''):'ps-single';
+      if(PS.compare){
+        wrap.onclick=()=>{psEl('ps-tpl').value=t;psEl('ps-compare').checked=false;psChange();};
+        const cap=document.createElement('div');cap.className='ps-cap';cap.textContent=label+(pdf.numPages>1?' · '+pdf.numPages+' pages':'');wrap.appendChild(cap);
+      }
+      for(let i=1;i<=pages;i++){
+        const page=await pdf.getPage(i),v1=page.getViewport({scale:1});
+        const target=PS.compare?270:Math.min(Math.max(box.clientWidth-24,300),900),vp=page.getViewport({scale:target/v1.width*dpr});
+        const cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;cv.style.width=target+'px';
+        await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;wrap.appendChild(cv);
+      }
+      frag.appendChild(wrap);
+    }
+    if(gen!==PS.gen)return;
+    box.innerHTML='';box.className=PS.compare?'ps-grid':'ps-stack';box.appendChild(frag);
+    const o=pdfOpts(PS.kind);st.textContent=PAGE_SIZES[o.size][0]+' · '+o.orient+' · '+Math.round(o.W)+'×'+Math.round(o.H)+' mm'+(PS.compare?' · click a template to select it':'');
+  }catch(e){console.error(e);if(gen===PS.gen)st.textContent='Preview failed: '+(e.message||e);}
+}
+function psDownload(){
+  psRead();
+  if(PS.kind==='memo'){mg('mm-tpl').value=PS.tpl;psClose();memoExport();return;}
+  const p=fnPrefs();p.tpl=PS.tpl;p.remarks=PS.rem;fnSave(p);psClose();exportPDF();
+}
+</script>
 </body>
 </html>
