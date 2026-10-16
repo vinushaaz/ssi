@@ -347,6 +347,89 @@ body.no-gst .col-hsn{display:none}
 .app-hidden{display:none!important}
 .logout-btn{background:rgba(255,255,255,.15);border:none;color:#B5D4F4;border-radius:20px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px}
 .logout-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
+
+/* ═══ LINE ITEM CARDS + CALCULATION CONTROLS (v2 engine) ═══ */
+.items-list{display:flex;flex-direction:column;gap:12px}
+.it-card{border:1.5px solid var(--border);border-radius:var(--r);background:#fff;padding:12px 12px 10px;position:relative}
+.it-card:focus-within{border-color:#B9D0EE;box-shadow:0 0 0 3px rgba(46,125,209,.07)}
+.it-head{display:grid;grid-template-columns:26px 1fr 78px 30px;gap:8px;align-items:start}
+.it-n{font-size:12px;font-weight:700;color:var(--blue);background:var(--blue-lt);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;margin-top:6px}
+.it-card textarea,.it-card input,.it-card select{font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);border:1.5px solid var(--border);border-radius:8px;background:#FAFBFD;padding:8px 9px;width:100%;transition:all .15s;-webkit-appearance:none;appearance:none}
+.it-card select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%236B7280' stroke-width='1.6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;padding-right:24px}
+.it-card textarea{resize:vertical;min-height:50px;line-height:1.45}
+.it-card input:focus,.it-card textarea:focus,.it-card select:focus{outline:none;border-color:var(--blue-mid);background:#fff;box-shadow:0 0 0 3px rgba(46,125,209,.1)}
+.it-card input[readonly],.it-card input:disabled{background:#F1F4F9;color:#6B7280;cursor:not-allowed}
+.it-card input.num{text-align:right}
+.it-ctl{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;margin:10px 0 8px}
+.it-fld{display:flex;flex-direction:column;gap:3px;min-width:0}
+.it-fld>span,.it-lbl{font-size:10.5px;font-weight:700;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.it-fld.grow{flex:1 1 220px}
+.tgl{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--navy);background:var(--blue-lt);border-radius:9px;padding:6px 10px;cursor:pointer;user-select:none}
+.tgl .state{font-size:11px;font-weight:700;min-width:26px;color:var(--green)}
+.tgl.off{background:#F3F4F6;color:#6B7280}.tgl.off .state{color:#B45309}
+.tgl.na{opacity:.55;pointer-events:none}
+.switch.sm{width:36px;height:21px}
+.switch.sm .slider::before{height:15px;width:15px;left:3px;bottom:3px}
+.switch.sm input:checked + .slider::before{transform:translateX(15px)}
+.switch.sm input:checked + .slider{background:var(--green)}
+.it-body{background:#F8FAFD;border:1px dashed #D5E0F0;border-radius:10px;padding:9px 10px;margin-bottom:8px}
+.it-body.dim{opacity:.62}
+.it-hint{font-size:11.5px;color:var(--muted);line-height:1.5}
+.it-hint b{color:var(--navy)}
+.ms-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 6px;padding:6px 0;border-bottom:1px dashed #E2EAF5}
+.ms-row:last-of-type{border-bottom:none}
+.ms-k{font-size:11px;font-weight:700;color:var(--blue);min-width:18px}
+.ms-grp{display:flex;align-items:center;gap:4px}
+.ms-grp input{width:58px;text-align:center;padding:7px 4px}
+.ms-grp i{font-style:normal;font-size:11px;color:var(--faint)}
+.ms-grp .lbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase}
+.ms-x{font-size:13px;color:var(--faint)}
+.ms-eq{margin-left:auto;font-size:12.5px;font-weight:700;color:var(--navy);white-space:nowrap}
+.ms-del{border:none;background:none;color:var(--faint);font-size:18px;cursor:pointer;line-height:1;width:26px;height:26px;border-radius:6px}
+.ms-del:hover{background:#FEE2E2;color:var(--red)}
+.ms-add{margin-top:6px;border:1.5px dashed #B9D0EE;background:#fff;color:var(--blue);font-weight:600;font-size:12.5px;padding:7px 12px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.ms-total{margin-top:6px;font-size:12.5px;color:var(--navy);font-weight:600}
+.ms-warn{color:var(--amber);font-size:11.5px;margin-top:4px}
+.it-res{display:grid;grid-template-columns:1.2fr .9fr 1fr 1.3fr;gap:8px}
+@media(max-width:560px){.it-res{grid-template-columns:1fr 1fr}.it-head{grid-template-columns:24px 1fr 30px}.it-head .it-hsn{grid-column:2/3;grid-row:2}}
+.it-note{margin-top:7px;font-size:11.5px;color:var(--blue-mid);font-weight:500;line-height:1.5;word-break:break-word}
+.it-note.err{color:var(--red)}
+.it-flag{display:inline-block;font-size:10px;font-weight:700;border-radius:20px;padding:1px 7px;margin-left:4px;vertical-align:middle}
+.it-flag.man{background:var(--amber-lt);color:var(--amber)}
+.it-extra{margin-top:8px}
+.it-extra input{font-size:12.5px;color:#556}
+.tabular{font-variant-numeric:tabular-nums}
+
+/* calculation controls panel */
+.ctl-panel{border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:14px}
+.ctl-row{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid #EEF2F8;background:#fff}
+.ctl-row:last-child{border-bottom:none}
+.ctl-row .t{font-size:13px;font-weight:600;color:var(--navy)}
+.ctl-row .h{font-size:11.5px;color:var(--muted);margin-top:1px;line-height:1.4}
+.ctl-row .m{flex:1;min-width:0}
+.ctl-row .st{font-size:11px;font-weight:700;color:var(--green);min-width:30px;text-align:right}
+.ctl-row.off .st{color:#B45309}
+.ctl-sub{padding:10px 14px 12px;background:#F8FAFD;border-bottom:1px solid #EEF2F8}
+.ctl-sub.disabled{opacity:.5}
+.ctl-sub.disabled input,.ctl-sub.disabled select{pointer-events:none}
+.ctl-over{display:none;padding:10px 14px 12px;background:var(--amber-lt);border-bottom:1px solid #F3E3B8}
+.ctl-over.show{display:block}
+.ctl-over .field input{background:#fff}
+.ctl-over .warn{font-size:12px;color:var(--amber);font-weight:700;margin-bottom:6px}
+.chg-row{display:grid;grid-template-columns:auto 1fr 130px;gap:10px;align-items:center;margin-bottom:8px}
+.chg-row input[type=text],.chg-row input[type=number]{font-size:14px;padding:9px 11px;border:1.5px solid var(--border);border-radius:var(--rs);background:#FAFBFD;font-family:'DM Sans',sans-serif;width:100%}
+.chg-row .nm{font-size:13px;color:var(--text)}
+.chg-row.off .nm,.chg-row.off input{opacity:.5}
+.tot-row .val.neg{color:var(--red)}
+.tot-badge{display:inline-block;font-size:10px;font-weight:700;border-radius:20px;padding:1px 8px;background:var(--amber-lt);color:var(--amber);margin-left:6px;vertical-align:middle}
+.tot-grand .val small{display:block;font-size:11px;font-weight:600;color:var(--amber);letter-spacing:0}
+.chk-inline{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--text);margin-top:6px}
+.chk-inline input{width:auto}
+
+/* preview canvases (real PDF pages) */
+.pv-pages{display:flex;flex-direction:column;align-items:center;gap:16px}
+.pv-pages canvas{background:#fff;box-shadow:0 8px 40px rgba(0,0,0,.28);max-width:100%;height:auto!important}
+.pv-status{color:#E5E7EB;font-size:12px;text-align:center;padding:6px}
 </style>
 </head>
 <body>
@@ -491,16 +574,16 @@ body.no-gst .col-hsn{display:none}
     </div>
     <div class="gst-toggle-row">
       <div>
-        <div class="gst-toggle-title">GST Invoice</div>
-        <div class="gst-toggle-hint" id="gst-toggle-hint">Tax invoice with GSTIN &amp; tax breakup</div>
+        <div class="gst-toggle-title">GST on this bill</div>
+        <div class="gst-toggle-hint" id="gst-toggle-hint">Ordinary bill — no GSTIN, no tax rows</div>
       </div>
       <label class="switch">
-        <input type="checkbox" id="gst-invoice-toggle" checked onchange="handleGstInvoiceToggle()"/>
+        <input type="checkbox" id="gst-invoice-toggle" onchange="handleGstInvoiceToggle()"/>
         <span class="slider"></span>
       </label>
     </div>
     <div class="g2" style="margin-bottom:12px">
-      <div class="field"><label id="inv-no-label">Invoice number</label><input id="inv-no" value="SS/24-25/016" oninput="updateBadge()"/></div>
+      <div class="field"><label id="inv-no-label">Bill number</label><input id="inv-no" value="SS/24-25/016" oninput="updateBadge()"/></div>
       <div class="field"><label>Date</label><input id="inv-date" type="date"/></div>
     </div>
     <div class="field"><label>Delivery address <span style="font-weight:400;color:var(--faint)">(optional)</span></label><input id="inv-delivery" placeholder="Same as billing"/></div>
@@ -561,33 +644,63 @@ Ayapakkam, Chennai - 600 077</textarea></div>
       <div><div class="card-title">Line Items</div><div class="card-sub">Totals calculate in real-time</div></div>
     </div>
 
-    <div class="scroll-hint">
-      <svg viewBox="0 0 24 24"><path d="M5 12h14M15 8l4 4-4 4"/></svg>
-      Swipe table left to see all columns
-    </div>
-
-    <div class="tbl-wrap">
-      <table class="items-tbl">
-        <thead><tr>
-          <th style="width:28px">#</th>
-          <th>Description</th>
-          <th class="col-hsn" style="width:62px">HSN</th>
-          <th style="width:118px">Calc Type</th>
-          <th style="width:210px">Qty / Area</th>
-          <th style="width:60px">Unit</th>
-          <th class="r" style="width:80px">Rate ₹</th>
-          <th class="r" style="width:80px">Amt ₹</th>
-          <th style="width:32px"></th>
-        </tr></thead>
-        <tbody id="items-body"></tbody>
-      </table>
-    </div>
+    <div id="auto-banner" class="it-hint" style="display:none;margin-bottom:10px;background:var(--amber-lt);border-radius:9px;padding:8px 11px;color:var(--amber);font-weight:600"></div>
+    <div class="items-list" id="items-body"></div>
 
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0"><button class="btn" onclick="pickExcel()">📊 Import Excel</button><button class="btn" onclick="downloadTemplate()">⬇ Download Excel Template</button><button class="btn" onclick="sfOpen()">📁 Save Location</button></div>
     <button class="add-row-btn" onclick="addRow()">
       <svg><path d="M12 5v14M5 12h14"/></svg>
       Add line item
     </button>
+
+    <div class="sec-divider"><span>Calculation Controls</span></div>
+    <div class="ctl-panel">
+      <div class="ctl-row" id="ctlrow-autoqty">
+        <div class="m"><div class="t">Automatic quantity / area</div><div class="h">ON: lines set to <b>Auto calculation</b> work out their quantity from measurements. OFF: every line uses its own manual quantity (measurements are kept).</div></div>
+        <span class="st" id="st-autoqty">ON</span>
+        <label class="switch"><input type="checkbox" id="ctl-autoqty" checked onchange="ctlChanged()"/><span class="slider"></span></label>
+      </div>
+      <div class="ctl-row" id="ctlrow-autoamt">
+        <div class="m"><div class="t">Automatic line amount</div><div class="h">ON: amount = quantity × rate. OFF: every line uses its own manual amount (rates are kept).</div></div>
+        <span class="st" id="st-autoamt">ON</span>
+        <label class="switch"><input type="checkbox" id="ctl-autoamt" checked onchange="ctlChanged()"/><span class="slider"></span></label>
+      </div>
+      <div class="ctl-row" id="ctlrow-sub">
+        <div class="m"><div class="t">Subtotal calculation</div><div class="h">ON: sum of all line amounts. OFF: you type the subtotal yourself.</div></div>
+        <span class="st" id="st-sub">ON</span>
+        <label class="switch"><input type="checkbox" id="ctl-sub-auto" checked onchange="ctlChanged()"/><span class="slider"></span></label>
+      </div>
+      <div class="ctl-over" id="sub-over-box">
+        <div class="warn">⚠ Subtotal is MANUALLY OVERRIDDEN — line items no longer drive it.</div>
+        <div class="field"><label>Manual subtotal (₹)</label><input id="sub-override" type="number" inputmode="decimal" step="0.01" min="0" value="" oninput="calcUI()"/></div>
+        <div class="it-hint" id="sub-over-hint" style="margin-top:6px"></div>
+      </div>
+      <div class="ctl-row" id="ctlrow-gst">
+        <div class="m"><div class="t">GST calculation</div><div class="h">ON: tax is added and shown in the totals. OFF: ordinary bill, no tax rows. Line items are never affected.</div></div>
+        <span class="st" id="st-gst">OFF</span>
+        <label class="switch"><input type="checkbox" id="gst-switch-2" onchange="setGstFromControls(this.checked)"/><span class="slider"></span></label>
+      </div>
+      <div class="ctl-row" id="ctlrow-disc">
+        <div class="m"><div class="t">Discount</div><div class="h">OFF excludes the discount from the total but keeps the value below.</div></div>
+        <span class="st" id="st-disc">OFF</span>
+        <label class="switch"><input type="checkbox" id="disc-on" onchange="ctlChanged()"/><span class="slider"></span></label>
+      </div>
+      <div class="ctl-row" id="ctlrow-chg">
+        <div class="m"><div class="t">Additional charges</div><div class="h">Master switch. Each charge below also has its own switch.</div></div>
+        <span class="st" id="st-chg">ON</span>
+        <label class="switch"><input type="checkbox" id="chg-master-on" checked onchange="ctlChanged()"/><span class="slider"></span></label>
+      </div>
+      <div class="ctl-row" id="ctlrow-grand">
+        <div class="m"><div class="t">Grand total calculation</div><div class="h">ON: subtotal − discount + tax + charges ± round off. OFF: you type the grand total yourself.</div></div>
+        <span class="st" id="st-grand">ON</span>
+        <label class="switch"><input type="checkbox" id="ctl-grand-auto" checked onchange="ctlChanged()"/><span class="slider"></span></label>
+      </div>
+      <div class="ctl-over" id="grand-over-box">
+        <div class="warn">⚠ Grand total is MANUALLY OVERRIDDEN — it will not follow the items, discount, tax or charges.</div>
+        <div class="field"><label>Manual grand total (₹)</label><input id="grand-override" type="number" inputmode="decimal" step="0.01" min="0" value="" oninput="calcUI()"/></div>
+        <div class="it-hint" id="grand-over-hint" style="margin-top:6px"></div>
+      </div>
+    </div>
 
     <div id="tax-settings-section">
     <div class="sec-divider"><span>Tax Settings</span></div>
@@ -616,36 +729,31 @@ Ayapakkam, Chennai - 600 077</textarea></div>
         <option value="exempt">GST Exempt</option>
       </select>
     </div>
+    <label class="chk-inline"><input type="checkbox" id="chg-taxable" onchange="calcUI()"/> Charge GST on additional charges too (default: charges are added after GST)</label>
     </div>
 
     <div class="sec-divider"><span>Discount</span></div>
-    <div class="g2" style="gap:12px;margin-bottom:12px">
+    <div id="disc-box" class="g2" style="gap:12px;margin-bottom:12px">
       <div class="field">
         <label>Discount Type</label>
         <select id="disc-type" onchange="handleDiscTypeChange();calcUI()">
-          <option value="none" selected>No Discount</option>
-          <option value="pct">Percentage (%)</option>
+          <option value="pct" selected>Percentage (%)</option>
           <option value="fixed">Fixed Amount (₹)</option>
         </select>
       </div>
-      <div class="field" id="disc-value-field" style="display:none">
+      <div class="field" id="disc-value-field">
         <label id="disc-value-label">Discount %</label>
         <input id="disc-value" type="number" min="0" step="0.01" value="0" oninput="calcUI()"/>
       </div>
     </div>
 
     <div class="sec-divider"><span>Additional Charges</span></div>
-    <div class="g2" style="gap:12px;margin-bottom:10px">
-      <div class="field"><label>Packing (₹)</label><input id="chg-packing" type="number" min="0" step="0.01" value="0" oninput="calcUI()"/></div>
-      <div class="field"><label>Transport (₹)</label><input id="chg-transport" type="number" min="0" step="0.01" value="0" oninput="calcUI()"/></div>
-    </div>
-    <div class="g2" style="gap:12px;margin-bottom:10px">
-      <div class="field"><label>Installation (₹)</label><input id="chg-installation" type="number" min="0" step="0.01" value="0" oninput="calcUI()"/></div>
-      <div class="field"><label>Labour (₹)</label><input id="chg-labour" type="number" min="0" step="0.01" value="0" oninput="calcUI()"/></div>
-    </div>
-    <div class="g2" style="gap:12px;margin-bottom:12px">
-      <div class="field"><label>Other Charge — Label</label><input id="chg-other-label" type="text" placeholder="e.g. Loading" value=""/></div>
-      <div class="field"><label>Other Charge (₹)</label><input id="chg-other" type="number" min="0" step="0.01" value="0" oninput="calcUI()"/></div>
+    <div id="chg-box">
+      <div class="chg-row" id="chg-row-packing"><label class="switch sm"><input type="checkbox" id="chg-packing-on" checked onchange="calcUI()"/><span class="slider"></span></label><span class="nm">Packing (₹)</span><input id="chg-packing" type="number" inputmode="decimal" min="0" step="0.01" value="0" oninput="calcUI()"/></div>
+      <div class="chg-row" id="chg-row-transport"><label class="switch sm"><input type="checkbox" id="chg-transport-on" checked onchange="calcUI()"/><span class="slider"></span></label><span class="nm">Transport (₹)</span><input id="chg-transport" type="number" inputmode="decimal" min="0" step="0.01" value="0" oninput="calcUI()"/></div>
+      <div class="chg-row" id="chg-row-installation"><label class="switch sm"><input type="checkbox" id="chg-installation-on" checked onchange="calcUI()"/><span class="slider"></span></label><span class="nm">Installation (₹)</span><input id="chg-installation" type="number" inputmode="decimal" min="0" step="0.01" value="0" oninput="calcUI()"/></div>
+      <div class="chg-row" id="chg-row-labour"><label class="switch sm"><input type="checkbox" id="chg-labour-on" checked onchange="calcUI()"/><span class="slider"></span></label><span class="nm">Labour (₹)</span><input id="chg-labour" type="number" inputmode="decimal" min="0" step="0.01" value="0" oninput="calcUI()"/></div>
+      <div class="chg-row" id="chg-row-other"><label class="switch sm"><input type="checkbox" id="chg-other-on" checked onchange="calcUI()"/><span class="slider"></span></label><input id="chg-other-label" type="text" placeholder="Other charge label (e.g. Loading)" value=""/><input id="chg-other" type="number" inputmode="decimal" min="0" step="0.01" value="0" oninput="calcUI()"/></div>
     </div>
 
     <div class="sec-divider"><span>Round Off</span></div>
@@ -665,11 +773,11 @@ Ayapakkam, Chennai - 600 077</textarea></div>
     </div>
 
     <div class="totals-wrap">
-      <div class="tot-row" id="row-sub"><span class="lbl">Sub-total</span><span class="val" id="t-sub">₹ 0.00</span></div>
+      <div class="tot-row" id="row-sub"><span class="lbl">Sub-total<span id="sub-badge"></span></span><span class="val" id="t-sub">₹ 0.00</span></div>
       <div id="totals-mid"></div>
       <div class="tot-grand">
-        <span class="lbl">Grand Total</span>
-        <span class="val" id="t-grand">₹ 0.00</span>
+        <span class="lbl">Grand Total<span id="grand-badge"></span></span>
+        <span class="val"><span id="t-grand">₹ 0.00</span><small id="t-grand-calc"></small></span>
       </div>
       <div class="words-box" id="t-words">Enter items above to see total in words</div>
     </div>
@@ -707,7 +815,7 @@ Ayapakkam, Chennai - 600 077</textarea></div>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
       Save to History
     </button>
-    <button class="btn btn-full" style="justify-content:center;grid-column:1/-1;background:var(--blue-lt);color:var(--blue)" onclick="psOpen('inv')">🎨 PDF Studio — templates, margins &amp; page size</button>
+    <button class="btn btn-full" style="justify-content:center;grid-column:1/-1;background:var(--blue-lt);color:var(--blue)" onclick="psOpen('inv')">📄 PDF Preview — locked master template</button>
     <button class="btn btn-full" onclick="goTab(1)" style="justify-content:center;grid-column:1/-1">
       <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       Edit Items
@@ -721,7 +829,7 @@ Ayapakkam, Chennai - 600 077</textarea></div>
 
   <div class="preview-scroll">
     <div class="preview-bg">
-      <div class="invoice-paper" id="invoice-paper"><!-- rendered by JS --></div>
+      <div id="invoice-paper" class="pv-pages"></div>
     </div>
   </div>
 </div>
@@ -852,7 +960,8 @@ function sbErr(e){
 
 function init(){
   document.getElementById('inv-date').value=new Date().toISOString().split('T')[0];
-  rows=[{desc:"Making and Supply of Door frame with 45mm thick door\nSize: 7'3\" x 3'3\" - 1 No. & Wood Size: 5 1/2\" x 3\"",hsn:"9403",calcType:'qty',qty:12,unit:"Nos",rate:21423,area:0,areaSqm:0,sheets:0,sheetSize:'8x4',length:0,lengthUnit:'ft',width:0,areaUnit:'ft'}];
+  rows=[Object.assign(blankRow(),{desc:"Making and Supply of Door frame with 45mm thick door\nSize: 7'3\" x 3'3\" - 1 No. & Wood Size: 5 1/2\" x 3\"",hsn:"9403",mode:'qty',qty:12,qtyEdited:true,unit:"Nos",unitTouched:true,rate:21423})];
+  handleGstRateChange();handleDiscTypeChange();handleRoundOffModeChange();handleGstInvoiceToggle();
   renderRows();
   // show desktop sidebar on wide screens
   if(window.innerWidth>=769) document.getElementById('sidebar').style.display='flex';
@@ -929,25 +1038,78 @@ function clearSig(){
   saveCompanySettings();
 }
 
-/* ── ROWS ── */
-function addRow(){rows.push({desc:'',hsn:'',calcType:'qty',qty:1,unit:'Nos',rate:0,area:0,areaSqm:0,sheets:0,sheetSize:'8x4',length:0,lengthUnit:'ft',width:0,areaUnit:'ft',remarks:''});renderRows();scheduleAutoSave();}
-function delRow(i){rows.splice(i,1);renderRows();scheduleAutoSave();}
-
-/* ── SMART CALCULATION ENGINE ── */
-// Only hardcoded conversions permitted: standard sheet sizes → sq.ft. Everything else is user input.
+/* ═══════════════════════════════════════════════════════════════════
+   LINE ITEMS + CALCULATION ENGINE  (single source of truth for the
+   on-screen cards, the totals panel, the preview, the PDF and Excel)
+   ═══════════════════════════════════════════════════════════════════ */
 const SHEET_SIZES={
   '8x4':{label:'8×4 ft',sqft:32},
   '7x4':{label:'7×4 ft',sqft:28},
   '6x4':{label:'6×4 ft',sqft:24},
   '6x2':{label:'6×2 ft',sqft:12},
 };
+const MODES={
+  dim:'Length × Width (automatic)',
+  multi:'Multiple measurements',
+  manual:'Manual quantity / area',
+  qty:'Quantity × Rate (units)',
+  fixed:'Fixed amount',
+  sheet:'Sheet work',
+  percent:'Percentage of subtotal',
+  formula:'Custom formula'
+};
+const DIM_UNITS={ft:'Feet (decimal, 8.5 = 8½ ft)',ftin:'Feet + Inches (8 ft 6 in)',in:'Inches',m:'Metres'};
 
-/* ═══ CENTRAL CALCULATION ENGINE (single source for UI, preview, PDF, Excel, totals) ═══ */
-const DIM_TYPES={lw:{h:0,q:0},lwh:{h:1,q:0},lwhq:{h:1,q:1},custom:{h:0,q:1}};
-const QTY_TYPES={qty:1,piece:'Piece',set:'Set',lot:'Lot'};
-const ADV_TYPES=['custom','lw','lwh','lwhq','sheet','lump','percent','formula'];
-const num=v=>(v===''||v==null)?NaN:+v;
-// controlled formula parser (no eval): numbers, A-D, Qty, + - * / × ÷ x ( )
+/* ── tiny helpers ── */
+const num=v=>(v===''||v==null)?NaN:+v;                       // strict (formula engine)
+const num0=v=>{const n=parseFloat(v);return isFinite(n)?n:0;}; // lenient (typed inputs)
+const isBlank=v=>v===''||v==null||(typeof v==='string'&&v.trim()==='');
+const manualOr=(v,fb)=>isBlank(v)?fb:num0(v);
+function r2(v){v=+v;if(!isFinite(v)||Math.abs(v)<1e-7)return 0;const s=v<0?-1:1;return s*Number(Math.round(Math.abs(v)+'e2')+'e-2');} // half-up to paise, no float drift
+const $id=id=>document.getElementById(id);
+const chk=(id,def)=>{const e=$id(id);return e?!!e.checked:def;};
+const fv=id=>{const e=$id(id);return e?e.value:'';};
+const escH=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const fmtIn=q=>{q=+q||0;return String(+q.toFixed(3));};          // value shown inside an input
+const isAreaUnit=u=>{const k=String(u||'').toLowerCase().replace(/[.\s_\-]/g,'');return /^(sq|sqr|square)(ft|feet|foot|f|m|mtr|meter|metre|mm|cm|in|inch|yd|yard)s?$/.test(k)||k==='sft';};
+
+/* ── rows ── */
+function blankMs(){return{l1:'',l2:'',w1:'',w2:'',c:1};}
+function blankRow(){return{desc:'',hsn:'',remarks:'',mode:'qty',auto:true,autoAmt:true,unit:'Nos',unitTouched:false,rate:'',qty:1,qtyEdited:false,qtyManual:'',amount:'',
+  dimUnit:'ft',ms:[blankMs()],showMs:true,sheets:'',sheetSize:'8x4',percentageValue:'',percentageBase:'subtotal',baseAmount:'',formula:'',vars:{}};}
+// Brings rows from older saved invoices / Excel import into the current model without changing their numbers.
+function normalizeRow(o){
+  o=o||{};
+  if(o.mode&&MODES[o.mode]){
+    const r=Object.assign(blankRow(),o);
+    if(!Array.isArray(r.ms)||!r.ms.length)r.ms=[blankMs()];
+    r.ms=r.ms.map(e=>Object.assign(blankMs(),e));
+    r.vars=r.vars||{};return r;
+  }
+  const r=blankRow(),t=o.calcType||'qty',nz=v=>(+v?+v:'');
+  r.desc=o.desc||'';r.hsn=o.hsn||'';r.remarks=o.remarks||'';r.rate=nz(o.rate);r.qtyEdited=true;r.unitTouched=true;
+  const rem=s=>{r.remarks=[r.remarks,s].filter(Boolean).join(' | ');};
+  switch(t){
+    case 'piece':case 'set':case 'lot':r.mode='qty';r.qty=+o.qty||0;r.unit={piece:'Piece',set:'Set',lot:'Lot'}[t];break;
+    case 'sqft':r.mode='manual';r.qty=+o.area||0;r.unit='sq.ft';break;
+    case 'sqm':r.mode='manual';r.qty=+o.areaSqm||0;r.unit='sq.m';break;
+    case 'sheet':r.mode='sheet';r.sheets=nz(o.sheets);r.sheetSize=o.sheetSize||'8x4';break;
+    case 'rft':r.mode='qty';r.qty=+o.length||0;r.unit=o.lengthUnit==='m'?'meter':'R.ft';break;
+    case 'lw':case 'custom':{const m=o.areaUnit==='m';r.mode='dim';r.dimUnit=m?'m':'ft';r.unit=m?'sq.m':'sq.ft';r.unitTouched=false;
+      r.ms=[{l1:nz(o.length),l2:'',w1:nz(o.width),w2:'',c:t==='custom'?(+o.qty||1):1}];break;}
+    case 'lwh':case 'lwhq':{const m=o.areaUnit==='m',q=t==='lwhq'?(+o.qty||0):1;r.mode='qty';r.unit=m?'cu.m':'cu.ft';
+      r.qty=r2((+o.length||0)*(+o.width||0)*(+o.height||0)*q);
+      rem((+o.length||0)+' × '+(+o.width||0)+' × '+(+o.height||0)+(t==='lwhq'?' × '+q:'')+(m?' m':' ft'));break;}
+    case 'lump':r.mode='fixed';r.amount=+o.amount||0;break;
+    case 'percent':r.mode='percent';r.percentageValue=nz(o.percentageValue);r.percentageBase=o.percentageBase||'subtotal';r.baseAmount=nz(o.baseAmount);break;
+    case 'formula':r.mode='formula';r.formula=o.formula||'';r.vars=o.vars||{};r.qty=+o.qty||0;r.unit=o.unit||'Nos';break;
+    default:r.mode='qty';r.qty=+o.qty||0;r.unit=o.unit||'Nos';
+  }
+  if(o.autoAmt===false){r.autoAmt=false;r.amount=o.amount;}
+  return r;
+}
+
+/* ── controlled formula parser (no eval): numbers, A-D, Qty, + - * / × ÷ x ( ) ── */
 function evalFormula(expr,vars){
   const src=String(expr||'').trim();if(!src)return{err:'Enter a formula, e.g. A × B × C'};
   const re=/\s*(\d+\.?\d*|\.\d+|qty|[A-D]|[-+*\/×÷x()])/iy,toks=[];let m;re.lastIndex=0;
@@ -960,7 +1122,7 @@ function evalFormula(expr,vars){
     else if(tl==='qty'||/^[A-D]$/i.test(t)){
       const key=tl==='qty'?'Qty':t.toUpperCase(),v=num(vars[key]);
       if(isNaN(v))return{err:'Enter a value for '+key};out.push(v);prev='n';
-    }else if(t==='(' ){ops.push(t);prev='(';}
+    }else if(t==='('){ops.push(t);prev='(';}
     else if(t===')'){while(ops.length&&ops[ops.length-1]!=='(')out.push(ops.pop());if(!ops.length)return{err:'Unbalanced brackets'};ops.pop();prev='n';}
     else{
       const op=t==='×'||tl==='x'?'*':t==='÷'?'/':t;
@@ -981,461 +1143,511 @@ function evalFormula(expr,vars){
   return st.length===1&&isFinite(st[0])?{val:st[0]}:{err:'Formula is incomplete'};
 }
 function fvars(r){return Object.assign({},r.vars||{},{Qty:r.qty});}
-function pctBase(r){return r.percentageBase==='custom'?(+r.baseAmount||0):rows.reduce((s,x)=>x.calcType==='percent'?s:s+rowAmount(x),0);}
-function dimUnit(r,cu){return cu?(r.areaUnit==='m'?'cu.m':'cu.ft'):(r.areaUnit==='m'?'sq.m':'sq.ft');}
-function dimQty(r){const t=DIM_TYPES[r.calcType],L=+r.length||0,W=+r.width||0,H=t.h?(+r.height||0):1,Q=t.q?(+r.qty||(r.calcType==='custom'?1:0)):1;return L*W*H*Q;}
-function getRowAreaQty(r){
-  const mode=r.calcType||'qty';
-  if(DIM_TYPES[mode])return{qty:DIM_TYPES[mode].q?(+r.qty||(mode==='custom'?1:0)):'',area:dimQty(r)};
-  switch(mode){
-    case 'sqft': return{qty:'',area:+r.area||0};
-    case 'sqm': return{qty:'',area:+r.areaSqm||0};
-    case 'sheet':{const sz=SHEET_SIZES[r.sheetSize]||SHEET_SIZES['8x4'];return{qty:+r.sheets||0,area:(+r.sheets||0)*sz.sqft};}
-    case 'rft': return{qty:+r.length||0,area:''};
-    case 'lump': case 'percent': return{qty:'',area:''};
-    case 'formula':{const f=evalFormula(r.formula,fvars(r));return{qty:f.err?0:f.val,area:''};}
-    default: return{qty:+r.qty||0,area:''};
-  }
+
+/* ── measurements ── */
+// value of ONE dimension in feet (or metres when dimUnit = m). 8 ft 6 in = 8 + 6/12 = 8.5  (never "8.6")
+function dimVal(a,b,u){a=num0(a);b=num0(b);return u==='ftin'?a+b/12:u==='in'?a/12:a;}
+function msArea(e,u){
+  const c=isBlank(e.c)?1:num0(e.c);
+  return r2(dimVal(e.l1,e.l2,u)*dimVal(e.w1,e.w2,u)*c);   // every entry is rounded to paise-style 2 dp, then added
 }
-function getFinalQtyUnit(r){
-  const mode=r.calcType||'qty';
-  if(DIM_TYPES[mode])return{qty:dimQty(r),unit:dimUnit(r,DIM_TYPES[mode].h)};
-  switch(mode){
-    case 'sqft': return{qty:+r.area||0,unit:'sq.ft'};
-    case 'sqm': return{qty:+r.areaSqm||0,unit:'sq.m'};
-    case 'sheet':{const sz=SHEET_SIZES[r.sheetSize]||SHEET_SIZES['8x4'];return{qty:(+r.sheets||0)*sz.sqft,unit:'sq.ft'};}
-    case 'rft': return{qty:+r.length||0,unit:r.lengthUnit==='m'?'meter':'R.ft'};
-    case 'lump': return{qty:0,unit:'Lump Sum'};
-    case 'percent': return{qty:0,unit:'%'};
-    case 'formula':{const f=evalFormula(r.formula,fvars(r));return{qty:f.err?0:f.val,unit:r.unit||'Nos'};}
-    case 'piece': case 'set': case 'lot': return{qty:+r.qty||0,unit:QTY_TYPES[mode]};
-    default: return{qty:+r.qty||0,unit:r.unit||'Nos'};
+function msUsed(r){return r.mode==='dim'?r.ms.slice(0,1):r.ms;}
+function autoQty(r){
+  if(r.mode==='dim'||r.mode==='multi')return r2(msUsed(r).reduce((s,e)=>s+msArea(e,r.dimUnit),0));
+  return 0;
+}
+const gAutoQty=()=>chk('ctl-autoqty',true);
+const gAutoAmt=()=>chk('ctl-autoamt',true);
+const qtyAutoOn=r=>gAutoQty()&&r.auto!==false;
+const amtAutoOn=r=>gAutoAmt()&&r.autoAmt!==false;
+
+/* ── per-row quantity / amount ── */
+function pctBase(r){return r.percentageBase==='custom'?num0(r.baseAmount):rows.reduce((s,x)=>x.mode==='percent'?s:s+rowAmount(x),0);}
+function rowQty(r){
+  switch(r.mode){
+    case 'dim':case 'multi':{const a=autoQty(r);return qtyAutoOn(r)?a:manualOr(r.qtyManual,a);}
+    case 'sheet':{const sz=SHEET_SIZES[r.sheetSize]||SHEET_SIZES['8x4'];return r2(num0(r.sheets)*sz.sqft);}
+    case 'formula':{const f=evalFormula(r.formula,fvars(r));return f.err?0:r2(f.val);}
+    case 'fixed':case 'percent':return 0;
+    default:return num0(r.qty);
   }
 }
 function rowAmount(r){
-  const mode=r.calcType||'qty';
-  if(mode==='lump')return +r.amount||0;
-  if(mode==='percent')return pctBase(r)*(+r.percentageValue||0)/100;
-  const{qty}=getFinalQtyUnit(r);return qty*(+r.rate||0);
+  if(r.mode==='fixed')return r2(num0(r.amount));
+  if(r.mode==='percent')return r2(pctBase(r)*num0(r.percentageValue)/100);
+  const calcd=r2(rowQty(r)*num0(r.rate));
+  return amtAutoOn(r)?calcd:manualOr(r.amount,calcd);
 }
-function rateText(r){return(r.calcType==='lump'||r.calcType==='percent')?'—':fmt(r.rate);}
-// returns a message when the row's input is incomplete/invalid (never silently treated as zero)
+function rowUnit(r){
+  switch(r.mode){
+    case 'fixed':return 'Lump Sum';
+    case 'percent':return '%';
+    case 'sheet':return 'sq.ft';
+    case 'dim':case 'multi':return String(r.unit||'').trim()||(r.dimUnit==='m'?'sq.m':'sq.ft');
+    default:return String(r.unit||'').trim()||'Nos';
+  }
+}
+// what goes into the Qty and Area columns of the bill (area-type units go to Area, everything else to Qty — as in Mr.Karna.pdf)
+function rowCols(r){
+  const u=rowUnit(r),q=rowQty(r);
+  if(r.mode==='fixed'||r.mode==='percent')return{qty:'',area:'',unit:u};
+  if(r.mode==='sheet')return{qty:num0(r.sheets),area:q,unit:u};
+  if(isAreaUnit(u))return{qty:'',area:q,unit:u};
+  return{qty:q,area:'',unit:u};
+}
+function rateText(r){
+  if(r.mode==='fixed'||r.mode==='percent')return'—';
+  if(!amtAutoOn(r)&&!num0(r.rate))return'—';
+  return fmt(num0(r.rate));
+}
+function fmtQty(q){return String(+(+q||0).toFixed(2));}   // 1 → "1", 60 → "60", 2.5 → "2.5"
+
+/* ── measurement text printed under the item name (same style as the italic line in Mr.Karna.pdf) ── */
+function msEntryStr(e,u){
+  const f=v=>fmtIn(num0(v)),c=isBlank(e.c)?'1':f(e.c);
+  return u==='ftin'?(f(e.l1)+'-'+f(e.l2)+' × '+f(e.w1)+'-'+f(e.w2)+'-'+c):(f(e.l1)+' × '+f(e.w1)+' × '+c);
+}
+function msNote(r){
+  if((r.mode!=='dim'&&r.mode!=='multi')||r.showMs===false)return'';
+  const list=msUsed(r).filter(e=>num0(e.l1)||num0(e.l2)||num0(e.w1)||num0(e.w2));
+  if(!list.length)return'';
+  return'('+list.map(e=>msEntryStr(e,r.dimUnit)).join(', ')+({ft:' ft',in:' in',m:' m'}[r.dimUnit]||'')+')';
+}
+function splitDescLines(d){return String(d||'').replace(/\r/g,'').split('\n');}
+// lines for the PDF/Excel description cell: [bold name lines…] then italic detail lines
+function itemTextParts(r,showRem){
+  const L=splitDescLines(r.desc),name=(L[0]||'').trim();
+  const det=L.slice(1).map(s=>s.replace(/\s+$/,'')).filter(s=>s.trim()!=='');
+  const mn=msNote(r);if(mn)det.push(mn);
+  if(r.mode==='percent')det.push(num0(r.percentageValue)+'% of '+(r.percentageBase==='custom'?'₹'+fmt(num0(r.baseAmount)):'Subtotal (₹'+fmt(pctBase(r))+')'));
+  if(r.mode==='sheet'){const sz=SHEET_SIZES[r.sheetSize]||SHEET_SIZES['8x4'];det.push(fmtIn(num0(r.sheets))+' × '+sz.label+' sheets');}
+  if(r.mode==='formula'&&String(r.formula||'').trim())det.push(String(r.formula).trim());
+  if(showRem!==false&&String(r.remarks||'').trim())det.push(String(r.remarks).trim());
+  return{name,det};
+}
+
+/* ── validation message for one row (never silently treated as zero) ── */
 function rowIssue(r){
-  const mode=r.calcType||'qty';
-  for(const f of['qty','area','areaSqm','length','width','height','sheets','rate','amount','percentageValue','baseAmount'])if(+r[f]<0)return'Negative value in '+f;
-  if(DIM_TYPES[mode]){const t=DIM_TYPES[mode];
-    if(!(+r.length>0))return'Length missing';if(!(+r.width>0))return'Width missing';
-    if(t.h&&!(+r.height>0))return'Height missing';if(t.q&&mode!=='custom'&&!(+r.qty>0))return'Quantity missing';}
-  else if(mode==='lump'){if(!(+r.amount>0))return'Lump-sum amount missing';return'';}
-  else if(mode==='percent'){
-    if(!(+r.percentageValue>0)||+r.percentageValue>100)return'Percentage must be between 0 and 100';
-    if(r.percentageBase==='custom'&&!(+r.baseAmount>0))return'Base amount missing';
+  const nums=[r.qty,r.qtyManual,r.rate,r.amount,r.sheets,r.percentageValue,r.baseAmount];
+  r.ms.forEach(e=>nums.push(e.l1,e.l2,e.w1,e.w2,e.c));
+  if(nums.some(v=>!isBlank(v)&&num0(v)<0))return'Negative value entered';
+  if(r.mode==='dim'||r.mode==='multi'){
+    const used=msUsed(r);
+    for(let k=0;k<used.length;k++){const e=used[k];
+      const hasL=num0(e.l1)||num0(e.l2),hasW=num0(e.w1)||num0(e.w2);
+      if((hasL&&!hasW)||(!hasL&&hasW))return'Measurement '+(k+1)+' needs both length and width';
+      if(r.dimUnit==='ftin'&&(num0(e.l2)>=12||num0(e.w2)>=12))return'Inches in measurement '+(k+1)+' should be below 12';
+      if(!isBlank(e.c)&&!(num0(e.c)>0)&&(hasL||hasW))return'Count in measurement '+(k+1)+' must be above 0';
+    }
+    if(qtyAutoOn(r)&&!used.some(e=>(num0(e.l1)||num0(e.l2))&&(num0(e.w1)||num0(e.w2))))return'Enter at least one measurement';
+    if(!(rowQty(r)>0))return'Quantity / area is zero';
+  }else if(r.mode==='fixed'){if(!(num0(r.amount)>0))return'Fixed amount missing';return'';}
+  else if(r.mode==='percent'){
+    if(!(num0(r.percentageValue)>0)||num0(r.percentageValue)>100)return'Percentage must be between 0 and 100';
+    if(r.percentageBase==='custom'&&!(num0(r.baseAmount)>0))return'Base amount missing';
     if(r.percentageBase!=='custom'&&!(pctBase(r)>0))return'No items to calculate % of';return'';}
-  else if(mode==='formula'){const f=evalFormula(r.formula,fvars(r));if(f.err)return f.err;if(f.val<=0)return'Formula result must be above zero';}
-  else if(mode==='sqft'&&!(+r.area>0))return'Area missing';
-  else if(mode==='sqm'&&!(+r.areaSqm>0))return'Area missing';
-  else if(mode==='sheet'&&!(+r.sheets>0))return'Number of sheets missing';
-  else if(mode==='rft'&&!(+r.length>0))return'Length missing';
-  else if((mode==='qty'||QTY_TYPES[mode])&&!(+r.qty>0))return'Quantity missing';
-  if(!(+r.rate>0))return'Rate missing';
+  else if(r.mode==='formula'){const f=evalFormula(r.formula,fvars(r));if(f.err)return f.err;if(f.val<=0)return'Formula result must be above zero';}
+  else if(r.mode==='sheet'){if(!(num0(r.sheets)>0))return'Number of sheets missing';}
+  else if(!(num0(r.qty)>0))return'Quantity missing';
+  if(amtAutoOn(r)){if(!(num0(r.rate)>0))return'Rate missing';}
+  else if(!(manualOr(r.amount,0)>0))return'Manual amount missing';
   return'';
 }
-// human-readable calculation line (UI helper, PDF sub-line)
-function calcExplain(r){
-  const mode=r.calcType||'qty',u=r.areaUnit==='m'?'m':'ft',n=v=>fmt(+v||0).replace(/\.00$/,'');
-  if(DIM_TYPES[mode]){const t=DIM_TYPES[mode];
-    let p=[n(r.length)+' '+u,n(r.width)+' '+u];if(t.h)p.push(n(r.height)+' '+u);if(t.q)p.push(n(r.qty||(mode==='custom'?1:0))+' Nos');
-    return p.join(' × ')+' = '+n(dimQty(r))+' '+dimUnit(r,t.h);}
-  if(mode==='sheet'){const sz=SHEET_SIZES[r.sheetSize]||SHEET_SIZES['8x4'];return n(r.sheets)+' × '+sz.label+' sheets = '+n((+r.sheets||0)*sz.sqft)+' sq.ft';}
-  if(mode==='lump')return'Lump Sum';
-  if(mode==='percent')return n(r.percentageValue)+'% of '+(r.percentageBase==='custom'?'₹'+n(r.baseAmount):'Subtotal (₹'+fmt(pctBase(r))+')');
-  if(mode==='formula'){const f=evalFormula(r.formula,fvars(r));return String(r.formula||'')+(f.err?'':' = '+n(f.val)+' '+(r.unit||'Nos'));}
+// readable one-line explanation shown under each card
+function calcLine(r){
+  const e=rowIssue(r);if(e)return{t:'⚠ '+e,err:true};
+  const q=rowQty(r),a=rowAmount(r),u=rowUnit(r),n=v=>fmt(v).replace(/\.00$/,'');
+  let s='';
+  if(r.mode==='fixed')return{t:'Fixed amount → ₹'+fmt(a)};
+  if(r.mode==='percent')return{t:num0(r.percentageValue)+'% of '+(r.percentageBase==='custom'?'₹'+n(num0(r.baseAmount)):'subtotal ₹'+fmt(pctBase(r)))+' → ₹'+fmt(a)};
+  if(r.mode==='dim'||r.mode==='multi'){
+    const used=msUsed(r).filter(x=>(num0(x.l1)||num0(x.l2))&&(num0(x.w1)||num0(x.w2)));
+    const parts=used.map(x=>msArea(x,r.dimUnit));
+    s=qtyAutoOn(r)?(parts.length>1?parts.map(n).join(' + ')+' = ':'')+n(q)+' '+u:'Manual quantity '+n(q)+' '+u+' (measurements would give '+n(autoQty(r))+')';
+  }else s=n(q)+' '+u;
+  if(amtAutoOn(r))return{t:s+' × ₹'+fmt(num0(r.rate))+' = ₹'+fmt(a)};
+  return{t:s+' → manual amount ₹'+fmt(a)+' (qty × rate would be ₹'+fmt(r2(q*num0(r.rate)))+')'};
+}
+
+/* ═══ CARD UI ═══ */
+function addRow(){rows.push(blankRow());renderRows();scheduleAutoSave();const c=$id('item-'+(rows.length-1));if(c){const t=c.querySelector('textarea');if(t&&!('ontouchstart' in window))t.focus();}}
+function delRow(i){rows.splice(i,1);renderRows();scheduleAutoSave();}
+function rowSet(i,f,v){rows[i][f]=v;updateRowLive(i);}
+function setUnitTyped(i,v){rows[i].unit=v;rows[i].unitTouched=true;updateRowLive(i);}
+function setMode(i,m){
+  const r=rows[i],old=r.mode;
+  if((m==='manual'||m==='qty')&&['dim','multi','sheet','formula'].includes(old)&&!r.qtyEdited){r.qty=rowQty(r);r.qtyEdited=true;}  // start from the number already on screen
+  r.mode=m;
+  if(!r.unitTouched){r.unit=(m==='dim'||m==='multi'||m==='manual')?(r.dimUnit==='m'&&m!=='manual'?'sq.m':'sq.ft'):(m==='qty'?'Nos':r.unit);}
+  renderRows();scheduleAutoSave();
+}
+function setAuto(i,on){
+  const r=rows[i];
+  if(!on&&isBlank(r.qtyManual))r.qtyManual=autoQty(r);   // manual box starts from what the measurements gave
+  r.auto=on;renderRows();scheduleAutoSave();
+}
+function setAutoAmt(i,on){
+  const r=rows[i];
+  if(!on&&isBlank(r.amount))r.amount=r2(rowQty(r)*num0(r.rate));  // manual amount starts from qty × rate
+  r.autoAmt=on;renderRows();scheduleAutoSave();
+}
+function setDimUnit(i,u){
+  const r=rows[i],wasDef=!r.unitTouched;r.dimUnit=u;
+  if(wasDef&&(r.mode==='dim'||r.mode==='multi'))r.unit=u==='m'?'sq.m':'sq.ft';
+  renderRows();scheduleAutoSave();
+}
+function msSet(i,k,f,v){rows[i].ms[k][f]=v;updateRowLive(i);}
+function addMs(i){const r=rows[i];r.ms.push(blankMs());if(r.mode==='dim')r.mode='multi';renderRows();scheduleAutoSave();setTimeout(()=>{const e=$id('msl-'+i+'-'+(r.ms.length-1));if(e&&!('ontouchstart' in window))e.focus();},30);}
+function delMs(i,k){const r=rows[i];if(r.ms.length>1)r.ms.splice(k,1);else r.ms[0]=blankMs();renderRows();scheduleAutoSave();}
+// typing straight into the result boxes = deliberate manual override of that one calculation
+function setFinalQty(i,v){
+  const r=rows[i];
+  if(r.mode==='dim'||r.mode==='multi'){r.qtyManual=v;r.auto=false;}
+  else{r.qty=v;r.qtyEdited=true;}
+  updateRowLive(i);
+}
+function setFinalAmt(i,v){
+  const r=rows[i];
+  r.amount=v;if(r.mode!=='fixed')r.autoAmt=false;
+  updateRowLive(i);
+}
+
+function sw(id,on,fn,cls){return`<label class="switch sm"><input type="checkbox" id="${id}" ${on?'checked':''} onchange="${fn}"/><span class="slider"></span></label>`;}
+function msRowHtml(i,k,e,r,removable){
+  const u=r.dimUnit,pre='msl-'+i+'-'+k;
+  const one=(a,f1,f2,lbl)=>u==='ftin'
+    ?`<span class="ms-grp"><span class="lbl">${lbl}</span><input id="${a==='l'?pre:''}" type="number" inputmode="decimal" step="any" min="0" placeholder="ft" value="${esc(e[f1])}" oninput="msSet(${i},${k},'${f1}',this.value)"/><i>ft</i><input type="number" inputmode="decimal" step="any" min="0" placeholder="in" value="${esc(e[f2])}" oninput="msSet(${i},${k},'${f2}',this.value)"/><i>in</i></span>`
+    :`<span class="ms-grp"><span class="lbl">${lbl}</span><input id="${a==='l'?pre:''}" type="number" inputmode="decimal" step="any" min="0" placeholder="${u==='in'?'in':u==='m'?'m':'ft'}" value="${esc(e[f1])}" oninput="msSet(${i},${k},'${f1}',this.value)"/><i>${u==='in'?'in':u==='m'?'m':'ft'}</i></span>`;
+  return`<div class="ms-row">${removable?`<span class="ms-k">${k+1}</span>`:''}${one('l','l1','l2','L')}<span class="ms-x">×</span>${one('w','w1','w2','W')}<span class="ms-x">×</span>
+    <span class="ms-grp"><span class="lbl">Count</span><input type="number" inputmode="decimal" step="any" min="0" placeholder="1" value="${esc(e.c)}" oninput="msSet(${i},${k},'c',this.value)"/></span>
+    <span class="ms-eq tabular" id="msa-${i}-${k}">= ${fmt(msArea(e,u))} ${r.dimUnit==='m'?'sq.m':'sq.ft'}</span>${removable?`<button class="ms-del" title="Delete this measurement" onclick="delMs(${i},${k})">×</button>`:''}</div>`;
+}
+function modeBodyHtml(r,i){
+  const m=r.mode,dimOpts=Object.keys(DIM_UNITS).map(k=>`<option value="${k}" ${r.dimUnit===k?'selected':''}>${DIM_UNITS[k]}</option>`).join('');
+  if(m==='dim'||m==='multi'){
+    const used=m==='dim'?[r.ms[0]]:r.ms;
+    return`<div class="it-fld" style="margin-bottom:6px"><span>Measurement format</span><select onchange="setDimUnit(${i},this.value)">${dimOpts}</select></div>`
+      +used.map((e,k)=>msRowHtml(i,k,e,r,m==='multi')).join('')
+      +(m==='multi'?`<button class="ms-add" onclick="addMs(${i})">+ Add measurement</button><div class="ms-total tabular" id="mstot-${i}"></div>`:`<button class="ms-add" onclick="addMs(${i})">+ Add another measurement</button>`)
+      +(m==='dim'&&r.ms.length>1?`<div class="ms-warn">${r.ms.length-1} more saved measurement(s) are not counted in this mode — switch to “Multiple measurements” to use them.</div>`:'')
+      +`<div class="ms-warn" id="mswarn-${i}"></div>`
+      +`<label class="chk-inline"><input type="checkbox" ${r.showMs!==false?'checked':''} onchange="rows[${i}].showMs=this.checked;updateRowLive(${i})"/> Print the measurements under the description on the bill</label>`;
+  }
+  if(m==='manual')return`<div class="it-hint"><b>Manual quantity / area.</b> Type the final area or quantity in <b>Quantity / Area</b> below. Use unit <b>sq.ft</b> (or any area unit) to print it in the Area column.</div>`;
+  if(m==='qty')return`<div class="it-hint"><b>Quantity × Rate.</b> Units, running feet, nos, etc. Amount = quantity × rate.</div>`;
+  if(m==='fixed')return`<div class="it-hint"><b>Fixed amount.</b> Type the line amount in <b>Amount</b> below. Quantity and rate are not used and print as “—”.</div>`;
+  if(m==='sheet'){
+    const opts=Object.keys(SHEET_SIZES).map(k=>`<option value="${k}" ${r.sheetSize===k?'selected':''}>${SHEET_SIZES[k].label} (${SHEET_SIZES[k].sqft} sq.ft)</option>`).join('');
+    return`<div style="display:flex;gap:8px;flex-wrap:wrap"><div class="it-fld" style="width:150px"><span>Sheet size</span><select onchange="rowSet(${i},'sheetSize',this.value)">${opts}</select></div><div class="it-fld" style="width:110px"><span>No. of sheets</span><input type="number" inputmode="decimal" step="any" min="0" value="${esc(r.sheets)}" oninput="rowSet(${i},'sheets',this.value)"/></div></div>`;
+  }
+  if(m==='percent'){const c=r.percentageBase==='custom';
+    return`<div style="display:flex;gap:8px;flex-wrap:wrap"><div class="it-fld" style="width:100px"><span>Percent %</span><input type="number" inputmode="decimal" step="any" min="0" value="${esc(r.percentageValue)}" oninput="rowSet(${i},'percentageValue',this.value)"/></div>
+      <div class="it-fld" style="width:170px"><span>Of</span><select onchange="rows[${i}].percentageBase=this.value;renderRows()"><option value="subtotal" ${c?'':'selected'}>All other lines (subtotal)</option><option value="custom" ${c?'selected':''}>A custom amount</option></select></div>
+      ${c?`<div class="it-fld" style="width:130px"><span>Base ₹</span><input type="number" inputmode="decimal" step="any" min="0" value="${esc(r.baseAmount)}" oninput="rowSet(${i},'baseAmount',this.value)"/></div>`:''}</div>`;}
+  if(m==='formula'){const vi=k=>`<div class="it-fld" style="width:70px"><span>${k}</span><input type="number" inputmode="decimal" step="any" value="${esc((r.vars||{})[k]??'')}" oninput="(rows[${i}].vars=rows[${i}].vars||{}).${k}=this.value;updateRowLive(${i})"/></div>`;
+    return`<div class="it-fld" style="margin-bottom:6px"><span>Formula (use A, B, C, D, Qty, + − × ÷ and brackets)</span><input value="${esc(r.formula)}" placeholder="e.g. A × B × C" oninput="rowSet(${i},'formula',this.value)"/></div><div style="display:flex;gap:8px;flex-wrap:wrap">${vi('A')}${vi('B')}${vi('C')}${vi('D')}<div class="it-fld" style="width:70px"><span>Qty</span><input type="number" inputmode="decimal" step="any" value="${esc(r.qty)}" oninput="rowSet(${i},'qty',this.value)"/></div></div>`;}
   return'';
 }
-function fmtQty(q,mode){return String(+(+q||0).toFixed(2));} // whole numbers show without decimals (1, 8, 20); fractions keep up to 2 (2.5)
-
-function calcTypeSelectHtml(r,i){
-  const modes=[['qty','Quantity'],['piece','Per Piece'],['set','Per Set'],['lot','Per Lot'],['sqft','Square Feet'],['sqm','Square Meter'],['sheet','Sheet Work'],['rft','Running Feet / Meter'],['lw','Length × Width'],['custom','L × W × Qty'],['lwh','L × W × H (cubic)'],['lwhq','L × W × H × Qty'],['lump','Lump Sum'],['percent','Percentage'],['formula','Custom Formula']];
-  const cur=r.calcType||'qty';
-  const opts=modes.map(([v,l])=>`<option value="${v}" ${cur===v?'selected':''}>${l}</option>`).join('');
-  return`<select class="calc-mini-select" style="width:100%!important" onchange="rows[${i}].calcType=this.value;renderRows()">${opts}</select>`;
+function itemHtml(r,i){
+  const m=r.mode,isDim=m==='dim'||m==='multi';
+  const modeOpts=`<optgroup label="Measurements">${['dim','multi'].map(k=>`<option value="${k}" ${m===k?'selected':''}>${MODES[k]}</option>`).join('')}</optgroup>`
+    +`<optgroup label="Quantity / amount">${['manual','qty','fixed'].map(k=>`<option value="${k}" ${m===k?'selected':''}>${MODES[k]}</option>`).join('')}</optgroup>`
+    +`<optgroup label="More">${['sheet','percent','formula'].map(k=>`<option value="${k}" ${m===k?'selected':''}>${MODES[k]}</option>`).join('')}</optgroup>`;
+  const ro=m==='fixed'||m==='percent'||m==='sheet'||m==='formula';
+  return`<div class="it-card" id="item-${i}">
+    <div class="it-head"><span class="it-n">${i+1}</span>
+      <textarea rows="2" placeholder="Description of work — 1st line prints bold, further lines print in italics" oninput="rowSet(${i},'desc',this.value)">${escH(r.desc)}</textarea>
+      <input class="it-hsn" placeholder="HSN" value="${esc(r.hsn)}" oninput="rowSet(${i},'hsn',this.value)"/>
+      <button class="del-btn" onclick="delRow(${i})" title="Delete this item">×</button></div>
+    <div class="it-ctl">
+      <label class="it-fld grow"><span>Calculation method</span><select onchange="setMode(${i},this.value)">${modeOpts}</select></label>
+      ${isDim?`<label class="tgl" id="tgl-auto-${i}" title="ON: quantity comes from the measurements. OFF: you type the final quantity; measurements are kept."><span>Automatic calculation</span>${sw('auto-chk-'+i,r.auto!==false,`setAuto(${i},this.checked)`)}<b class="state" id="auto-st-${i}"></b></label>`:''}
+      ${m!=='fixed'&&m!=='percent'?`<label class="tgl" id="tgl-amt-${i}" title="ON: amount = quantity × rate. OFF: you type the amount; quantity and rate are kept."><span>Automatic amount</span>${sw('amt-chk-'+i,r.autoAmt!==false,`setAutoAmt(${i},this.checked)`)}<b class="state" id="amt-st-${i}"></b></label>`:''}
+    </div>
+    <div class="it-body" id="body-${i}">${modeBodyHtml(r,i)}</div>
+    <div class="it-res">
+      <label class="it-fld"><span>Quantity / Area<span class="it-flag man" id="flag-q-${i}" style="display:none">MANUAL</span></span><input id="res-qty-${i}" class="num tabular" type="number" inputmode="decimal" step="any" min="0" value="" ${ro?'readonly':''} oninput="setFinalQty(${i},this.value)"/></label>
+      <label class="it-fld"><span>Unit</span><input id="res-unit-${i}" list="unit-list" value="${esc(m==='fixed'||m==='percent'?rowUnit(r):r.unit)}" ${m==='fixed'||m==='percent'||m==='sheet'?'readonly':''} oninput="setUnitTyped(${i},this.value)"/></label>
+      <label class="it-fld"><span>Rate ₹</span><input id="res-rate-${i}" class="num tabular" type="number" inputmode="decimal" step="any" min="0" value="${esc(r.rate)}" ${m==='fixed'||m==='percent'?'disabled':''} oninput="rowSet(${i},'rate',this.value)"/></label>
+      <label class="it-fld"><span>Amount ₹<span class="it-flag man" id="flag-a-${i}" style="display:none">MANUAL</span></span><input id="res-amt-${i}" class="num tabular" type="number" inputmode="decimal" step="any" min="0" value="" ${m==='percent'?'readonly':''} oninput="setFinalAmt(${i},this.value)"/></label>
+    </div>
+    <div class="it-note" id="helper-${i}"></div>
+    <div class="it-extra"><input value="${esc(r.remarks)}" placeholder="Extra note printed in italics under the description (optional)" oninput="rowSet(${i},'remarks',this.value)"/></div>
+  </div>`;
 }
-
-function calcCellHtml(r,i){
-  const mode=r.calcType||'qty';
-  if(mode==='qty'){
-    return`<input class="r" type="number" inputmode="decimal" min="0" step="0.001" value="${r.qty||0}" oninput="rows[${i}].qty=+this.value||0;updateRowLive(${i})"/>`;
-  }
-  if(mode==='sqft'){
-    return`<input class="r" type="number" inputmode="decimal" min="0" step="0.01" value="${r.area||0}" placeholder="Area sq.ft" oninput="rows[${i}].area=+this.value||0;updateRowLive(${i})"/>`;
-  }
-  if(mode==='sqm'){
-    return`<input class="r" type="number" inputmode="decimal" min="0" step="0.01" value="${r.areaSqm||0}" placeholder="Area sq.m" oninput="rows[${i}].areaSqm=+this.value||0;updateRowLive(${i})"/>`;
-  }
-  if(mode==='sheet'){
-    const curSize=r.sheetSize||'8x4';
-    const sz=SHEET_SIZES[curSize]||SHEET_SIZES['8x4'];
-    const area=(+r.sheets||0)*sz.sqft;
-    const sizeOpts=Object.keys(SHEET_SIZES).map(k=>`<option value="${k}" ${curSize===k?'selected':''}>${SHEET_SIZES[k].label} (${SHEET_SIZES[k].sqft} sq.ft)</option>`).join('');
-    return`<div class="calc-cell">
-      <select class="calc-mini-select" style="width:100%!important" onchange="rows[${i}].sheetSize=this.value;updateRowLive(${i})">${sizeOpts}</select>
-      <div class="calc-inline">
-        <div class="calc-nos-wrap">
-          <span class="calc-nos-lbl">Nos</span>
-          <input class="r" type="number" inputmode="decimal" min="0" step="1" value="${r.sheets||0}" placeholder="0" title="No. of sheets" oninput="rows[${i}].sheets=+this.value||0;updateRowLive(${i})"/>
-        </div>
-        <span class="calc-helper" id="helper-${i}">= ${fmt(area)} sq.ft</span>
-      </div>
-    </div>`;
-  }
-  if(mode==='rft'){
-    return`<div class="calc-cell">
-      <div class="calc-inline">
-        <input class="r" type="number" inputmode="decimal" min="0" step="0.01" value="${r.length||0}" placeholder="Length" oninput="rows[${i}].length=+this.value||0;updateRowLive(${i})"/>
-        <select class="calc-mini-select" onchange="rows[${i}].lengthUnit=this.value;updateRowLive(${i})">
-          <option value="ft" ${r.lengthUnit!=='m'?'selected':''}>R.ft</option>
-          <option value="m" ${r.lengthUnit==='m'?'selected':''}>meter</option>
-        </select>
-      </div>
-    </div>`;
-  }
-  if(mode==='custom'){
-    const area=(+r.length||0)*(+r.width||0)*(+r.qty||1);
-    const unitLbl=r.areaUnit==='m'?'sq.m':'sq.ft';
-    return`<div class="calc-cell">
-      <div class="calc-inline">
-        <input type="number" inputmode="decimal" min="0" step="0.01" value="${r.length||0}" placeholder="L" title="Length" oninput="rows[${i}].length=+this.value||0;updateRowLive(${i})"/>
-        <span>×</span>
-        <input type="number" inputmode="decimal" min="0" step="0.01" value="${r.width||0}" placeholder="W" title="Width" oninput="rows[${i}].width=+this.value||0;updateRowLive(${i})"/>
-        <span>×</span>
-        <input type="number" inputmode="decimal" min="0" step="1" value="${r.qty||1}" placeholder="Qty" title="Quantity" oninput="rows[${i}].qty=+this.value||0;updateRowLive(${i})"/>
-      </div>
-      <div class="calc-inline">
-        <select class="calc-mini-select" onchange="rows[${i}].areaUnit=this.value;updateRowLive(${i})">
-          <option value="ft" ${r.areaUnit!=='m'?'selected':''}>ft</option>
-          <option value="m" ${r.areaUnit==='m'?'selected':''}>meter</option>
-        </select>
-        <span class="calc-helper" id="helper-${i}">${fmt(area)} ${unitLbl} (Calculated)</span>
-      </div>
-    </div>`;
-  }
-  const ni=(f,ph,t)=>`<input type="number" inputmode="decimal" step="0.01" value="${r[f]||''}" placeholder="${ph}" title="${t||ph}" oninput="rows[${i}].${f}=+this.value||0;updateRowLive(${i})"/>`;
-  const hp=`<span class="calc-helper" id="helper-${i}">${esc(rowHelper(r))}</span>`;
-  if(DIM_TYPES[mode]&&mode!=='custom'){const t=DIM_TYPES[mode];
-    return`<div class="calc-cell"><div class="calc-inline">${ni('length','L')}<span>×</span>${ni('width','W')}${t.h?'<span>×</span>'+ni('height','H'):''}${t.q?'<span>×</span>'+ni('qty','Qty'):''}</div><div class="calc-inline"><select class="calc-mini-select" onchange="rows[${i}].areaUnit=this.value;updateRowLive(${i})"><option value="ft" ${r.areaUnit!=='m'?'selected':''}>ft</option><option value="m" ${r.areaUnit==='m'?'selected':''}>meter</option></select>${hp}</div></div>`;}
-  if(QTY_TYPES[mode])return ni('qty','Qty');
-  if(mode==='lump')return`<div class="calc-cell">${ni('amount','Lump sum ₹')}${hp}</div>`;
-  if(mode==='percent'){const c=r.percentageBase==='custom';
-    return`<div class="calc-cell"><div class="calc-inline">${ni('percentageValue','%')}<select class="calc-mini-select" onchange="rows[${i}].percentageBase=this.value;renderRows()"><option value="subtotal" ${c?'':'selected'}>of Subtotal</option><option value="custom" ${c?'selected':''}>of Custom amount</option></select></div>${c?ni('baseAmount','Base ₹'):''}${hp}</div>`;}
-  if(mode==='formula'){const vi=k=>`<input type="number" inputmode="decimal" step="0.01" style="width:48px" value="${(r.vars||{})[k]??''}" placeholder="${k}" title="${k}" oninput="(rows[${i}].vars=rows[${i}].vars||{}).${k}=this.value;updateRowLive(${i})"/>`;
-    return`<div class="calc-cell"><input value="${esc(r.formula||'')}" placeholder="e.g. A × B × C" oninput="rows[${i}].formula=this.value;updateRowLive(${i})"/><div class="calc-inline">${vi('A')}${vi('B')}${vi('C')}${vi('D')}</div>${hp}</div>`;}
-  return'';
-}
-
-function rowHelper(r){
-  const e=rowIssue(r);
-  if(e)return'⚠ '+e;
-  const x=calcExplain(r);return x?x+'  →  ₹'+fmt(rowAmount(r)):'';
-}
-
-function unitCellHtml(r,i){
-  const mode=r.calcType||'qty';
-  if(mode==='qty'){
-    return`<input value="${esc(r.unit)}" oninput="rows[${i}].unit=this.value" placeholder="Nos" list="unit-list"/>`;
-  }
-  const{unit}=getFinalQtyUnit(r);
-  return`<span id="unitdisp-${i}" style="font-size:12px;color:var(--muted);padding:8px 4px;display:inline-block">${unit}</span>`;
-}
-
-// Live per-row update (recomputes amount + helper text without re-rendering inputs, so focus is preserved)
+function setIdle(id,v){const e=$id(id);if(e&&document.activeElement!==e)e.value=v;}
+// Incremental refresh of ONE card (keeps the cursor where it is) + totals
 function updateRowLive(i){
   const r=rows[i];if(!r)return;
-  const amtEl=document.getElementById('amt-'+i);
-  if(amtEl)amtEl.textContent='₹'+fmt(rowAmount(r));
-  const helperEl=document.getElementById('helper-'+i);
-  if(helperEl){
-    const mode=r.calcType;
-    if(mode==='sheet'){
-      const sz=SHEET_SIZES[r.sheetSize]||SHEET_SIZES['8x4'];
-      helperEl.textContent='= '+fmt((+r.sheets||0)*sz.sqft)+' sq.ft';
-    }else if(mode==='custom'){
-      const area=(+r.length||0)*(+r.width||0)*(+r.qty||1);
-      const unitLbl=r.areaUnit==='m'?'sq.m':'sq.ft';
-      helperEl.textContent=fmt(area)+' '+unitLbl+' (Calculated)';
-    }
+  const m=r.mode,isDim=m==='dim'||m==='multi',q=rowQty(r),a=rowAmount(r);
+  const ro=m==='fixed'||m==='percent';
+  setIdle('res-qty-'+i,ro?'':fmtIn(q));
+  setIdle('res-amt-'+i,a?a.toFixed(2):(isBlank(r.amount)&&m!=='fixed'?'0.00':a.toFixed(2)));
+  if(m==='fixed'||m==='percent')setIdle('res-unit-'+i,rowUnit(r));
+  if(m==='sheet')setIdle('res-unit-'+i,'sq.ft');
+  // toggles
+  const au=$id('auto-chk-'+i);if(au){au.checked=r.auto!==false;const on=qtyAutoOn(r),t=$id('tgl-auto-'+i),s=$id('auto-st-'+i);
+    if(t)t.classList.toggle('off',!on);if(s)s.textContent=on?'ON':(gAutoQty()?'OFF':'OFF (all lines)');}
+  const am=$id('amt-chk-'+i);if(am){am.checked=r.autoAmt!==false;const on=amtAutoOn(r),t=$id('tgl-amt-'+i),s=$id('amt-st-'+i);
+    if(t)t.classList.toggle('off',!on);if(s)s.textContent=on?'ON':(gAutoAmt()?'OFF':'OFF (all lines)');}
+  const fq=$id('flag-q-'+i);if(fq)fq.style.display=(isDim&&!qtyAutoOn(r))?'inline-block':'none';
+  const fa=$id('flag-a-'+i);if(fa)fa.style.display=(m!=='fixed'&&m!=='percent'&&!amtAutoOn(r))?'inline-block':'none';
+  const bd=$id('body-'+i);if(bd)bd.classList.toggle('dim',isDim&&!qtyAutoOn(r));
+  // measurement results
+  if(isDim){
+    msUsed(r).forEach((e,k)=>{const el=$id('msa-'+i+'-'+k);if(el)el.textContent='= '+fmt(msArea(e,r.dimUnit))+' '+(r.dimUnit==='m'?'sq.m':'sq.ft');});
+    const tt=$id('mstot-'+i);if(tt){const parts=r.ms.map(e=>msArea(e,r.dimUnit)).filter((x,k)=>x||k===0);
+      tt.textContent='Total measured area'+(parts.length>1?' = '+parts.map(fmt).join(' + '):'')+' = '+fmt(autoQty(r))+' '+(r.dimUnit==='m'?'sq.m':'sq.ft');}
+    const w=$id('mswarn-'+i);if(w)w.textContent=qtyAutoOn(r)?'':'Automatic calculation is OFF for this item — the measurements above are kept but the manual quantity is used.';
   }
-  if(helperEl&&(ADV_TYPES.includes(r.calcType)&&r.calcType!=='sheet'))helperEl.textContent=rowHelper(r);
-  if(r.calcType==='percent'||r.calcType==='lump')rows.forEach((x,k)=>{if(x.calcType==='percent'){const e=document.getElementById('amt-'+k);if(e)e.textContent='₹'+fmt(rowAmount(x));}});
-  else rows.forEach((x,k)=>{if(x.calcType==='percent'){const e=document.getElementById('amt-'+k);if(e)e.textContent='₹'+fmt(rowAmount(x));}});
-  const unitEl=document.getElementById('unitdisp-'+i);
-  if(unitEl){const{unit}=getFinalQtyUnit(r);unitEl.textContent=unit;}
+  const h=$id('helper-'+i);if(h){const c=calcLine(r);h.textContent=c.t;h.classList.toggle('err',!!c.err);}
+  // percentage rows follow the other lines
+  rows.forEach((x,k)=>{if(x.mode==='percent'&&k!==i){setIdle('res-amt-'+k,rowAmount(x).toFixed(2));const hh=$id('helper-'+k);if(hh){const c=calcLine(x);hh.textContent=c.t;hh.classList.toggle('err',!!c.err);}}});
   calcUI();
 }
-
 function renderRows(){
-  document.getElementById('items-body').innerHTML=rows.map((r,i)=>`<tr>
-    <td class="row-n">${i+1}</td>
-    <td><input value="${esc(r.desc)}" oninput="rows[${i}].desc=this.value" placeholder="Description…" style="min-width:160px"/><input value="${esc(r.remarks)}" oninput="rows[${i}].remarks=this.value" placeholder="Remarks (optional)" style="min-width:160px;font-size:11px;margin-top:3px;color:#667"/></td>
-    <td class="col-hsn"><input value="${esc(r.hsn)}" oninput="rows[${i}].hsn=this.value" placeholder="9403"/></td>
-    <td>${calcTypeSelectHtml(r,i)}</td>
-    <td>${calcCellHtml(r,i)}</td>
-    <td>${unitCellHtml(r,i)}</td>
-    <td><input class="r" type="number" inputmode="decimal" min="0" step="0.01" value="${r.rate}" oninput="rows[${i}].rate=+this.value||0;updateRowLive(${i})"/></td>
-    <td class="amt-cell" id="amt-${i}">₹${fmt(rowAmount(r))}</td>
-    <td><button class="del-btn" onclick="delRow(${i})">×</button></td>
-  </tr>`).join('');
-  calcUI();
+  $id('items-body').innerHTML=rows.map((r,i)=>itemHtml(r,i)).join('');
+  rows.forEach((_,i)=>updateRowLive(i));
+  if(!rows.length)calcUI();
 }
 
-/* ── GST HELPERS ── */
+/* ═══ GST / DISCOUNT / ROUND-OFF HELPERS ═══ */
 function getGstRate(){
-  const sel=document.getElementById('gst-rate')?document.getElementById('gst-rate').value:'18';
-  if(sel==='custom'){
-    return(+document.getElementById('gst-custom-rate').value||0)/100;
-  }
+  const sel=fv('gst-rate')||'18';
+  if(sel==='custom')return(+fv('gst-custom-rate')||0)/100;
   return(+sel)/100;
 }
-function getGstMode(){
-  return document.getElementById('gst-mode')?document.getElementById('gst-mode').value:'split';
-}
+function getGstMode(){return fv('gst-mode')||'split';}
 function handleGstRateChange(){
-  const sel=document.getElementById('gst-rate').value;
-  document.getElementById('gst-custom-field').style.display=sel==='custom'?'flex':'none';
+  const sel=fv('gst-rate');
+  const f=$id('gst-custom-field');if(f)f.style.display=sel==='custom'?'flex':'none';
 }
-
-/* ── GST INVOICE / PLAIN BILL TOGGLE ── */
-function isGstMode(){
-  const el=document.getElementById('gst-invoice-toggle');
-  return el?el.checked:true;
-}
+function isGstMode(){const el=$id('gst-invoice-toggle');return el?el.checked:false;}
 function handleGstInvoiceToggle(){
   const on=isGstMode();
   document.body.classList.toggle('no-gst',!on);
-  document.getElementById('gst-toggle-hint').textContent=on?'Tax invoice with GSTIN & tax breakup':'Plain bill — no GSTIN or tax breakup shown';
-  document.getElementById('co-gstin-field').style.display=on?'':'none';
-  document.getElementById('cust-gstin-field').style.display=on?'':'none';
-  document.getElementById('tax-settings-section').style.display=on?'':'none';
-  const invNoLbl=document.getElementById('inv-no-label');
-  if(invNoLbl)invNoLbl.textContent=on?'Invoice number':'Bill number';
+  $id('gst-toggle-hint').textContent=on?'GST added — GSTIN and tax rows are shown on the bill':'Ordinary bill — no GSTIN, no tax rows';
+  $id('co-gstin-field').style.display=on?'':'none';
+  $id('cust-gstin-field').style.display=on?'':'none';
+  $id('tax-settings-section').style.display=on?'':'none';
+  const s2=$id('gst-switch-2');if(s2)s2.checked=on;
   calcUI();
 }
-
-/* ── DISCOUNT HELPERS ── */
+function setGstFromControls(on){const t=$id('gst-invoice-toggle');if(t)t.checked=on;handleGstInvoiceToggle();}
 function handleDiscTypeChange(){
-  const sel=document.getElementById('disc-type').value;
-  const field=document.getElementById('disc-value-field');
-  const label=document.getElementById('disc-value-label');
-  if(sel==='none'){field.style.display='none';return;}
-  field.style.display='flex';
-  label.textContent=sel==='pct'?'Discount %':'Discount Amount (₹)';
+  const sel=fv('disc-type');
+  const label=$id('disc-value-label');if(label)label.textContent=sel==='fixed'?'Discount Amount (₹)':'Discount %';
 }
-
-/* ── ROUND OFF HELPERS ── */
 function handleRoundOffModeChange(){
-  const sel=document.getElementById('roundoff-mode').value;
-  document.getElementById('roundoff-custom-field').style.display=sel==='custom'?'flex':'none';
+  const f=$id('roundoff-custom-field');if(f)f.style.display=fv('roundoff-mode')==='custom'?'flex':'none';
+}
+// A global switch / override box was touched
+function ctlChanged(){
+  const t=calc();
+  if(!chk('ctl-sub-auto',true)&&isBlank(fv('sub-override')))$id('sub-override').value=t.subCalc.toFixed(2);
+  if(!chk('ctl-grand-auto',true)&&isBlank(fv('grand-override')))$id('grand-override').value=t.grandCalc.toFixed(2);
+  rows.forEach((_,i)=>updateRowLive(i));
+  if(!rows.length)calcUI();
 }
 
-/* ── CALC ── */
+/* ═══ TOTALS ═══ */
+const CHARGES=[['packing','Packing Charges'],['transport','Transport Charges'],['installation','Installation Charges'],['labour','Labour Charges'],['other','']];
 function calc(){
-  const sub=rows.reduce((s,r)=>s+rowAmount(r),0);
+  const subCalc=r2(rows.reduce((s,r)=>s+rowAmount(r),0));
+  const subAuto=chk('ctl-sub-auto',true);
+  const sub=subAuto?subCalc:r2(Math.max(0,num0(fv('sub-override'))));
 
-  // Discount — applied BEFORE GST, reduces the taxable amount
-  const discType=document.getElementById('disc-type')?document.getElementById('disc-type').value:'none';
-  const discVal=+((document.getElementById('disc-value')||{}).value)||0;
+  // Discount (before GST)
+  const discOn=chk('disc-on',false),discType=fv('disc-type')==='fixed'?'fixed':'pct',discVal=num0(fv('disc-value'));
   let discAmt=0;
-  if(discType==='pct')discAmt=sub*discVal/100;
-  else if(discType==='fixed')discAmt=discVal;
-  discAmt=Math.min(Math.max(discAmt,0),sub);
-  const taxable=sub-discAmt;
+  if(discOn){discAmt=discType==='pct'?r2(sub*discVal/100):r2(discVal);discAmt=Math.min(Math.max(discAmt,0),sub);}
+  const base=r2(sub-discAmt);
 
-  // GST — computed on the post-discount taxable amount
-  const rate=getGstRate();
-  const mode=getGstMode();
+  // Additional charges
+  const chgMaster=chk('chg-master-on',true),charges={};let chargesTotal=0;
+  CHARGES.forEach(([k])=>{const on=chgMaster&&chk('chg-'+k+'-on',true),v=r2(Math.max(0,num0(fv('chg-'+k))));charges[k]=on?v:0;chargesTotal+=charges[k];});
+  chargesTotal=r2(chargesTotal);
+  charges.otherLabel=(fv('chg-other-label')||'').trim()||'Other Charges';
+
+  // GST
+  const rate=getGstRate(),mode=getGstMode(),gstOn=isGstMode(),chgTaxable=chk('chg-taxable',false);
+  const gstApplies=gstOn&&mode!=='exempt'&&rate>0;
+  const taxBase=r2(base+(chgTaxable?chargesTotal:0));
   let sgst=0,cgst=0,igst=0;
-  const gstApplies=isGstMode()&&mode!=='exempt'&&rate>0;
-  if(gstApplies){
-    if(mode==='igst'){igst=taxable*rate;}
-    else{sgst=taxable*rate/2;cgst=taxable*rate/2;}
-  }
-  const taxTotal=sgst+cgst+igst;
+  if(gstApplies){if(mode==='igst')igst=r2(taxBase*rate);else{sgst=r2(taxBase*rate/2);cgst=r2(taxBase*rate/2);}}
+  const taxTotal=r2(sgst+cgst+igst);
 
-  // Additional Charges — applied AFTER GST
-  const chgPacking=+((document.getElementById('chg-packing')||{}).value)||0;
-  const chgTransport=+((document.getElementById('chg-transport')||{}).value)||0;
-  const chgInstallation=+((document.getElementById('chg-installation')||{}).value)||0;
-  const chgLabour=+((document.getElementById('chg-labour')||{}).value)||0;
-  const chgOther=+((document.getElementById('chg-other')||{}).value)||0;
-  const chgOtherLabel=((document.getElementById('chg-other-label')||{}).value||'').trim()||'Other Charges';
-  const charges={packing:chgPacking,transport:chgTransport,installation:chgInstallation,labour:chgLabour,other:chgOther,otherLabel:chgOtherLabel};
-  const chargesTotal=chgPacking+chgTransport+chgInstallation+chgLabour+chgOther;
-
-  // Round Off — Auto (nearest ₹1), Custom (manual amount), or None
-  const preRound=taxable+taxTotal+chargesTotal;
-  const roMode=document.getElementById('roundoff-mode')?document.getElementById('roundoff-mode').value:'auto';
-  let roundOff,grand;
-  if(roMode==='none'){
-    roundOff=0;grand=preRound;
-  }else if(roMode==='custom'){
-    roundOff=+((document.getElementById('roundoff-custom-value')||{}).value)||0;
-    grand=preRound+roundOff;
-  }else{
-    grand=Math.round(preRound);roundOff=grand-preRound;
-  }
-
-  return{sub,discType,discVal,discAmt,taxable,rate,mode,sgst,cgst,igst,taxTotal,charges,chargesTotal,roMode,preRound,roundOff,grand};
+  // Round-off + grand total
+  const preRound=r2(base+chargesTotal+taxTotal),roMode=fv('roundoff-mode')||'auto';
+  let roundOff,grandCalc;
+  if(roMode==='none'){roundOff=0;grandCalc=preRound;}
+  else if(roMode==='custom'){roundOff=r2(num0(fv('roundoff-custom-value')));grandCalc=r2(preRound+roundOff);}
+  else{grandCalc=Math.round(preRound);roundOff=r2(grandCalc-preRound);}
+  const grandAuto=chk('ctl-grand-auto',true);
+  const grand=grandAuto?grandCalc:r2(Math.max(0,num0(fv('grand-override'))));
+  return{subCalc,subAuto,sub,discOn,discType,discVal,discAmt,base,taxable:taxBase,rate,mode,gstOn,gstApplies,chgTaxable,sgst,cgst,igst,taxTotal,
+    charges,chargesTotal,roMode,preRound,roundOff,grandCalc,grandAuto,grand};
 }
-
-// Shared row-list builder — used by the on-screen totals panel, PDF export and Excel export
-// so all three always show the exact same breakdown in the exact same order.
+// Shared row-list builder — on-screen totals, PDF and Excel all print exactly the same lines in the same order.
+// Nothing is returned for switched-off options, so ordinary bills keep the plain Sub-Total → GRAND TOTAL look of Mr.Karna.pdf.
 function buildTotalsLines(t){
-  const ratePct=(t.rate*100).toFixed(2).replace(/\.?0+$/,'');
-  const lines=[];
-  if(t.discAmt>0){
-    const discLbl=t.discType==='pct'?('Discount @ '+t.discVal+'%'):'Discount';
-    lines.push({label:discLbl,value:'- '+fmt(t.discAmt)});
-    lines.push({label:'Taxable Amount',value:fmt(t.taxable)});
+  const ratePct=+(t.rate*100).toFixed(2),half=+(ratePct/2).toFixed(2),lines=[];
+  const chLines=[];
+  [['packing','Packing Charges'],['transport','Transport Charges'],['installation','Installation Charges'],['labour','Labour Charges'],['other',t.charges.otherLabel]]
+    .forEach(([k,l])=>{if(t.charges[k]>0)chLines.push({label:l,value:fmt(t.charges[k])});});
+  if(t.discAmt>0)lines.push({label:t.discType==='pct'?('Discount @ '+t.discVal+'%'):'Discount',value:'- '+fmt(t.discAmt)});
+  if(t.gstApplies&&t.chgTaxable)chLines.forEach(l=>lines.push(l));
+  if(t.gstOn){
+    if(t.mode==='exempt'||t.rate===0)lines.push({label:'GST',value:'Exempt / N.A.'});
+    else{
+      if(t.discAmt>0||(t.chgTaxable&&t.chargesTotal>0))lines.push({label:'Taxable Amount',value:fmt(t.taxable)});
+      if(t.mode==='igst')lines.push({label:'IGST @ '+ratePct+'%',value:fmt(t.igst)});
+      else{lines.push({label:'SGST @ '+half+'%',value:fmt(t.sgst)});lines.push({label:'CGST @ '+half+'%',value:fmt(t.cgst)});}
+    }
   }
-  if(!isGstMode()){
-    // plain bill — no GST line shown at all
-  }else if(t.mode==='exempt'||t.rate===0){
-    lines.push({label:'GST',value:'Exempt / N.A.'});
-  }else if(t.mode==='igst'){
-    lines.push({label:'IGST @ '+ratePct+'%',value:fmt(t.igst)});
-  }else{
-    lines.push({label:'SGST @ '+(ratePct/2)+'%',value:fmt(t.sgst)});
-    lines.push({label:'CGST @ '+(ratePct/2)+'%',value:fmt(t.cgst)});
-  }
-  const c=t.charges;
-  if(c.packing>0)lines.push({label:'Packing Charges',value:fmt(c.packing)});
-  if(c.transport>0)lines.push({label:'Transport Charges',value:fmt(c.transport)});
-  if(c.installation>0)lines.push({label:'Installation Charges',value:fmt(c.installation)});
-  if(c.labour>0)lines.push({label:'Labour Charges',value:fmt(c.labour)});
-  if(c.other>0)lines.push({label:c.otherLabel,value:fmt(c.other)});
-  if(t.roMode!=='none'&&Math.abs(t.roundOff)>0.004){
-    lines.push({label:'Round Off'+(t.roMode==='custom'?' (Custom)':''),value:(t.roundOff>=0?'+ ':'- ')+fmt(Math.abs(t.roundOff))});
-  }
+  if(!(t.gstApplies&&t.chgTaxable))chLines.forEach(l=>lines.push(l));
+  if(t.roMode!=='none'&&Math.abs(t.roundOff)>0.004)lines.push({label:'Round Off'+(t.roMode==='custom'?' (Custom)':''),value:(t.roundOff>=0?'+ ':'- ')+fmt(Math.abs(t.roundOff))});
   return lines;
 }
-
-// Formats a totals-line value for on-screen display: "- 500.00" -> "- ₹ 500.00", "Exempt / N.A." stays as-is
 function formatCurrencyLine(value){
   if(value.indexOf('Exempt')>-1)return value;
   const m=value.match(/^([+-]) (.+)$/);
   if(m)return m[1]+' ₹ '+m[2];
-  return '₹ '+value;
+  return'₹ '+value;
 }
-
 function calcUI(){
   const t=calc();
-  document.getElementById('t-sub').textContent='₹ '+fmt(t.sub);
-  const lines=buildTotalsLines(t);
-  document.getElementById('totals-mid').innerHTML=lines.map(l=>
-    `<div class="tot-row"><span class="lbl">${esc(l.label)}</span><span class="val">${formatCurrencyLine(l.value)}</span></div>`
-  ).join('');
-  document.getElementById('t-grand').textContent='₹ '+fmt(t.grand);
-  document.getElementById('t-words').textContent=numWords(t.grand);
+  $id('t-sub').textContent='₹ '+fmt(t.sub);
+  $id('sub-badge').innerHTML=t.subAuto?'':'<span class="tot-badge">MANUAL OVERRIDE</span>';
+  $id('totals-mid').innerHTML=buildTotalsLines(t).map(l=>`<div class="tot-row"><span class="lbl">${escH(l.label)}</span><span class="val${/^-/.test(l.value)?' neg':''}">${escH(formatCurrencyLine(l.value))}</span></div>`).join('');
+  $id('t-grand').textContent='₹ '+fmt(t.grand);
+  $id('grand-badge').innerHTML=t.grandAuto?'':'<span class="tot-badge">MANUAL OVERRIDE</span>';
+  $id('t-grand-calc').textContent=t.grandAuto?'':'Calculated: ₹ '+fmt(t.grandCalc);
+  $id('t-words').textContent=numWords(t.grand);
+  // switches, hints and dimmed panels
+  const st=(id,on)=>{const e=$id(id);if(e){e.textContent=on?'ON':'OFF';e.parentElement.classList.toggle('off',!on);}};
+  st('st-autoqty',chk('ctl-autoqty',true));st('st-autoamt',chk('ctl-autoamt',true));st('st-sub',t.subAuto);st('st-gst',t.gstOn);
+  st('st-disc',t.discOn);st('st-chg',chk('chg-master-on',true));st('st-grand',t.grandAuto);
+  $id('sub-over-box').classList.toggle('show',!t.subAuto);$id('grand-over-box').classList.toggle('show',!t.grandAuto);
+  $id('sub-over-hint').textContent='Calculated from the lines: ₹ '+fmt(t.subCalc)+(Math.abs(t.sub-t.subCalc)>0.004?'  ·  difference: ₹ '+fmt(Math.abs(t.sub-t.subCalc)):'');
+  $id('grand-over-hint').textContent='Calculated from the totals: ₹ '+fmt(t.grandCalc)+(Math.abs(t.grand-t.grandCalc)>0.004?'  ·  difference: ₹ '+fmt(Math.abs(t.grand-t.grandCalc)):'');
+  $id('disc-box').style.opacity=t.discOn?'1':'.5';
+  $id('chg-box').style.opacity=chk('chg-master-on',true)?'1':'.5';
+  CHARGES.forEach(([k])=>{const r=$id('chg-row-'+k);if(r)r.classList.toggle('off',!chk('chg-'+k+'-on',true));});
+  const bn=$id('auto-banner'),off=[];
+  if(!chk('ctl-autoqty',true))off.push('automatic quantity / area');if(!chk('ctl-autoamt',true))off.push('automatic line amounts');
+  if(bn){bn.style.display=off.length?'block':'none';bn.textContent=off.length?'⚠ '+off.join(' and ')+' switched OFF for all lines — manual values are used (switch them back ON in Calculation Controls below).':'';}
 }
 
 /* ── HELPERS ── */
-function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;');}
+function esc(s){return(s==null?'':String(s)).replace(/&/g,'&amp;').replace(/"/g,'&quot;');}
 function fmt(n){
-  // Correct Indian number format: last 3 digits, then groups of 2
-  // 257076 → 2,57,076   |   303349.68 → 3,03,349.68
-  const fixed = (+n).toFixed(2);
-  const [intPart, decPart] = fixed.split('.');
-  if(intPart.length <= 3) return intPart + '.' + decPart;
-  const lastThree = intPart.slice(-3);
-  let remaining = intPart.slice(0, -3);
-  const pairs = [];
-  while(remaining.length > 0){
-    pairs.unshift(remaining.slice(-2));
-    remaining = remaining.slice(0, -2);
+  // Indian grouping: 257076 → 2,57,076 | 303349.68 → 3,03,349.68
+  n=+n;if(!isFinite(n))n=0;
+  const neg=n<0,fixed=Math.abs(n).toFixed(2),[intPart,decPart]=fixed.split('.');
+  let out;
+  if(intPart.length<=3)out=intPart;
+  else{
+    let rest=intPart.slice(0,-3);const pairs=[];
+    while(rest.length>0){pairs.unshift(rest.slice(-2));rest=rest.slice(0,-2);}
+    out=pairs.join(',')+','+intPart.slice(-3);
   }
-  return pairs.join(',') + ',' + lastThree + '.' + decPart;
+  return(neg&&+fixed!==0?'-':'')+out+'.'+decPart;
 }
-function fmtDate(d){return d?new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';}
+function fmtDate(d){
+  if(!d)return'—';
+  const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(d));if(m)return m[3]+'/'+m[2]+'/'+m[1];
+  const x=new Date(d);return isNaN(x)?'—':String(x.getDate()).padStart(2,'0')+'/'+String(x.getMonth()+1).padStart(2,'0')+'/'+x.getFullYear();
+}
 function g(id){return document.getElementById(id)?.value||'';}
-
+// Amount in words, Indian system (lakh / crore): 300150 → "Rupees three lakh one hundred fifty only"
 function numWords(n){
   const a=['','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
   const b=['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
-  function w(x){if(!x)return '';if(x<20)return a[x]+' ';if(x<100)return b[Math.floor(x/10)]+' '+(a[x%10]?a[x%10]+' ':'');return a[Math.floor(x/100)]+' hundred '+(x%100?w(x%100):'');}
-  function cv(x){const cr=Math.floor(x/10000000),la=Math.floor((x%10000000)/100000),th=Math.floor((x%100000)/1000),hu=x%1000;return(cr?w(cr)+'crore ':'')+(la?w(la)+'lakh ':'')+(th?w(th)+'thousand ':'')+(hu?w(hu):'');}
-  if(!n)return 'Zero only';
-  const inr=Math.floor(n),ps=Math.round((n-inr)*100);
-  let r='Rupees '+cv(inr).trim();if(ps)r+=' and paise '+w(ps).trim();
-  return r.charAt(0).toUpperCase()+r.slice(1)+' only';
+  const w=x=>{let s='';if(x>=100){s=a[Math.floor(x/100)]+' hundred';x%=100;if(x)s+=' ';}
+    if(x>=20){s+=b[Math.floor(x/10)];if(x%10)s+=' '+a[x%10];}else if(x>0)s+=a[x];return s;};
+  const ind=x=>{if(x<=0)return'';const o=[];
+    const cr=Math.floor(x/1e7);x-=cr*1e7;const la=Math.floor(x/1e5);x-=la*1e5;const th=Math.floor(x/1e3);x-=th*1e3;
+    if(cr)o.push((cr>=1000?ind(cr):w(cr))+' crore');if(la)o.push(w(la)+' lakh');if(th)o.push(w(th)+' thousand');if(x)o.push(w(x));return o.join(' ');};
+  n=+n;if(!isFinite(n))n=0;
+  const cents=Math.round(Math.abs(n)*100),rup=Math.floor(cents/100),ps=cents%100;
+  if(!cents)return'Rupees zero only';
+  let s='';if(rup)s='Rupees '+ind(rup);if(ps)s+=(rup?' and ':'')+w(ps)+' paise';s+=' only';
+  if(n<0)s='minus '+s;
+  return s.charAt(0).toUpperCase()+s.slice(1);
 }
 
-/* ── PREVIEW ── */
-function renderPreview(){
-  const t=calc(),CS=isGstMode()?6:5; // HSN column is dropped on plain (non-GST) bills
-  const taxRowsHtml=buildTotalsLines(t).map(l=>
-    `<tr class="sub"><td colspan="${CS}" style="text-align:right;padding-right:10px">${l.label}</td><td colspan="2" class="r" style="padding-right:12px">${l.value.indexOf('Exempt')>-1?l.value:(l.value.match(/^[+-]/)?l.value.charAt(0)+' &#8377; '+l.value.slice(2):'&#8377; '+l.value)}</td></tr>`
-  ).join('');
+/* ── PREVIEW: the real PDF pages (pdf.js) so the screen always equals the download; plain-HTML fallback if pdf.js is unavailable ── */
+let pvGen=0;
+function htmlPreview(){
+  const t=calc(),gst=isGstMode();
   const irows=rows.map((r,i)=>{
-    const{unit:fu}=getFinalQtyUnit(r);
-    const{qty:aq,area:aa}=getRowAreaQty(r);
-    const amt=rowAmount(r);
-    return`<tr>
-    <td class="c">${i+1}</td>
-    <td style="white-space:pre-line;max-width:180px">${r.desc}</td>
-    ${isGstMode()?'<td class="c">'+r.hsn+'</td>':''}<td class="r">${aq===''?'—':fmtQty(aq,r.calcType)}</td>
-    <td class="r">${aa===''?'—':fmt(aa)}</td>
-    <td class="c">${fu}</td><td class="r">${rateText(r)}</td>
-    <td class="r"><strong>${fmt(amt)}</strong></td>
-  </tr>`;
-  }).join('');
-  const logoHtml=logoDataUrl?`<div style="text-align:center;margin-bottom:8px"><img src="${logoDataUrl}" style="max-height:50px;max-width:160px;object-fit:contain"/></div>`:'';
-  const sigHtml=sigDataUrl?`<img src="${sigDataUrl}" style="max-height:52px;max-width:160px;object-fit:contain;display:block;margin-left:auto" alt="sig"/>`:`<div style="height:46px;width:160px;margin-left:auto"></div>`;
-  document.getElementById('invoice-paper').innerHTML=`
-    ${logoHtml}
-    <div class="inv-co-name">${g('co-name')}</div>
+    const{name,det}=itemTextParts(r,true),c=rowCols(r);
+    return`<tr><td class="c">${i+1}</td><td style="max-width:200px"><b>${escH(name)}</b>${det.map(s=>`<div style="font-size:8px;font-style:italic;color:#69707d">${escH(s)}</div>`).join('')}</td>
+      <td class="c">${escH(r.hsn||'')}</td><td class="c">${c.qty===''?'—':fmtQty(c.qty)}</td><td class="c">${c.area===''?'—':fmt(c.area)}</td><td class="c">${escH(c.unit)}</td>
+      <td class="r">${escH(rateText(r))}</td><td class="r"><strong>&#8377; ${fmt(rowAmount(r))}</strong></td></tr>`;}).join('');
+  const extra=buildTotalsLines(t).map(l=>`<tr class="sub"><td colspan="6" style="text-align:right;padding-right:10px">${escH(l.label)}:</td><td colspan="2" class="r">${escH(formatCurrencyLine(l.value))}</td></tr>`).join('');
+  return`<div class="invoice-paper"><div class="inv-co-name">${escH(g('co-name'))}</div>
     <div class="inv-tagline">OFFICE &nbsp;|&nbsp; COMMERCIAL &nbsp;|&nbsp; RESIDENTIAL</div>
-    <div class="inv-topbar">
-      <div class="inv-topbar-l">${g('co-addr').replace(/\n/g,'<br>')} <br>Email: ${g('co-email')}</div>
-      <div class="inv-topbar-r"><strong>${g('co-person')}</strong><br>${g('co-ph1')}<br>${g('co-ph2')}</div>
-    </div>
-    ${isGstMode()?`<div class="inv-gstin">GSTIN: ${g('co-gstin')}</div>`:''}
-    <div class="inv-label">${isGstMode()?'INVOICE':'BILL'}</div>
-    <div class="inv-parties">
-      <div class="inv-party">
-        <div class="plbl">Bill To</div>
-        <div class="pname">${g('cust-name')}</div>
-        <div style="white-space:pre-line">${g('cust-addr')}</div>
-        ${g('cust-phone')?'<br>Ph: '+g('cust-phone'):''}
-        ${isGstMode()?'<br><strong>GSTIN:</strong> '+g('cust-gstin'):''}
-      </div>
-      <div class="inv-party" style="background:#FAFCFF">
-        ${isGstMode()?'<div><strong>INVOICE NO:</strong> '+g('inv-no')+'</div>':''}
-        <div><strong>DATE:</strong> ${fmtDate(g('inv-date'))}</div>
-        ${g('inv-delivery')?'<br><strong>Delivery:</strong><br>'+g('inv-delivery'):''}
-      </div>
-    </div>
-    <table class="inv-tbl">
-      <thead><tr>
-        <th style="width:24px">S.No</th><th>Description of Work</th>
-        ${isGstMode()?'<th style="width:48px">SAC/HSN</th>':''}<th style="width:40px">Qty</th>
-        <th style="width:44px">Area</th>
-        <th style="width:34px">Unit</th><th style="width:68px;text-align:right;padding-right:10px">Rate (&#8377;)</th><th style="width:82px;text-align:right;padding-right:12px">Amount (&#8377;)</th>
-      </tr></thead>
-      <tbody>
-        ${irows}
-        <tr class="sub"><td colspan="${CS}" style="text-align:right;font-weight:700;padding-right:10px">Sub-Total:</td><td colspan="2" class="r" style="font-weight:700;padding-right:12px">&#8377; ${fmt(t.sub)}</td></tr>
-        ${taxRowsHtml}
-        <tr class="grand"><td colspan="${CS}" style="text-align:right;font-size:11px;font-weight:700;padding-right:10px">GRAND TOTAL:</td><td colspan="2" class="r" style="font-size:12px;font-weight:700;padding-right:12px">&#8377; ${fmt(t.grand)}</td></tr>
-      </tbody>
-    </table>
-    <div class="inv-words">(${numWords(t.grand)})</div>
-    <div class="inv-footer">
-      <div class="inv-terms">Goods once sold cannot be taken.<br>All subject to Chennai Jurisdiction.<div style="margin-top:8px;color:#aaa">Thank you for your business.</div></div>
-      <div class="inv-sign">
-        <div class="for">for ${g('co-name')}</div>
-        ${sigHtml}
-        <div class="sig-line">Authorised Signature</div>
-      </div>
-    </div>`;
+    <div class="inv-topbar"><div class="inv-topbar-l">${escH(g('co-addr'))}<br>Email: ${escH(g('co-email'))}${gst?'<br>GSTIN: '+escH(g('co-gstin')):''}</div>
+    <div class="inv-topbar-r"><strong>${escH(g('co-person'))}</strong><br>${escH(g('co-ph1'))}<br>${escH(g('co-ph2'))}</div></div>
+    <div class="inv-label">B I L L</div>
+    <div class="inv-parties"><div class="inv-party"><div class="plbl">Bill To</div><div class="pname">${escH(g('cust-name'))}</div><div style="white-space:pre-line">${escH(g('cust-addr'))}</div>${g('cust-phone')?'Ph: '+escH(g('cust-phone')):''}${gst&&g('cust-gstin')?'<br>GSTIN: '+escH(g('cust-gstin')):''}</div>
+    <div class="inv-party"><div><strong>BILL NO: ${escH(g('inv-no'))}</strong></div><div><strong>DATE: ${fmtDate(g('inv-date'))}</strong></div>${g('inv-delivery')?'<br>Delivery: '+escH(g('inv-delivery')):''}</div></div>
+    <table class="inv-tbl"><thead><tr><th style="width:26px">S.No</th><th>Description of Work</th><th style="width:44px">HSN</th><th style="width:36px">Qty</th><th style="width:48px">Area</th><th style="width:40px">Unit</th><th style="width:66px">Rate (&#8377;)</th><th style="width:88px">Amount (&#8377;)</th></tr></thead>
+    <tbody>${irows}<tr class="sub"><td colspan="6" style="text-align:right;font-weight:700;padding-right:10px">Sub-Total:</td><td colspan="2" class="r" style="font-weight:700">&#8377; ${fmt(t.sub)}</td></tr>${extra}
+    <tr class="grand"><td colspan="6" style="text-align:right;padding-right:10px">GRAND TOTAL:</td><td colspan="2" class="r">&#8377; ${fmt(t.grand)}</td></tr></tbody></table>
+    <div class="inv-words">(${escH(numWords(t.grand))})</div>
+    <div class="inv-footer"><div class="inv-terms">Goods once sold cannot be taken.<br>All subject to Chennai Jurisdiction.<div style="margin-top:8px">Thank you for your business.</div></div>
+    <div class="inv-sign"><div class="for"><b style="color:var(--blue)">for ${escH(g('co-name'))}</b></div>${sigDataUrl?`<img src="${sigDataUrl}" style="max-height:52px;max-width:160px;display:block;margin-left:auto" alt="sig"/>`:'<div style="height:46px"></div>'}<div class="sig-line">Authorised Signature</div></div></div></div>`;
+}
+async function renderPreview(){
+  const box=$id('invoice-paper'),gen=++pvGen;
+  const fallback=()=>{box.className='';box.innerHTML=htmlPreview();};
+  if(typeof window.jspdf==='undefined'||typeof pdfjsLib==='undefined'){fallback();return;}
+  try{
+    const doc=buildPDF('preview.pdf',fnPrefs().remarks!==false,null,'doc');
+    const pdf=await pdfjsLib.getDocument({data:new Uint8Array(doc.output('arraybuffer'))}).promise;
+    if(gen!==pvGen)return;
+    const frag=document.createDocumentFragment(),wrapW=box.parentElement?box.parentElement.clientWidth:700,target=Math.min(820,Math.max(300,wrapW-24)),dpr=window.devicePixelRatio||1;
+    for(let i=1;i<=pdf.numPages;i++){
+      const page=await pdf.getPage(i),v1=page.getViewport({scale:1}),vp=page.getViewport({scale:target/v1.width*dpr});
+      const cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;cv.style.width=target+'px';
+      await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;frag.appendChild(cv);
+      if(gen!==pvGen)return;
+    }
+    box.className='pv-pages';box.innerHTML='';box.appendChild(frag);
+  }catch(e){console.error('Preview fell back to HTML:',e);if(gen===pvGen)fallback();}
+}
+
+/* ── EXPORT EXCEL ── */
+function buildExcel(fname){
+  const t=calc(),gst=isGstMode();
+  const taxRows=buildTotalsLines(t).map(l=>{
+    const signed=l.value.match(/^([+-]) (.+)$/);let v;
+    if(l.value.indexOf('Exempt')>-1)v=l.value;
+    else if(signed)v=(signed[1]==='-'?-1:1)*(+signed[2].replace(/,/g,''));
+    else v=+l.value.replace(/,/g,'');
+    return['','','','','','',l.label+' (₹):',v];
+  });
+  const head=[[g('co-name')],['OFFICE | COMMERCIAL | RESIDENTIAL'],[g('co-addr').replace(/\n/g,', ')],['Ph: '+g('co-ph1')+' / '+g('co-ph2')+'  |  '+g('co-email')]];
+  if(gst)head.push(['GSTIN: '+g('co-gstin')]);
+  head.push([]);const billIdx=head.length;head.push(['BILL'],[]);
+  head.push(['Bill No:',g('inv-no'),'','','Date:',fmtDate(g('inv-date'))]);
+  head.push(gst?['Bill To:',g('cust-name'),'','','Customer GSTIN:',g('cust-gstin')]:['Bill To:',g('cust-name')]);
+  head.push(['Address:',g('cust-addr').replace(/\n/g,', ')],[]);
+  const items=rows.map((r,i)=>{
+    const{name,det}=itemTextParts(r,true),c=rowCols(r);
+    return[i+1,[name].concat(det).join('\n'),r.hsn,c.qty===''?'':+(+c.qty).toFixed(3),c.area===''?'':+(+c.area).toFixed(2),c.unit,(r.mode==='fixed'||r.mode==='percent')?'':num0(r.rate),+rowAmount(r).toFixed(2)];
+  });
+  const aoa=[...head,['S.No','Description of Work','HSN','Qty','Area','Unit','Rate (₹)','Amount (₹)'],...items,[],
+    ['','','','','','','Sub-Total (₹):',+t.sub.toFixed(2)],...taxRows,['','','','','','','Grand Total (₹):',+t.grand.toFixed(2)],
+    [],['Amount in Words:',numWords(t.grand)],[],['Authorised Signature:',g('co-person')]];
+  const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols']=[{wch:6},{wch:44},{wch:10},{wch:8},{wch:10},{wch:9},{wch:22},{wch:16}];
+  ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:7}},{s:{r:1,c:0},e:{r:1,c:7}},{s:{r:billIdx,c:0},e:{r:billIdx,c:7}}];
+  XLSX.utils.book_append_sheet(wb,ws,'Bill');
+  saveOut(new Blob([XLSX.write(wb,{bookType:'xlsx',type:'array'})],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),fname,'Excel',()=>XLSX.writeFile(wb,fname));
 }
 
 /* ── EXPORT PDF ── */
@@ -1457,13 +1669,6 @@ function fitCols(cw,di,CW,minD){
   if(d<minD){k=(CW-minD)/o;d=minD;}
   return cw.map((v,i)=>i===di?d:v*k);
 }
-const PDF_THEMES={
-  classic:{c:[26,95,168],soft:[234,242,251],band:1,zebra:0,serif:0,pad:2.3,fs:8.8},
-  premium:{c:[22,43,82],soft:[240,244,250],band:0,zebra:0,serif:1,pad:3,fs:8.8},
-  minimal:{c:[45,45,45],soft:[246,246,246],band:0,zebra:0,serif:0,pad:2.4,fs:8.8},
-  corporate:{c:[30,58,95],soft:[237,241,246],band:1,zebra:1,serif:0,pad:2.3,fs:8.8},
-  compact:{c:[26,95,168],soft:[234,242,251],band:1,zebra:0,serif:0,pad:1.5,fs:7.9}
-};
 const RUP_R='AAEAAAAPAIAAAwBwR0RFRgARAAIAAATQAAAAFkdQT1NEdkx1AAAE6AAAACBHU1VCJ6Q/wwAABQgAAACWTUFUSAk/M4QAAAWgAAAA9k9TLzJp+4/EAAACDAAAAFZjbWFwQXAiIgAAAmQAAABsZ2FzcAAHAAcAAATEAAAADGdseWalriZDAAAA/AAAAH5oZWFkDOYB1QAAAaQAAAA2aGhlYQ2fB3AAAAHoAAAAJGhtdHgMbwDQAAAB3AAAAAxsb2NhAAAAPwAAAZwAAAAIbWF4cABDA8EAAAF8AAAAIG5hbWUn7T2+AAAC0AAAAdRwb3N0/4EAWgAABKQAAAAgAAEAagAABK8F1QAmAAATNyEHIRYXIQcjBgcGBxYXFhcTIwMmJyYrATUzMjc2NyE3ISYnJiNqNwQON/6eTxUBNTf2BT1BfUE9O0HN2b9LREZ43P6SSkQG/b43AgASLUqSBVp7e06Be35VXSQWSESC/mgBf5cwMaZDPnJ7QzRYAAAAAQAAAAMDVAArAGgADAABAAAAAAAAAAAAAAAAAAgABAAAAAAAAAA/AAEAAAACXrjwpv7+Xw889QAfCAAAAAAA08Ir/AAAAADTwiv899b8TA5ZCdwAAAAIAAAAAAAAAAAEzQBmAosAAAUXAGoAAQAAB23+HQAADv731vpRDlkAAQAAAAAAAAAAAAAAAAAAAAMAAQQOAZAABQAABTMFmQAAAR4FMwWZAAAD1wBmAhIAAAILBgMDCAQCAgQAAAABAAAAAgAAAAAAAAAAUGZFZABAACAguQYU/hQBmgdtAeMAAAABAAAAAAAAAAAAAwAAAAMAAAAcAAAACgAAAEQAAwABAAAAHAAEACgAAAAGAAQAAQACACAguf//AAAAICC5////4d9JAAEAAAAAAAAADAAAAAAAKAAAAAAAAAACAAAAIAAAACAAAAABAAAguQAAILkAAAACAAAABwBaAAMAAQQJAAABMAAAAAMAAQQJAAEAFgEwAAMAAQQJAAIACAFGAAMAAQQJAAMAFgEwAAMAAQQJAAQAFgEwAAMAAQQJAAUAGAFOAAMAAQQJAAYAFAFmAEMAbwBwAHkAcgBpAGcAaAB0ACAAKABjACkAIAAyADAAMAAzACAAYgB5ACAAQgBpAHQAcwB0AHIAZQBhAG0ALAAgAEkAbgBjAC4AIABBAGwAbAAgAFIAaQBnAGgAdABzACAAUgBlAHMAZQByAHYAZQBkAC4ACgBDAG8AcAB5AHIAaQBnAGgAdAAgACgAYwApACAAMgAwADAANgAgAGIAeQAgAFQAYQB2AG0AagBvAG4AZwAgAEIAYQBoAC4AIABBAGwAbAAgAFIAaQBnAGgAdABzACAAUgBlAHMAZQByAHYAZQBkAC4ACgBEAGUAagBhAFYAdQAgAGMAaABhAG4AZwBlAHMAIABhAHIAZQAgAGkAbgAgAHAAdQBiAGwAaQBjACAAZABvAG0AYQBpAG4ACgBEAGUAagBhAFYAdQAgAFMAYQBuAHMAQgBvAG8AawBWAGUAcgBzAGkAbwBuACAAMgAuADMANwBEAGUAagBhAFYAdQBTAGEAbgBzAAMAAAAAAAD/fgBaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAgAAv//AAMAAQAAAAwAAAAAAAAAAQABAAIAAQABAAAAAQAAAAoAHAAeAAFERkxUAAgABAAAAAD//wAAAAAAAAABAAAACgCSAJQAFERGTFQAemFyYWIAhGFybW4AhGJyYWkAhGNhbnMAhGNoZXIAhGN5cmwAhGdlb3IAhGdyZWsAhGhhbmkAhGhlYnIAhGthbmEAhGxhbyAAhGxhdG4AhG1hdGgAhG5rbyAAhG9nYW0AhHJ1bnIAhHRmbmcAhHRoYWkAhAAEAAAAAP//AAAAAAAAAAAAAAAAAAEAAAAKAOAA6ABQADwMAAfdAAAAAAKCAAAEYAAABdUAAAAAAAAEYAAAAAAAAAAAAAAAAAAABGAAAAAAAAABaAAABGAAAABVAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEOAAACdgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWgAAAQ4AAABaAAAAWgAAAQ4AAAAAAAAAAAAAAQ4AAABaAAAAWgAAAQ4AAABaAAAAWgAAAFoAAAFyAAAAWgAAAFoAAAI4AAD7jwAAADwAAAAAAAAAAAAoAAoACgAAAAAAAQAAAAA=',RUP_B='AAEAAAAOAIAAAwBgR0RFRgARAAIAAATsAAAAFkdQT1NEdkx1AAAFBAAAACBHU1VCJ6Q/wwAABSQAAACWT1MvMmslkisAAAH8AAAAVmNtYXBBcCIiAAACVAAAAGxnYXNwAAcABwAABOAAAAAMZ2x5ZiA3FSAAAADsAAAAfmhlYWQN9wG6AAABlAAAADZoaGVhDq8HdAAAAdgAAAAkaG10eA0nAM0AAAHMAAAADGxvY2EAAAA/AAABjAAAAAhtYXhwAEMDywAAAWwAAAAgbmFtZSwMQXIAAALAAAAB/nBvc3T/gQBaAAAEwAAAACAAAQBnAAAFLQXVACUAABM3IQchFhchByEGBwYHFhcWFxMhAy4BKwERMzI3NjchNyEmJyYjZ1gEblb+xCAMAWZW/usRK0iQTz8/P9H+ZrY3cV6Wy3k1Gg3+KFgBfQ0XNXkFEsPDOErDTTpfLRJAQID+WAFzcFIBCkMhKsMlHUAAAAABAAAAAwNOACsAeAAMAAEAAAAAAAAAAAAAAAAACAAEAAAAAAAAAD8AAQAAAAJeuEsR1v5fDzz1AB8IAAAAAADTwiv5AAAAANPCK/n3cvyuD80JZQABAAgAAAAAAAAAAATNAGYCyQAABZEAZwABAAAHbf4dAAAQIfdy+TIPzQABAAAAAAAAAAAAAAAAAAAAAwABBJUCvAAFAAAFMwWZAAABHgUzBZkAAAPXAGYCEgAAAgsIAwMGBAICBAAAAAEAAAACAAAAAAAAAABQZkVkACAAICC5BhT+FAGaB20B4wAAAAEAAAAAAAAAAAADAAAAAwAAABwAAAAKAAAARAADAAEAAAAcAAQAKAAAAAYABAABAAIAICC5//8AAAAgILn////h30kAAQAAAAAAAAAMAAAAAAAoAAAAAAAAAAIAAAAgAAAAIAAAAAEAACC5AAAguQAAAAIAAAAHAFoAAwABBAkAAAEwAAAAAwABBAkAAQAWATAAAwABBAkAAgAIAUYAAwABBAkAAwAgAU4AAwABBAkABAAgAU4AAwABBAkABQAYAW4AAwABBAkABgAeAYYAQwBvAHAAeQByAGkAZwBoAHQAIAAoAGMAKQAgADIAMAAwADMAIABiAHkAIABCAGkAdABzAHQAcgBlAGEAbQAsACAASQBuAGMALgAgAEEAbABsACAAUgBpAGcAaAB0AHMAIABSAGUAcwBlAHIAdgBlAGQALgAKAEMAbwBwAHkAcgBpAGcAaAB0ACAAKABjACkAIAAyADAAMAA2ACAAYgB5ACAAVABhAHYAbQBqAG8AbgBnACAAQgBhAGgALgAgAEEAbABsACAAUgBpAGcAaAB0AHMAIABSAGUAcwBlAHIAdgBlAGQALgAKAEQAZQBqAGEAVgB1ACAAYwBoAGEAbgBnAGUAcwAgAGEAcgBlACAAaQBuACAAcAB1AGIAbABpAGMAIABkAG8AbQBhAGkAbgAKAEQAZQBqAGEAVgB1ACAAUwBhAG4AcwBCAG8AbABkAEQAZQBqAGEAVgB1ACAAUwBhAG4AcwAgAEIAbwBsAGQAVgBlAHIAcwBpAG8AbgAgADIALgAzADcARABlAGoAYQBWAHUAUwBhAG4AcwAtAEIAbwBsAGQAAAADAAAAAAAA/34AWgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAIAAL//wADAAEAAAAMAAAAAAAAAAEAAQACAAEAAQAAAAEAAAAKABwAHgABREZMVAAIAAQAAAAA//8AAAAAAAAAAQAAAAoAkgCUABRERkxUAHphcmFiAIRhcm1uAIRicmFpAIRjYW5zAIRjaGVyAIRjeXJsAIRnZW9yAIRncmVrAIRoYW5pAIRoZWJyAIRrYW5hAIRsYW8gAIRsYXRuAIRtYXRoAIRua28gAIRvZ2FtAIRydW5yAIR0Zm5nAIR0aGFpAIQABAAAAAD//wAAAAAAAAAAAAAAAA==';
 function pdfFonts(doc){doc.addFileToVFS('rupR.ttf',RUP_R);doc.addFont('rupR.ttf','RupF','normal');doc.addFileToVFS('rupB.ttf',RUP_B);doc.addFont('rupB.ttf','RupF','bold');}
 // text with a real rupee glyph (standard PDF fonts have none); supports left/right/center
@@ -1478,240 +1683,209 @@ function pdfTxt(doc,str,x,y,al){
   segs.forEach(s=>{doc.setFont(s[1],s[2]);doc.text(s[0],cx,y);cx+=s[3];});
   doc.setFont(fam,st);
 }
-// "Kitchen Base Unit – 10'-3" x 2'-6" = 1 No.; … with accessories (Tandem Box)" → name + detail lines
-function splitDesc(d){
-  d=String(d||'').replace(/\s+/g,' ').trim();
-  const m=d.match(/^(.{2,90}?)\s+[–—]\s+(.+)$/)||d.match(/^(.{10,60}?)\s+-\s+(.+)$/);
-  if(!m)return{name:d,det:[]};
-  const det=[];
-  m[2].split(/\s*;\s*/).forEach(seg=>{
-    const w=seg.match(/^(.*?)\s+with\s+(.+)$/i);
-    const fx=s=>s.replace(/(\d["'”]?)\s*[xX]\s*(?=\d)/g,'$1 × ');
-    if(w&&w[1].trim()){det.push(fx(w[1].trim()));det.push('With '+w[2]);}else if(w){det.push('With '+w[2]);}else det.push(fx(seg));
-  });
-  return{name:m[1],det:det.filter(Boolean)};
-}
-/* ═══ BILL / INVOICE PDF — one design system, six template skins ═══
-   Type scale (A4): company 22 · tagline 6.4 · business info 7.4 · title 9.6 · customer 7.8–9.2
-   table head 7.4 · item name 8.6 · item detail 7 · numbers 8–8.4 · totals 8.2 · grand total 11 · footer 6.4
-   Fonts: Times (serif, "Georgia"-style) for brand + headings, Helvetica (Arial-style) for data. */
-const PRO_INK=[38,52,69],PRO_MUTE=[102,112,125];
-const PRO_THEMES={
-  standard:{acc:[36,99,166],soft:[234,242,250],bd:[212,223,234],grid:1,zebra:0,serifHead:1,pad:2.1,fs:1},
-  classic:{acc:[36,99,166],soft:[234,242,250],bd:[212,223,234],grid:0,zebra:0,serifHead:0,pad:2.1,fs:1},
-  premium:{acc:[22,43,82],soft:[238,242,249],bd:[208,216,230],grid:0,zebra:0,serifHead:1,pad:2.5,fs:1},
-  minimal:{acc:[48,52,58],soft:[243,244,246],bd:[214,216,220],grid:0,zebra:0,serifHead:0,pad:2.1,fs:1},
-  corporate:{acc:[30,58,95],soft:[236,241,247],bd:[208,218,230],grid:0,zebra:1,serifHead:0,pad:2.1,fs:1},
-  compact:{acc:[36,99,166],soft:[234,242,250],bd:[212,223,234],grid:1,zebra:0,serifHead:1,pad:1.3,fs:.94}
+/* ═══════════════════════════════════════════════════════════════════
+   MASTER BILL TEMPLATE  —  reproduces Mr.Karna.pdf (A4 portrait, mm)
+   This is the ONLY invoice layout in the app. Nothing here depends on the
+   calculation settings: they only change the *values* that are printed.
+   Geometry / colours / fonts were measured from the template file.
+   ═══════════════════════════════════════════════════════════════════ */
+const MP={
+  ACC:[26,95,168],GRAY:[105,112,125],INK:[28,32,44],INFO:[55,70,100],
+  BORDER:[171,196,227],HEAD:[214,230,245],SOFT:[247,250,255],RULE:[199,204,214],WHITE:[255,255,255],
+  X:[14,24,88,105,117,133,148,168,196],      // table column edges
+  LIM:280,                                    // lowest y a table row / totals block may reach (footer rule is at 283)
+  FOOT:283
 };
-function buildPDFPro(fname,showRem,tplKey,outMode){
-  const T=PRO_THEMES[tplKey]||PRO_THEMES.standard,O=pdfOpts('inv'),doc=newPdfDoc(O);pdfFonts(doc);
-  const W=O.W,H=O.H,M=O.mS,CW=W-2*M,FY=H-O.mB,PB=FY-8,gstOn=isGstMode(),bill=g('inv-no'),title=gstOn?'INVOICE':'BILL';
-  const ACC=T.acc,SOFT=T.soft,BD=T.bd,INK=PRO_INK,MUTE=PRO_MUTE,k=T.fs,SERIF='times',SANS='helvetica',HF=T.serifHead?SERIF:SANS,WH=[255,255,255];
+// keep only characters the built-in Times font can print (plus ₹, which has its own glyph font)
+function pdfSafe(s){return String(s==null?'':s).replace(/[^\u0000-ÿ₹‘’‚“”„–—•…€™†‡‰ŒœŠšŽžŸƒˆ˜‹›]/g,'?').replace(/ /g,' ');}
+
+function buildPDF(fname,showRem,_tpl,outMode){
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});pdfFonts(doc);
+  const{ACC,GRAY,INK,INFO,BORDER,HEAD,SOFT,RULE,WHITE,X,LIM,FOOT}=MP;
+  const W=210,L=14,R=196,TIMES='times';
   const col=a=>doc.setTextColor(a[0],a[1],a[2]),fil=a=>doc.setFillColor(a[0],a[1],a[2]),drw=a=>doc.setDrawColor(a[0],a[1],a[2]);
-  const cs=n=>{if(doc.setCharSpace)doc.setCharSpace(n);};
-  const spaced=(txt,x,yy,c,al)=>{cs(c);const w=doc.getTextWidth(txt)+(txt.length-1)*c;doc.text(txt,al==='center'?x-w/2:al==='right'?x-w:x,yy);cs(0);};
-  const hdr=['S.No','Description of Work',gstOn?'SAC/HSN':'HSN','Qty','Area','Unit','Rate (₹)','Amount (₹)'];
-  const al=['center','left','center','right','right','center','right','right'];
-  const cw=fitCols(gstOn?[9,0,16,13,17,13,19,25]:[9,0,0,13,17,13,19,25],1,CW,46),X=[M];cw.forEach((w,i)=>X.push(X[i]+w));
-  const PX=2.2,LN=.3528;
-  let y=O.mT;
+  // text helper: font, style, size, colour, alignment (strings holding ₹ go through the glyph-aware writer)
+  const T=(s,x,y,style,size,color,align)=>{s=pdfSafe(s);doc.setFont(TIMES,style);doc.setFontSize(size);col(color);
+    if(s.indexOf('₹')>-1)pdfTxt(doc,s,x,y,align||'left');else doc.text(s,x,y,{align:align||'left'});};
+  const wrap=(s,w,style,size)=>{doc.setFont(TIMES,style);doc.setFontSize(size);return doc.splitTextToSize(pdfSafe(s),w);};
+  const hline=(y,x1,x2,c,lw)=>{drw(c);doc.setLineWidth(lw);doc.line(x1,y,x2,y);};
+  const vline=(x,y1,y2,c,lw)=>{drw(c);doc.setLineWidth(lw);doc.line(x,y1,x,y2);};
+  // shrink a single-line string until it fits a column
+  const fitSize=(s,style,size,maxW)=>{doc.setFont(TIMES,style);let z=size;doc.setFontSize(z);while(z>6&&doc.getTextWidth(s.replace(/₹/g,''))+(/₹/.test(s)?2.8:0)>maxW){z-=.4;doc.setFontSize(z);}return z;};
 
-  // ── letterhead ──
-  if(logoDataUrl){try{doc.addImage(logoDataUrl,'PNG',M,y,20,10);}catch(e){}}
-  doc.setFont(SERIF,'bolditalic');doc.setFontSize(22*k);col(ACC);doc.text(g('co-name'),W/2,y+7.6,{align:'center'});
-  doc.setFont(SANS,'normal');doc.setFontSize(6.4);col(MUTE);spaced('OFFICE   |   COMMERCIAL   |   RESIDENTIAL',W/2,y+12,1,'center');
-  y+=16.5;doc.setFontSize(7.4);col(INK);
-  const hl=doc.splitTextToSize(g('co-addr').replace(/\s*\n+\s*/g,', '),CW*.58).concat(['Email: '+g('co-email')]);
-  const hr=[[g('co-person'),g('co-ph1')].filter(Boolean).join(' : '),g('co-ph2')].filter(Boolean);
-  hl.forEach((l,i)=>doc.text(l,M,y+i*3.6));
-  hr.forEach((l,i)=>doc.text(l,W-M,y+i*3.6,{align:'right'}));
-  if(gstOn){doc.setFont(SANS,'bold');doc.text('GSTIN: '+g('co-gstin'),W-M,y+hr.length*3.6,{align:'right'});}
-  y+=Math.max(hl.length,hr.length+(gstOn?1:0))*3.6;
-  drw(ACC);doc.setLineWidth(.5);doc.line(M,y,W-M,y);y+=3.2;
+  const t=calc(),bill=g('inv-no'),dateTxt=fmtDate(g('inv-date')),gstOn=isGstMode(),co=g('co-name')||"SS Interior's";
+  let y;
 
-  // ── title band + bill-to / date box ──
-  fil(ACC);doc.rect(M,y,CW,6,'F');doc.setFont(HF,'bold');doc.setFontSize(9.6);col(WH);spaced(title,W/2,y+4.2,2.6,'center');y+=6;
-  const half=CW*.62,LH=3.7;
-  doc.setFont(SANS,'normal');doc.setFontSize(7.8);
-  const addr=doc.splitTextToSize(g('cust-addr')||'',half-8),ph=g('cust-phone');
-  const del=g('inv-delivery')?doc.splitTextToSize('Delivery: '+g('inv-delivery'),CW-half-8):[];
-  const leftH=12.6+addr.length*LH+(ph?LH:0)+(gstOn?LH+.8:0)+2,rightH=5.2+(gstOn?5.4:0)+5.4+del.length*LH+2;
-  const bh=Math.max(leftH,rightH,15);
-  drw(BD);doc.setLineWidth(.25);doc.rect(M,y,CW,bh);doc.line(M+half,y,M+half,y+bh);
-  doc.setFont(SANS,'bold');doc.setFontSize(6.4);col(ACC);spaced('BILL TO',M+4,y+4.2,.7);
-  doc.setFont(SANS,'bold');doc.setFontSize(9.2);col(INK);doc.text(g('cust-name')||'—',M+4,y+8.8);
-  doc.setFont(SANS,'normal');doc.setFontSize(7.8);col(INK);let cy=y+12.6;
-  addr.forEach(l=>{doc.text(l,M+4,cy);cy+=LH;});
-  if(ph){doc.text('Phone: '+ph,M+4,cy);cy+=LH;}
-  if(gstOn){doc.setFont(SANS,'bold');doc.text('GSTIN: '+g('cust-gstin'),M+4,cy+.4);}
-  let ry=y+5.6;const rx=M+half+4;
-  const kv=(a,b)=>{doc.setFont(SANS,'normal');doc.setFontSize(7.2);col(MUTE);doc.text(a,rx,ry);doc.setFont(SANS,'bold');doc.setFontSize(8.6);col(INK);doc.text(b,rx+21,ry);ry+=5.4;};
-  if(gstOn)kv('INVOICE NO',bill);
-  kv('DATE',fmtDate(g('inv-date')));
-  doc.setFont(SANS,'normal');doc.setFontSize(7.8);col(INK);del.forEach(l=>{doc.text(l,rx,ry);ry+=LH;});
-  y+=bh+4;
-
-  // ── continuation page header ──
-  const contHead=()=>{
-    doc.addPage();y=O.mT;doc.setFont(SERIF,'bolditalic');doc.setFontSize(13*k);col(ACC);doc.text(g('co-name'),M,y+5);
-    doc.setFont(SANS,'bold');doc.setFontSize(8);col(INK);doc.text(title+(gstOn?' NO: '+bill:''),W-M,y+3.4,{align:'right'});
-    doc.setFont(SANS,'normal');doc.setFontSize(7);col(MUTE);doc.text('Date: '+fmtDate(g('inv-date'))+'   ·   continued',W-M,y+7.4,{align:'right'});
-    y+=10;drw(ACC);doc.setLineWidth(.4);doc.line(M,y,W-M,y);y+=4;
+  /* ── continuation page header ── */
+  const contHeader=()=>{
+    T(co,L,19.0,'bolditalic',17,ACC);
+    T('BILL NO: '+bill,R,17.5,'bold',10,INK,'right');
+    T('DATE: '+dateTxt+'  (continued)',R,22.0,'normal',9,GRAY,'right');
+    fil(ACC);doc.rect(L,25,R-L,.8,'F');
+    y=31;
   };
-
-  // ── item table ──
-  const HH=6.4,vlines=(y0,h)=>{if(!T.grid)return;drw(BD);doc.setLineWidth(.2);X.forEach(x=>doc.line(x,y0,x,y0+h));};
-  const tblHead=()=>{
-    fil(SOFT);doc.rect(M,y,CW,HH,'F');drw(ACC);doc.setLineWidth(.35);doc.line(M,y,M+CW,y);doc.line(M,y+HH,M+CW,y+HH);vlines(y,HH);
-    doc.setFont(SANS,'bold');doc.setFontSize(7.2*k);col(ACC);
-    hdr.forEach((h,i)=>{if(cw[i]<=0)return;const ty=y+HH/2+1.1;
-      if(i===1)doc.text(h,X[i]+PX,ty);else if(al[i]==='right')pdfTxt(doc,h,X[i]+cw[i]-PX,ty,'right');else pdfTxt(doc,h,X[i]+cw[i]/2,ty,'center');});
-    y+=HH;
+  const tableHead=()=>{
+    fil(HEAD);drw(BORDER);doc.setLineWidth(.3);doc.rect(L,y,R-L,8,'FD');
+    for(let k=1;k<=7;k++)vline(X[k],y,y+8,BORDER,.25);
+    const b=y+5.4,c=(i)=>(X[i]+X[i+1])/2;
+    T('S.No',c(0),b,'bold',9,INK,'center');T('Description of Work',c(1)+0.125,b,'bold',9,INK,'center');
+    T('HSN',c(2),b,'bold',9,INK,'center');T('Qty',c(3),b,'bold',9,INK,'center');T('Area',c(4),b,'bold',9,INK,'center');T('Unit',c(5),b,'bold',9,INK,'center');
+    T('Rate (₹)',X[7]-2.5,b,'bold',9,INK,'right');T('Amount (₹)',X[8]-2.5,b,'bold',9,INK,'right');
+    y+=8;
   };
-  tblHead();
-  const lhN=8.6*k*LN*1.25,lhD=7*k*LN*1.32,lhR=6.6*k*LN*1.32,dw=cw[1]-PX*2;
+  const newPage=withHead=>{doc.addPage();contHeader();if(withHead)tableHead();};
+
+  /* ── page 1 letterhead ── */
+  if(logoDataUrl){try{const p=doc.getImageProperties(logoDataUrl),bw=36,bh=16,k=Math.min(bw/p.width,bh/p.height);doc.addImage(logoDataUrl,p.fileType,L,10,p.width*k,p.height*k);}catch(e){}}
+  {const z=fitSize(pdfSafe(co),'bolditalic',29,172);T(co,W/2,24.0,'bolditalic',z,ACC,'center');}
+  doc.setFont(TIMES,'normal');doc.setFontSize(8.6);col(GRAY);
+  doc.setCharSpace(1.1);doc.text('OFFICE',56.41,30.5);doc.text('COMMERCIAL',81.88,30.5);doc.text('RESIDENTIAL',121.86,30.5);doc.setCharSpace(0);
+  doc.setTextColor(ACC[0],ACC[1],ACC[2]);doc.text('|',76.58,30.5);doc.text('|',116.56,30.5);
+  fil(ACC);doc.rect(L,35,R-L,1,'F');
+
+  const left=wrap(g('co-addr').replace(/\s*\n+\s*/g,', '),150,'normal',9.2);
+  if(g('co-email'))left.push('Email: '+g('co-email'));
+  if(gstOn&&g('co-gstin'))left.push('GSTIN: '+g('co-gstin'));
+  const right=[g('co-person'),g('co-ph1'),g('co-ph2')].filter(Boolean);
+  const n=Math.max(3,left.length,right.length);
+  left.forEach((s,k)=>T(s,L,41.0+4.8*k,'normal',9.2,INFO));
+  right.forEach((s,k)=>T(s,R,41.0+4.8*k,k===0&&g('co-person')?'bold':'normal',9.2,INFO,'right'));
+  const ruleY=41.0+4.8*n,dy=ruleY-55.4;
+  hline(ruleY,L,R,RULE,.25);
+
+  /* ── BILL band + bill-to box ── */
+  const bandY=62.4+dy;
+  fil(ACC);doc.rect(L,bandY,R-L,8.5,'F');
+  {const s='BILL',cs=3.0;doc.setFont(TIMES,'bold');doc.setFontSize(12);col(WHITE);const w=doc.getTextWidth(s)+s.length*cs;
+   doc.setCharSpace(cs);doc.text(s,W/2-w/2,68.3+dy);doc.setCharSpace(0);}
+  const boxY=70.9+dy;
+  const nameL=wrap(g('cust-name')||'—',82,'bold',11),addrL=wrap(g('cust-addr'),82,'normal',9.2);
+  const lines2=[];
+  if(g('cust-phone'))lines2.push('Ph: '+g('cust-phone'));
+  if(gstOn&&g('cust-gstin'))lines2.push('GSTIN: '+g('cust-gstin'));
+  let ly=82.9+dy+(nameL.length-1)*4.8;
+  const leftEnd=ly+((addrL.filter(s=>s!=='').length+lines2.length)?5.2+(addrL.length+lines2.length-1)*4.4:0);
+  const del=g('inv-delivery')?wrap('Delivery: '+g('inv-delivery'),81,'normal',9.2):[];
+  const rightEnd=85.9+dy+(del.length?5.7+(del.length-1)*4.4:0);
+  const boxH=Math.max(27,Math.max(leftEnd,rightEnd)+5-boxY);
+  drw(BORDER);doc.setLineWidth(.3);doc.setFillColor(255,255,255);doc.rect(L,boxY,R-L,boxH,'FD');
+  vline(105,boxY,boxY+boxH,BORDER,.3);
+  T('BILL TO',19,76.9+dy,'bold',9,ACC);
+  nameL.forEach((s,k)=>T(s,19,82.9+dy+k*4.8,'bold',11,INK));
+  let ay=ly+5.2;
+  addrL.forEach(s=>{T(s,19,ay,'normal',9.2,INFO);ay+=4.4;});
+  lines2.forEach(s=>{T(s,19,ay,'normal',9.2,INFO);ay+=4.4;});
+  T('BILL NO: '+bill,110,79.4+dy,'bold',10.5,INK);
+  T('DATE: '+dateTxt,110,85.9+dy,'bold',10.5,INK);
+  del.forEach((s,k)=>T(s,110,91.6+dy+k*4.4,'normal',9.2,INFO));
+
+  /* ── item table ── */
+  y=boxY+boxH+6.0;
+  tableHead();
   rows.forEach((r,idx)=>{
-    const{unit:fu}=getFinalQtyUnit(r),{qty:aq,area:aa}=getRowAreaQty(r),amt=rowAmount(r),sd=splitDesc(r.desc);
-    doc.setFont(SANS,'bold');doc.setFontSize(8.6*k);const nl=doc.splitTextToSize(sd.name,dw);
-    doc.setFont(SANS,'normal');doc.setFontSize(7*k);const dl=[];sd.det.forEach(s=>doc.splitTextToSize(s,dw).forEach(x=>dl.push(x)));
-    const rt=[calcExplain(r),showRem?r.remarks:''].filter(Boolean).join('\n').replace(/₹\s?/g,'Rs. ');
-    doc.setFont(SANS,'italic');doc.setFontSize(6.6*k);const rl=rt?doc.splitTextToSize(rt,dw):[];
-    const rh=Math.max(7.6,T.pad*2+nl.length*lhN+(dl.length?.7+dl.length*lhD:0)+(rl.length?.7+rl.length*lhR:0));
-    if(y+rh>PB){contHead();tblHead();}
-    if(T.zebra&&idx%2===1){fil([247,249,252]);doc.rect(M,y,CW,rh,'F');}
-    drw(BD);doc.setLineWidth(.2);doc.line(M,y+rh,M+CW,y+rh);vlines(y,rh);
-    const b=y+T.pad+lhN*.74;
-    doc.setFont(SANS,'normal');doc.setFontSize(8*k);col(MUTE);doc.text(String(idx+1),X[0]+cw[0]/2,b,{align:'center'});
-    doc.setFont(SANS,'bold');doc.setFontSize(8.6*k);col(INK);nl.forEach((l,i)=>doc.text(l,X[1]+PX,b+i*lhN));
-    let dy=b+(nl.length-1)*lhN;
-    if(dl.length){doc.setFont(SANS,'normal');doc.setFontSize(7*k);col(MUTE);dl.forEach((l,i)=>doc.text(l,X[1]+PX,dy+.7+lhD*(i+1)));dy+=.7+dl.length*lhD;}
-    if(rl.length){doc.setFont(SANS,'italic');doc.setFontSize(6.6*k);col(MUTE);rl.forEach((l,i)=>doc.text(l,X[1]+PX,dy+.7+lhR*(i+1)));}
-    doc.setFont(SANS,'normal');doc.setFontSize(8*k);col(INK);
-    if(gstOn)doc.text(String(r.hsn||''),X[2]+cw[2]/2,b,{align:'center'});
-    doc.text(aq===''?'—':fmtQty(aq,r.calcType),X[3]+cw[3]-PX,b,{align:'right'});
-    doc.text(aa===''?'—':fmt(aa),X[4]+cw[4]-PX,b,{align:'right'});
-    doc.text(doc.splitTextToSize(fu,cw[5]-1.6),X[5]+cw[5]/2,b,{align:'center'});
-    doc.text(rateText(r),X[6]+cw[6]-PX,b,{align:'right'});
-    doc.setFont(SANS,'bold');doc.setFontSize(8.4*k);doc.text(fmt(amt),X[7]+cw[7]-PX,b,{align:'right'});
-    y+=rh;
+    const{name,det}=itemTextParts(r,showRem),cols=rowCols(r),amt=rowAmount(r);
+    const nl=wrap(name,59,'bold',10),dl=[];det.forEach(s=>wrap(s,59,'italic',7.8).forEach(x=>dl.push(x)));
+    const h=Math.max(10,6+nl.length*3.9+dl.length*4.0);
+    if(y+h>LIM)newPage(true);
+    const b=y+5.3;
+    hline(y+h,L,R,BORDER,.25);X.forEach(x=>vline(x,y,y+h,BORDER,.25));
+    T(String(idx+1),(X[0]+X[1])/2,b,'normal',9.6,INK,'center');
+    nl.forEach((s,k)=>T(s,26.5,b+k*4.05,'bold',10,INK));
+    const lastName=b+(Math.max(nl.length,1)-1)*4.05;
+    dl.forEach((s,k)=>T(s,26.5,lastName+3.79+k*3.6,'italic',7.8,GRAY));
+    const cell=(s,i,style)=>{const z=fitSize(s,style||'normal',9.6,X[i+1]-X[i]-2);T(s,(X[i]+X[i+1])/2,b,style||'normal',z,INK,'center');};
+    cell(String(r.hsn||''),2);
+    cell(cols.qty===''?'—':fmtQty(cols.qty),3);
+    cell(cols.area===''?'—':fmt(cols.area),4);
+    cell(String(cols.unit||'—'),5);
+    {const s=rateText(r),z=fitSize(s,'normal',9.6,X[7]-X[6]-3);T(s,X[7]-2.5,b,'normal',z,INK,'right');}
+    {const s='₹'+fmt(amt),z=fitSize(s,'bold',9.6,X[8]-X[7]-3);T(s,X[8]-2.5,b,'bold',z,INK,'right');}
+    y+=h;
   });
 
-  // ── totals (right) + amount in words (left) ──
-  const tt=calc(),trs=[['Sub-Total',fmt(tt.sub)]];buildTotalsLines(tt).forEach(l=>trs.push([l.label,l.value]));
-  const RH=5.6,GH=9,TW=Math.min(86,CW*.5),x0=W-M-TW,WW=CW-TW-6;
-  doc.setFont(SERIF,'italic');doc.setFontSize(8.8);const wl=doc.splitTextToSize(numWords(tt.grand),WW-8);
-  const Ht=trs.length*RH+3+GH,Hw=8.4+wl.length*4+2,blockH=Math.max(Ht,Hw),SG=27;
-  if(y+4+blockH+8+SG>PB)contHead();
-  y+=4;const top=y;
-  trs.forEach(([l,v])=>{
-    doc.setFont(SANS,'normal');doc.setFontSize(8.2);col(MUTE);doc.text(l,x0+3,y+3.9);
-    const m=String(v).match(/^([+-]) (.+)$/),txt=/Exempt/.test(v)?v:(m?m[1]+' ₹'+m[2]:'₹'+v);
-    doc.setFont(SANS,'normal');col(INK);pdfTxt(doc,txt,W-M-3,y+3.9,'right');
-    drw(BD);doc.setLineWidth(.2);doc.line(x0,y+RH,W-M,y+RH);y+=RH;
+  /* ── totals block: Sub-Total · (optional rows) · GRAND TOTAL · words · terms · signature ── */
+  const extra=buildTotalsLines(t),RH=8;
+  const wl=wrap('('+numWords(t.grand)+')',172,'italic',9.6);
+  const wordsH=Math.max(10.8,5.3+(wl.length-1)*4.4+5.5);
+  const groupH=RH*(1+extra.length)+11+wordsH+40;
+  if(y+groupH>LIM)newPage(false);
+  const rowLine=(label,value,style)=>{
+    T(label,165.0,y+5.5,style,10,INK,'right');T(value,R-2.5,y+5.5,style,10,INK,'right');
+    vline(L,y,y+RH,BORDER,.25);vline(168,y,y+RH,BORDER,.25);vline(R,y,y+RH,BORDER,.25);hline(y+RH,L,R,BORDER,.25);y+=RH;
+  };
+  rowLine('Sub-Total:','₹'+fmt(t.sub),'bold');
+  extra.forEach(l=>{
+    const m=l.value.match(/^([+-]) (.+)$/),v=/Exempt/.test(l.value)?l.value:(m?m[1]+' ₹'+m[2]:'₹'+l.value);
+    rowLine(l.label+':',v,'normal');
   });
-  y+=3;fil(ACC);doc.rect(x0,y,TW,GH,'F');
-  doc.setFont(SANS,'bold');doc.setFontSize(7.8);col(WH);spaced('GRAND TOTAL',x0+3,y+5.8,.7);
-  doc.setFontSize(11);pdfTxt(doc,'₹'+fmt(tt.grand),W-M-3,y+6.1,'right');
-  // words box
-  drw(BD);doc.setLineWidth(.25);doc.rect(M,top,WW,blockH);
-  doc.setFont(SANS,'bold');doc.setFontSize(6.2);col(ACC);spaced('AMOUNT IN WORDS',M+4,top+4.6,.6);
-  doc.setFont(SERIF,'italic');doc.setFontSize(8.8);col(INK);wl.forEach((l,i)=>doc.text(l,M+4,top+9.2+i*4));
-  y=top+blockH+9;
+  fil(HEAD);drw(BORDER);doc.setLineWidth(.25);doc.rect(L,y,R-L,11,'FD');
+  T('GRAND TOTAL:',159.21,y+7.4,'bold',12,INK,'right');
+  {const s='₹'+fmt(t.grand),z=fitSize(s,'bold',13,36);T(s,193.0,y+7.5,'bold',z,INK,'right');}
+  y+=11;
+  fil(SOFT);drw(BORDER);doc.setLineWidth(.25);doc.rect(L,y,R-L,wordsH,'FD');
+  wl.forEach((s,k)=>T(s,19,y+5.3+k*4.4,'italic',9.6,INK));
+  y+=wordsH;
+  T('Goods once sold cannot be taken.',L,y+9.0,'normal',9.4,GRAY);
+  T('All subject to Chennai Jurisdiction.',L,y+12.8,'normal',9.4,GRAY);
+  T('Thank you for your business.',L,y+20.4,'normal',9.4,GRAY);
+  T('for '+co,R,y+9.0,'bold',10,ACC,'right');
+  if(sigDataUrl){try{const p=doc.getImageProperties(sigDataUrl),bw=46,bh=20,k=Math.min(bw/p.width,bh/p.height),w=p.width*k,h=p.height*k;
+    doc.addImage(sigDataUrl,p.fileType,148+(bw-w)/2,y+11+(bh-h)/2,w,h);}catch(e){}}
+  hline(y+34.0,134,R,GRAY,.3);
+  T('Authorised Signature',R,y+38.5,'normal',9,GRAY,'right');
 
-  // ── terms + signature (follows the content, never pinned to a fixed position) ──
-  doc.setFont(SANS,'bold');doc.setFontSize(6.2);col(ACC);spaced('TERMS & CONDITIONS',M,y+2.6,.6);
-  doc.setFont(SANS,'normal');doc.setFontSize(6.9);col(MUTE);
-  ['Goods once sold cannot be taken.','All subject to Chennai Jurisdiction.','Thank you for your business.'].forEach((l,i)=>doc.text(l,M,y+7+i*3.7));
-  doc.setFont(SERIF,'bolditalic');doc.setFontSize(9);col(ACC);doc.text('for '+g('co-name'),W-M,y+2.8,{align:'right'});
-  if(sigDataUrl){try{doc.addImage(sigDataUrl,'JPEG',W-M-44,y+4,40,15);}catch(e){}}
-  drw(MUTE);doc.setLineWidth(.3);doc.line(W-M-58,y+20,W-M,y+20);
-  doc.setFont(SANS,'normal');doc.setFontSize(7.2);col(MUTE);doc.text('Authorised Signature',W-M,y+24,{align:'right'});
-
-  // ── footer ──
+  /* ── footer on every page ── */
   const N=doc.getNumberOfPages();
   for(let p=1;p<=N;p++){
-    doc.setPage(p);drw(BD);doc.setLineWidth(.25);doc.line(M,FY,W-M,FY);
-    doc.setFont(SANS,'normal');doc.setFontSize(6.4);col(MUTE);spaced("SS INTERIOR'S   |   OFFICE   |   COMMERCIAL   |   RESIDENTIAL",M,FY+4,.5);
-    if(N>1)doc.text((gstOn&&bill?bill+'   ·   ':'')+'Page '+p+' of '+N,W-M,FY+4,{align:'right'});
+    doc.setPage(p);hline(FOOT,L,R,RULE,.25);
+    T('BILL No: '+bill,L,288.0,'normal',8.5,GRAY);
+    T(co+'  |  Office  |  Commercial  |  Residential',105.0,288.0,'normal',8.5,GRAY,'center');
+    T('Page '+p+' of '+N,R,288.0,'normal',8.5,GRAY,'right');
   }
   if(outMode==='doc')return doc;
   saveOut(doc.output('blob'),fname,'PDF',()=>{try{sfDownload(doc.output('blob'),fname);}catch(e){doc.save(fname);}});
 }
-function buildPDF(fname,showRem,tplKey,outMode){return buildPDFPro(fname,showRem,tplKey,outMode);}
-/* ── EXPORT EXCEL ── */
-function buildExcel(fname){
-  const t=calc();
-  const taxRows=buildTotalsLines(t).map(l=>{
-    // strip leading sign text and keep a signed numeric value for proper Excel formatting
-    const signed=l.value.match(/^([+-]) (.+)$/);
-    let numVal;
-    if(l.value.indexOf('Exempt')>-1)numVal=l.value; // text cell
-    else if(signed)numVal=(signed[1]==='-'?-1:1)*(+signed[2].replace(/,/g,''));
-    else numVal=+l.value.replace(/,/g,'');
-    return['','','','','','',l.label+' (₹):',numVal];
-  });
-  const gstOnXl=isGstMode();
-  const aoa=[
-    [g('co-name')],['OFFICE | COMMERCIAL | RESIDENTIAL'],
-    [g('co-addr').replace(/\n/g,', ')],
-    ['Ph: '+g('co-ph1')+' / '+g('co-ph2')+'  |  '+g('co-email')],
-    ...(gstOnXl?[['GSTIN: '+g('co-gstin')]]:[]),[],[gstOnXl?'INVOICE':'BILL'],[],
-    (gstOnXl?['Invoice No:',g('inv-no'),'','','Date:',fmtDate(g('inv-date'))]:['Date:',fmtDate(g('inv-date'))]),
-    ...(gstOnXl?[['Bill To:',g('cust-name'),'','','Customer GSTIN:',g('cust-gstin')]]:[['Bill To:',g('cust-name')]]),
-    ['Address:',g('cust-addr').replace(/\n/g,', ')],[],
-    ['S.No','Description','HSN/SAC','Qty','Area','Unit','Rate (₹)','Amount (₹)'],
-    ...rows.map((r,i)=>{const{unit:fu}=getFinalQtyUnit(r);const{qty:aq,area:aa}=getRowAreaQty(r);return[i+1,r.desc+(calcExplain(r)?'\n'+calcExplain(r):'')+(r.remarks?'\n'+r.remarks:''),r.hsn,aq===''?'':+(+aq).toFixed(3),aa===''?'':+(+aa).toFixed(2),fu,(r.calcType==='lump'||r.calcType==='percent')?'':r.rate,+rowAmount(r).toFixed(2)];}),
-    [],
-    ['','','','','','','Sub-Total (₹):',+t.sub.toFixed(2)],
-    ...taxRows,
-    ['','','','','','','Grand Total (₹):',+t.grand.toFixed(2)],
-    [],['Amount in Words:',numWords(t.grand)],
-    [],['Authorised Signature:',g('co-person')],
-  ];
-  if(!gstOnXl){ // plain bill: drop the HSN/SAC column from the item table, sub-total, tax and grand-total rows
-    let inTbl=false;
-    aoa.forEach(r=>{
-      if(r[0]==='S.No')inTbl=true;
-      if(inTbl&&r.length>=8)r.splice(2,1);
-      if(inTbl&&r.length>=7&&/Grand Total/.test(String(r[r.length-2])))inTbl=false;
-    });
-  }
-  const lastCol=gstOnXl?7:6;
-  const wb=XLSX.utils.book_new();
-  const ws=XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols']=[{wch:6},{wch:40},{wch:12},{wch:8},{wch:8},{wch:8},{wch:20},{wch:16}];
-  if(!gstOnXl)ws['!cols'].splice(2,1);
-  ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:lastCol}},{s:{r:1,c:0},e:{r:1,c:lastCol}},{s:{r:6,c:0},e:{r:6,c:lastCol}}];
-  XLSX.utils.book_append_sheet(wb,ws,'Invoice');
-  saveOut(new Blob([XLSX.write(wb,{bookType:'xlsx',type:'array'})],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),fname,'Excel',()=>XLSX.writeFile(wb,fname));
-}
 
+/* ── SUPABASE: STATE COLLECTION ── */
 /* ── SUPABASE: STATE COLLECTION ── */
 const STATE_FIELD_IDS=['co-name','co-gstin','co-addr','co-person','co-email','co-ph1','co-ph2',
   'inv-no','inv-date','inv-delivery','cust-name','cust-gstin','cust-addr','cust-phone',
   'gst-rate','gst-custom-rate','gst-mode','disc-type','disc-value',
   'chg-packing','chg-transport','chg-installation','chg-labour','chg-other-label','chg-other',
-  'roundoff-mode','roundoff-custom-value'];
+  'roundoff-mode','roundoff-custom-value','sub-override','grand-override'];
+// calculation switches (checkboxes) and what an older saved invoice that never had them means
+const STATE_CHECK_DEFAULTS={'ctl-autoqty':true,'ctl-autoamt':true,'ctl-sub-auto':true,'ctl-grand-auto':true,'disc-on':false,
+  'chg-master-on':true,'chg-packing-on':true,'chg-transport-on':true,'chg-installation-on':true,'chg-labour-on':true,'chg-other-on':true,'chg-taxable':false};
 
 function collectState(){
   const fields={};
   STATE_FIELD_IDS.forEach(id=>{const el=document.getElementById(id);if(el)fields[id]=el.value;});
+  Object.keys(STATE_CHECK_DEFAULTS).forEach(id=>{const el=document.getElementById(id);if(el)fields[id]=!!el.checked;});
   fields['gst-invoice-toggle']=isGstMode();
-  return{fields,rows};
+  return{fields,rows,v:2};
 }
 
 function applyState(state){
   if(!state)return;
-  const fields=state.fields||{};
+  const fields=state.fields||{},legacyDiscNone=fields['disc-type']==='none';
   Object.keys(fields).forEach(id=>{
-    if(id==='gst-invoice-toggle')return;
+    if(id==='gst-invoice-toggle'||id in STATE_CHECK_DEFAULTS)return;
+    if(id==='disc-type'&&legacyDiscNone)return;       // old "No Discount" option no longer exists (the switch replaced it)
     const el=document.getElementById(id);
     if(el)el.value=fields[id];
   });
+  ['sub-override','grand-override'].forEach(id=>{if(!(id in fields)){const el=document.getElementById(id);if(el)el.value='';}});
+  Object.keys(STATE_CHECK_DEFAULTS).forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    if(id in fields)el.checked=!!fields[id];
+    else if(id==='disc-on')el.checked=!!fields['disc-type']&&!legacyDiscNone;
+    else el.checked=STATE_CHECK_DEFAULTS[id];
+  });
+  if(legacyDiscNone){const d=document.getElementById('disc-type');if(d)d.value='pct';}
   const gstToggleEl=document.getElementById('gst-invoice-toggle');
   if(gstToggleEl)gstToggleEl.checked=fields['gst-invoice-toggle']!==false;
-  rows=(state.rows&&state.rows.length)?state.rows:rows;
+  rows=(state.rows&&state.rows.length)?state.rows.map(normalizeRow):rows;
   // logo & signature are global company settings now, not part of per-invoice state — left untouched here
   handleGstRateChange();handleDiscTypeChange();handleRoundOffModeChange();handleGstInvoiceToggle();
   updateBadge();renderRows();calcUI();
@@ -1963,13 +2137,14 @@ async function deleteHistoryItem(id){
   }catch(e){showToast('Delete failed: '+sbErr(e),'err');console.error(e);}
 }
 
-/* ── RESET ── */
 function resetAll(){
   if(!confirm('Reset all fields?'))return;
-  rows=[{desc:'',hsn:'',calcType:'qty',qty:1,unit:'Nos',rate:0,area:0,areaSqm:0,sheets:0,sheetSize:'8x4',length:0,lengthUnit:'ft',width:0,areaUnit:'ft'}];
-  ['cust-name','cust-gstin','cust-addr','cust-phone','inv-delivery'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  rows=[blankRow()];
+  ['cust-name','cust-gstin','cust-addr','cust-phone','inv-delivery','sub-override','grand-override','chg-other-label'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['disc-value','chg-packing','chg-transport','chg-installation','chg-labour','chg-other'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=0;});
+  Object.keys(STATE_CHECK_DEFAULTS).forEach(id=>{const el=document.getElementById(id);if(el)el.checked=STATE_CHECK_DEFAULTS[id];});
   document.getElementById('inv-no').value='SS/24-25/017';
-  updateBadge();renderRows();goTab(0);
+  handleDiscTypeChange();updateBadge();renderRows();goTab(0);
   showToast('Fields reset — logo & signature kept','ok');
 }
 
@@ -2007,7 +2182,7 @@ function askFileName(ext,cb){
   document.getElementById('fn-billno').textContent=(FN_CTX?FN_CTX.no:g('inv-no'))||'—';
   document.getElementById('fn-fmt').value=p.fmt;document.getElementById('fn-mode').value=p.mode;
   document.getElementById('fn-remember').checked=p.remember;document.getElementById('fn-remarks').checked=p.remarks;
-  document.getElementById('fn-remarks-wrap').style.display=ext==='pdf'?'':'none';document.getElementById('fn-tpl-wrap').style.display=(ext==='pdf'&&!FN_CTX)?'':'none';document.getElementById('fn-tpl').value=p.tpl||'classic';
+  document.getElementById('fn-remarks-wrap').style.display=ext==='pdf'?'':'none';
   document.getElementById('fn-title').textContent='Save '+(ext==='pdf'?'PDF':'Excel');
   document.getElementById('fn-name').value=p.fmt==='custom'?p.custom:fnBuild(p.fmt);
   document.getElementById('fn-sf-state').textContent=SF.dir?'saving to '+SF.dir.name:'Downloads';document.getElementById('fn-modal').style.display='flex';
@@ -2017,27 +2192,29 @@ function fnClose(){document.getElementById('fn-modal').style.display='none';FN_C
 function fnGo(){
   const fmt=document.getElementById('fn-fmt').value,raw=document.getElementById('fn-name').value;
   const rem=document.getElementById('fn-remarks').checked;
-  const p=fnPrefs();p.remarks=rem;p.tpl=document.getElementById('fn-tpl').value;
+  const p=fnPrefs();p.remarks=rem;
   if(document.getElementById('fn-remember').checked){p.fmt=fmt;p.mode=document.getElementById('fn-mode').value;p.custom=fmt==='custom'?raw:p.custom;p.remember=true;}else p.remember=false;
   fnSave(p);fnClose();
-  if(_fnCb)_fnCb(withExt(raw,_fnExt),{remarks:rem,tpl:p.tpl});
+  if(_fnCb)_fnCb(withExt(raw,_fnExt),{remarks:rem});
 }
 
 /* ═══ VALIDATION ═══ */
 function validateInvoice(){
   const out=[],groups={};let nd=0;
-  rows.forEach(r=>{if(!(r.desc||'').trim())nd++;const e=rowIssue(r);if(e)groups[e]=(groups[e]||0)+1;});
+  rows.forEach(r=>{if(!splitDescLines(r.desc)[0].trim())nd++;const e=rowIssue(r);if(e)groups[e]=(groups[e]||0)+1;});
   if(!rows.length)out.push('No line items added.');
   if(nd)out.push(nd+' item(s) have no description.');
   Object.keys(groups).forEach(e=>out.push(groups[e]+' item(s): '+e+'.'));
+  const t=calc();
+  if(!t.subAuto)out.push('Subtotal is MANUALLY OVERRIDDEN: ₹'+fmt(t.sub)+' will print instead of the calculated ₹'+fmt(t.subCalc)+'.');
+  if(!t.grandAuto)out.push('Grand total is MANUALLY OVERRIDDEN: ₹'+fmt(t.grand)+' will print instead of the calculated ₹'+fmt(t.grandCalc)+'.');
   return out;
 }
 function exportPDF(){
-  renderPreview();
   if(typeof window.jspdf==='undefined'){showToast('PDF library loading, try again','err');return;}
   const issues=validateInvoice();
   if(issues.length&&!confirm('⚠ '+issues.join('\n')+'\n\nOK = Continue anyway, Cancel = go back'))return;
-  askFileName('pdf',(name,o)=>{try{buildPDF(name,o.remarks,o.tpl);}catch(e){console.error(e);showToast('PDF failed: '+(e.message||e),'err');}});
+  askFileName('pdf',(name,o)=>{try{buildPDF(name,o.remarks);}catch(e){console.error(e);showToast('PDF failed: '+(e.message||e),'err');}});
 }
 function exportExcel(){
   if(typeof XLSX==='undefined'){showToast('Excel library loading, try again','err');return;}
@@ -2110,25 +2287,22 @@ function xlItem(o,meta){
   const unitRaw=String(o.unit||'').trim(),u=xlNorm(unitRaw);
   const qty=xlNum(o.qty),L=xlNum(o.length),Wd=xlNum(o.width),H=xlNum(o.height),area=xlNum(o.area),rate=xlNum(o.rate),amt=xlNum(o.amount);
   const sqft=/^(sqft|sft|sqfeet|squarefeet)$/.test(u),sqm=/^(sqm|sqmeter|squaremeter)$/.test(u),rft=/^(rft|rf|runningfeet|rm|runningmeter|meter|mtr)$/.test(u);
-  const rem=[o.remarks?String(o.remarks).trim():'',...meta,H?'Height: '+H:''].filter(Boolean).join(' | ');
-  const it={desc:String(o.desc||'').trim(),hsn:String(o.hsn||'').trim(),calcType:'qty',qty:qty||1,unit:unitRaw||'Nos',rate,area:0,areaSqm:0,sheets:0,sheetSize:'8x4',length:0,lengthUnit:'ft',width:0,areaUnit:'ft',remarks:rem};
-  if(!rate&&amt>0&&!qty&&!area&&!L&&!Wd){it.calcType='lump';it.amount=amt;it.unit='Lump Sum';it.qty=0;return it;}
-  if(L&&Wd){it.calcType='custom';it.length=L;it.width=Wd;if(sqm)it.areaUnit='m';}
-  else if(sqm){it.calcType='sqm';it.areaSqm=area||qty;}
-  else if(area||sqft){it.calcType='sqft';it.area=area||qty;}
-  else if(rft||L){it.calcType='rft';it.length=L||qty;if(/^(rm|runningmeter|meter|mtr)$/.test(u))it.lengthUnit='m';}
-  // Excel amount is the source of truth when it differs from rate × displayed qty (e.g. rounded areas)
+  const r=blankRow();
+  r.desc=String(o.desc||'').trim();r.hsn=String(o.hsn||'').trim();r.rate=rate||'';r.qtyEdited=true;r.unitTouched=true;
+  r.remarks=[o.remarks?String(o.remarks).trim():'',...meta,H?'Height: '+H:''].filter(Boolean).join(' | ');
+  if(!rate&&amt>0&&!qty&&!area&&!L&&!Wd){r.mode='fixed';r.amount=amt;return r;}
+  if(L&&Wd){r.mode='dim';r.dimUnit=sqm?'m':'ft';r.unit=sqm?'sq.m':'sq.ft';r.unitTouched=false;r.ms=[{l1:L,l2:'',w1:Wd,w2:'',c:qty||1}];}
+  else if(sqm){r.mode='manual';r.qty=area||qty;r.unit='sq.m';}
+  else if(area||sqft){r.mode='manual';r.qty=area||qty;r.unit='sq.ft';}
+  else if(rft||L){r.mode='qty';r.qty=L||qty;r.unit=/^(rm|runningmeter|meter|mtr)$/.test(u)?'meter':'R.ft';}
+  else{r.mode='qty';r.qty=qty||1;r.unit=unitRaw||'Nos';}
+  // the Excel amount is the source of truth: keep qty and rate as they are and store the amount as a visible manual amount
   if(amt>0){
-    const q=getFinalQtyUnit(it).qty;
-    if(!rate&&q)it.rate=amt/q;
-    else if(rate&&Math.abs(q*rate-amt)>0.01){
-      const nq=amt/rate;
-      if(it.calcType==='custom'){it.calcType='sqft';it.area=nq;it.length=it.width=0;}
-      else if(it.calcType==='sqft')it.area=nq;else if(it.calcType==='sqm')it.areaSqm=nq;
-      else if(it.calcType==='rft')it.length=nq;else it.qty=nq;
-    }
+    const q=rowQty(r);
+    if(!rate&&q){r.rate=r2(amt/q);r.autoAmt=false;r.amount=amt;}
+    else if(rate&&Math.abs(r2(q*rate)-amt)>0.01){r.autoAmt=false;r.amount=amt;}
   }
-  return it;
+  return r;
 }
 function xlImport(){
   const m=_xl.map,items=[];let skipped=0,found=0;
@@ -2448,7 +2622,6 @@ function buildMemoPDF(fname,_x,mode){
  <select id="fn-fmt" onchange="fnFmtChange()" style="width:100%;padding:8px;border:1px solid #ccd;border-radius:8px;margin-bottom:10px"><option value="bill">Bill / Invoice Number</option><option value="bill_cust">Bill Number + Customer</option><option value="bill_date">Bill Number + Date</option><option value="cust_bill">Customer + Bill Number</option><option value="custom">Custom</option></select>
  <label style="display:block;margin-bottom:4px">File Name</label>
  <input id="fn-name" oninput="document.getElementById('fn-fmt').value='custom'" style="width:100%;padding:8px;border:1px solid #ccd;border-radius:8px;margin-bottom:10px"/>
- <div id="fn-tpl-wrap"><label style="display:block;margin-bottom:4px">PDF Template</label><select id="fn-tpl" style="width:100%;padding:8px;border:1px solid #ccd;border-radius:8px;margin-bottom:10px"><option value="standard">Standard — matches preview (default)</option><option value="classic">Classic Blue</option><option value="premium">Premium Interior</option><option value="minimal">Minimal</option><option value="corporate">Corporate</option><option value="compact">Compact</option></select></div>
  <label id="fn-remarks-wrap" style="display:block;margin-bottom:8px"><input type="checkbox" id="fn-remarks" checked/> Show item remarks under description</label>
  <label style="display:block;margin-bottom:8px"><input type="checkbox" id="fn-remember" checked/> Remember my filename preference</label>
  <label style="display:block;margin-bottom:4px">Download Mode</label>
@@ -2557,8 +2730,10 @@ function psOpen(kind){
   psEl('ps-tpl').innerHTML=list.map(([v,l])=>'<option value="'+v+'">'+l+'</option>').join('');psEl('ps-tpl').value=PS.tpl;
   psFillInputs();
   psEl('ps-rem-wrap').style.display=kind==='inv'?'':'none';psEl('ps-mt-wrap').style.display=kind==='inv'?'':'none';
+  ['ps-tpl','ps-size','ps-orient','ps-ms','ps-mt','ps-mb'].forEach(id=>{const p=psEl(id).parentElement;if(p&&p.parentElement===psEl('ps-mt-wrap').parentElement)p.style.display=kind==='inv'?'none':'';});
+  psEl('ps-compare').parentElement.style.display=kind==='inv'?'none':'';psEl('ps-compare').parentElement.nextElementSibling.style.display=kind==='inv'?'none':'';
   psEl('ps-rem').checked=PS.rem;psEl('ps-compare').checked=false;
-  psEl('ps-title').textContent=kind==='memo'?'Memo — PDF Studio':(isGstMode()?'Invoice':'Bill')+' — PDF Studio';
+  psEl('ps-title').textContent=kind==='memo'?'Memo — PDF Studio':'Bill — PDF Preview (locked master template)';
   psEl('ps-pages').innerHTML='';psEl('ps-overlay').style.display='block';document.body.style.overflow='hidden';psRender();
 }
 function psClose(){psEl('ps-overlay').style.display='none';document.body.style.overflow=(mg('memo-overlay')&&mg('memo-overlay').style.display==='block')?'hidden':'';}
@@ -2599,7 +2774,7 @@ async function psRender(){
     }
     if(gen!==PS.gen)return;
     box.innerHTML='';box.className=PS.compare?'ps-grid':'ps-stack';box.appendChild(frag);
-    const o=pdfOpts(PS.kind);st.textContent=PAGE_SIZES[o.size][0]+' · '+o.orient+' · '+Math.round(o.W)+'×'+Math.round(o.H)+' mm'+(PS.compare?' · click a template to select it':'');
+    const o=pdfOpts(PS.kind);st.textContent=PS.kind==='inv'?'A4 · portrait · 210×297 mm — fixed master template ('+(PS.compare?'':'page '+'1…')+')':PAGE_SIZES[o.size][0]+' · '+o.orient+' · '+Math.round(o.W)+'×'+Math.round(o.H)+' mm'+(PS.compare?' · click a template to select it':'');
   }catch(e){console.error(e);if(gen===PS.gen)st.textContent='Preview failed: '+(e.message||e);}
 }
 function psDownload(){
